@@ -89,6 +89,23 @@
             <Setter Property="Margin" Value="0,0,0,12"/>
         </Style>
 
+        <!-- 毛玻璃风格卡片：半透明 + 柔和阴影。
+             说明：不用 BlurEffect 对背景做真实模糊（逐帧开销大、易卡顿），
+             改用半透明白底 + 轻阴影模拟玻璃质感，保证在低端机也跟手流畅。 -->
+        <Style x:Key="GlassCardStyle" TargetType="Border">
+            <Setter Property="Background" Value="#CCFFFFFF"/>
+            <Setter Property="BorderBrush" Value="#BFE6E0D6"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="14"/>
+            <Setter Property="Padding" Value="16"/>
+            <Setter Property="Margin" Value="0,0,0,12"/>
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect BlurRadius="18" ShadowDepth="2" Opacity="0.10" Color="#000000"/>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <!-- ===== 页面标题 ===== -->
         <Style x:Key="PageTitleStyle" TargetType="TextBlock">
             <Setter Property="FontSize" Value="22"/>

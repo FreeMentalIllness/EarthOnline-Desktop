@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using EarthOnline.Desktop.Data;
 using EarthOnline.Desktop.Dialogs;
 using EarthOnline.Desktop.Pages;
@@ -35,6 +36,25 @@ public partial class MainWindow : Window
     private const double ExpandedNavWidth = 200;
     private const double CompactNavWidth = 64;
 
+    /// <summary>用户手动收起侧栏后的覆盖状态；null = 跟随窗口宽度自动判定。</summary>
+    private bool? _manualCollapsed = null;
+
+    /// <summary>侧栏宽度的动画代理属性：BeginAnimation 驱动 NavColumn 平滑伸缩，避免硬跳变。</summary>
+    public static readonly DependencyProperty NavWidthProxyProperty =
+        DependencyProperty.Register(nameof(NavWidthProxy), typeof(double), typeof(MainWindow),
+            new PropertyMetadata(200d, (o, e) =>
+            {
+                var w = (MainWindow)o;
+                if (w.NavColumn != null)
+                    w.NavColumn.Width = new GridLength((double)e.NewValue);
+            }));
+
+    public double NavWidthProxy
+    {
+        get => (double)GetValue(NavWidthProxyProperty);
+        set => SetValue(NavWidthProxyProperty, value);
+    }
+
     public MainWindow()
     {
         InitializeComponent();
@@ -62,12 +82,32 @@ public partial class MainWindow : Window
         ApplyLayoutMode();
     }
 
-    /// <summary>按当前窗口宽度切换侧栏形态。</summary>
+    /// <summary>按当前窗口宽度（或被用户手动覆盖）切换侧栏形态。</summary>
     private void ApplyLayoutMode()
     {
-        bool compact = ActualWidth < CompactThreshold;
+        bool compact = _manualCollapsed ?? (ActualWidth < CompactThreshold);
+        if (IsCompact == compact) return;
         IsCompact = compact;
-        NavColumn.Width = new GridLength(compact ? CompactNavWidth : ExpandedNavWidth);
+        AnimateNavWidth(compact ? CompactNavWidth : ExpandedNavWidth);
+    }
+
+    /// <summary>平滑伸缩侧栏（180ms 缓出），保证跟手且不卡顿。</summary>
+    private void AnimateNavWidth(double to)
+    {
+        BeginAnimation(NavWidthProxyProperty,
+            new DoubleAnimation(to, TimeSpan.FromMilliseconds(180))
+            {
+                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+            });
+    }
+
+    /// <summary>侧栏收起/展开开关：手动覆盖自动判定，图标随之翻转。</summary>
+    private void ToggleNavBtn_Click(object sender, RoutedEventArgs e)
+    {
+        _manualCollapsed = !(_manualCollapsed ?? IsCompact);
+        ApplyLayoutMode();
+        if (ToggleIcon != null)
+            ToggleIcon.Text = _manualCollapsed == true ? "⟩" : "⟨";
     }
 
     private void NavList_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -100,6 +140,26 @@ public partial class MainWindow : Window
         }
 
         ContentFrame.Navigate(page);
+        PlayEnterAnimation();
+    }
+
+    /// <summary>内容区进入动画：淡入 + 轻微上移（160ms 缓出），提供切换反馈而不牺牲性能。</summary>
+    private void PlayEnterAnimation()
+    {
+        if (ContentFrame == null) return;
+        ContentFrame.Opacity = 0;
+        ContentFrame.BeginAnimation(OpacityProperty,
+            new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(160))
+            {
+                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+            });
+        var tt = new TranslateTransform(0, 10);
+        ContentFrame.RenderTransform = tt;
+        tt.BeginAnimation(TranslateTransform.YProperty,
+            new DoubleAnimation(10, 0, TimeSpan.FromMilliseconds(160))
+            {
+                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+            });
     }
 
     /// <summary>供页面（如主页快速入口）触发导航。</summary>

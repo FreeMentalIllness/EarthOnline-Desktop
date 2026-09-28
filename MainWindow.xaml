@@ -31,16 +31,30 @@
                     <RowDefinition Height="Auto"/>  <!-- 底部版本 -->
                 </Grid.RowDefinitions>
 
-                <!-- 应用标题 -->
-                <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="16,20,12,16">
-                    <TextBlock Text="🌍" FontSize="20" VerticalAlignment="Center"/>
-                    <TextBlock Text="地球Online"
-                               Style="{StaticResource NavTextStyle}"
-                               FontWeight="SemiBold"
-                               FontSize="15"
-                               Foreground="{StaticResource TextPrimaryBrush}"
-                               Margin="10,0,0,0"/>
-                </StackPanel>
+                <!-- 应用标题 + 收起/展开开关 -->
+                <Grid Grid.Row="0" Margin="16,20,12,16">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="🌍" FontSize="20" VerticalAlignment="Center"/>
+                        <TextBlock Text="地球Online"
+                                   Style="{StaticResource NavTextStyle}"
+                                   FontWeight="SemiBold"
+                                   FontSize="15"
+                                   Foreground="{StaticResource TextPrimaryBrush}"
+                                   Margin="10,0,0,0"/>
+                    </StackPanel>
+                    <Button x:Name="ToggleNavBtn" Grid.Column="1"
+                            Click="ToggleNavBtn_Click"
+                            Background="Transparent" BorderThickness="0" Cursor="Hand"
+                            Width="28" Height="28" ToolTip="收起/展开侧栏"
+                            HorizontalAlignment="Right" VerticalAlignment="Center">
+                        <TextBlock x:Name="ToggleIcon" Text="⟨" FontSize="16"
+                                   Foreground="{StaticResource TextSecondaryBrush}"/>
+                    </Button>
+                </Grid>
 
                 <!-- 导航项 -->
                 <ListBox x:Name="NavList"
