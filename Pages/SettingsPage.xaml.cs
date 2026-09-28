@@ -130,6 +130,23 @@ public partial class SettingsPage : Page
         }
     }
 
+    private void OpenIssues_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = "https://github.com/FreeMentalIllness/EarthOnline-Desktop/issues",
+                UseShellExecute = true
+            });
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show("打开浏览器失败：" + ex.Message, "地球Online",
+                MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
     private void OpenDataFolder_Click(object sender, RoutedEventArgs e)
     {
         try
@@ -153,6 +170,7 @@ public partial class SettingsPage : Page
     {
         UpdateStatusText.Text = $"当前版本 v{UpdateService.CurrentVersion}";
         AboutVersionText.Text = $"版本 v{UpdateService.CurrentVersion} · 数据库与设置存于 %LOCALAPPDATA%\\EarthOnline";
+        AboutTechText.Text = $"技术栈：C# / .NET {Environment.Version} · WPF · SQLite（本地）　数据目录：{AppPaths.RootDir}";
         // 初始化期间会触发 Checked/Unchecked，先挂再设值的顺序由 _suppressGeneral 保证
         _suppressGeneral = true;
         try { AutoStartBox.IsChecked = AutoStartService.IsEnabled(); }
