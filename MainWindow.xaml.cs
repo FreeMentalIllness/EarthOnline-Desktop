@@ -91,6 +91,9 @@ public partial class MainWindow : Window
         }
         catch { /* 标记失败最多是下次再看一次 */ }
 
+        // 丢弃引导页缓存：设置页「重新查看引导」时才是全新第 1 步，而不是停在结束态
+        _pages.Remove("onboarding");
+
         if (NavList.Items.Count > 0) NavList.SelectedIndex = 0;
         else Navigate("home");
     }
