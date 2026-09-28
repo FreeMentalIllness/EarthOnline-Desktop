@@ -22,6 +22,14 @@
   #container { width:100%; height:100%; background:#F8F6F2; }
   #tip { position:absolute; left:0; right:0; top:0; padding:8px 12px; font-size:12px;
          color:#7A7268; background:rgba(255,255,255,.92); border-bottom:1px solid #E8E2DA; display:none; }
+  /* 离线 / SDK 失败时的大块降级面板（桌面端措辞：明确告诉用户去用列表） */
+  #offline { position:absolute; inset:0; display:none; align-items:center; justify-content:center;
+             background:#F8F6F2; text-align:center; padding:24px; }
+  #offline .box { max-width:420px; }
+  #offline .t { font-size:16px; font-weight:600; color:#1E1A16; }
+  #offline .m { font-size:13px; color:#7A7268; margin-top:10px; line-height:1.7; }
+  #offline .b { margin-top:16px; font-size:13px; padding:8px 16px; cursor:pointer;
+                border:1px solid #E8E2DA; background:#fff; color:#1E1A16; border-radius:6px; }
 </style>
 <script>
   // 安全密钥必须在 SDK 加载前注入（AMap 2.0 读取带下划线的 _AMapSecurityConfig）
@@ -32,6 +40,16 @@
 <body>
 <div id="container"></div>
 <div id="tip"></div>
+<div id="offline">
+  <div class="box">
+    <div class="t">🗺️ 当前无网络，地图不可用</div>
+    <div class="m">
+      地图需要联网加载高德地图服务，本次没有加载成功。<br>
+      <b>你可以直接切换列表视图</b>：右侧「足迹列表」的新增 / 编辑 / 删除完全可用，不依赖地图。
+    </div>
+    <button class="b" onclick="location.reload()">🔄 重试加载地图</button>
+  </div>
+</div>
 
 <script>
   var map = null, markers = {}, userMarker = null, popup = null;
@@ -53,10 +71,22 @@
     el.style.display = text ? 'block' : 'none';
   }
 
+  /** 统一下线：显示降级面板 + 通知宿主（reason: offline / sdk / init） */
+  function fail(reason, detail) {
+    var el = document.getElementById('offline');
+    if (el) { el.style.display = 'flex'; }
+    showTip('');
+    post({ type: 'fail', reason: reason, detail: detail || '' });
+  }
+
   function init() {
+    // 浏览器层面已明确离线：直接降级，不用等 SDK 超时
+    if (window.navigator && window.navigator.onLine === false) {
+      fail('offline', 'navigator.onLine=false');
+      return;
+    }
     if (typeof AMap === 'undefined') {
-      showTip('地图加载失败：高德地图 SDK 未就绪（请检查网络），下方列表功能仍可正常使用。');
-      post({ type: 'fail' });
+      fail('sdk', 'AMap undefined');
       return;
     }
     try {
@@ -64,8 +94,7 @@
         zoom: 4, center: [105, 35], viewMode: '2D', doubleClickZoom: false
       });
     } catch (e) {
-      showTip('地图初始化失败：' + (e && e.message ? e.message : e));
-      post({ type: 'fail' });
+      fail('init', (e && e.message ? e.message : String(e)));
       return;
     }
     post({ type: 'ready' });

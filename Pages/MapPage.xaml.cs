@@ -37,6 +37,8 @@ public partial class MapPage : Page
     private double? _pickLat, _pickLng;
     private bool _mapReady;
     private bool _loaded;
+    /// <summary>WebView2 事件是否已挂过（重试加载时避免重复订阅）。</summary>
+    private bool _handlersHooked;
 
     public MapPage()
     {
@@ -105,21 +107,50 @@ public partial class MapPage : Page
         try
         {
             await MapView.EnsureCoreWebView2Async(null);
-            MapView.CoreWebView2.WebMessageReceived += OnWebMessage;
-            MapView.NavigationCompleted += async (_, e) =>
+            // 事件只挂一次（重试会再次进入本方法）
+            if (!_handlersHooked)
             {
-                if (e.IsSuccess) await PushLocationsAsync();
-            };
+                MapView.CoreWebView2.WebMessageReceived += OnWebMessage;
+                MapView.NavigationCompleted += async (_, e) =>
+                {
+                    if (e.IsSuccess) await PushLocationsAsync();
+                    else ShowFallback(true, "地图页面加载失败（请检查网络或 WebView2 运行时）。可切换列表视图管理足迹。");
+                };
+                _handlersHooked = true;
+            }
+
 
             var file = ExtractMapHtml();
             MapView.Source = new Uri(file);
             SetHint("地图加载中…");
+            ShowFallback(false);
         }
         catch (Exception ex)
         {
             // WebView2 运行时缺失 / 初始化失败：不影响列表功能
-            SetHint("地图不可用（" + ex.Message + "），仍可通过列表管理足迹");
+            ShowFallback(true, "地图组件初始化失败：" + ex.Message);
+            SetHint("地图不可用，仍可通过列表管理足迹");
         }
+    }
+
+    /// <summary>地图不可用 → 显示桌面端降级面板（明确引导「切换列表视图」）；可用 → 隐藏。</summary>
+    private void ShowFallback(bool show, string? detail = null)
+    {
+        if (MapFallback is null) return;
+        MapFallback.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
+        if (show && !string.IsNullOrWhiteSpace(detail) && FallbackDetailText is not null)
+        {
+            FallbackDetailText.Text = detail;
+        }
+    }
+
+    /// <summary>降级面板上的「重试」：重新释放并加载地图页。</summary>
+    private async void RetryMap_Click(object sender, RoutedEventArgs e)
+    {
+        SetHint("正在重试加载地图…");
+        ShowFallback(false);
+        _mapReady = false;
+        await InitMapAsync();
     }
 
     /// <summary>把内嵌的 map.html 释放到数据目录（每次启动覆盖，保证与程序版本一致）。</summary>
@@ -168,13 +199,18 @@ public partial class MapPage : Page
             {
                 case "ready":
                     _mapReady = true;
+                    ShowFallback(false);
                     SetHint("双击列表可定位 · 在地图上点击可预填坐标");
                     _ = PushLocationsAsync();
                     break;
 
                 case "fail":
                     _mapReady = false;
-                    SetHint("地图加载失败（请检查网络），列表功能不受影响");
+                    var reason = root.TryGetProperty("reason", out var r) ? r.GetString() : "";
+                    ShowFallback(true, reason == "offline"
+                        ? "当前无网络，地图不可用。可切换列表视图：右侧足迹列表的新增 / 编辑 / 删除完全可用，不依赖地图。"
+                        : "地图加载失败（请检查网络），可切换列表视图管理足迹。");
+                    SetHint("地图不可用，仍可通过列表管理足迹");
                     break;
 
                 case "click":

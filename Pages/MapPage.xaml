@@ -47,7 +47,27 @@
             </Grid.ColumnDefinitions>
 
             <Border Grid.Column="0" Style="{StaticResource CardStyle}" Padding="0">
-                <wv2:WebView2 x:Name="MapView"/>
+                <Grid>
+                    <wv2:WebView2 x:Name="MapView"/>
+
+                    <!-- 地图不可用时的桌面端降级面板（离线 / SDK 加载失败 / WebView2 缺失） -->
+                    <Border x:Name="MapFallback" Visibility="Collapsed"
+                            Background="{StaticResource AppBgBrush}">
+                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Margin="28">
+                            <TextBlock Text="🗺️ 当前无网络，地图不可用" FontSize="16" FontWeight="SemiBold"
+                                       HorizontalAlignment="Center"
+                                       Foreground="{StaticResource TextPrimaryBrush}"/>
+                            <TextBlock x:Name="FallbackDetailText" FontSize="12" Margin="0,10,0,0"
+                                       TextAlignment="Center" TextWrapping="Wrap" MaxWidth="420"
+                                       Foreground="{StaticResource TextSecondaryBrush}"
+                                       Text="地图需要联网加载高德地图服务。你可以切换列表视图：右侧足迹列表的新增 / 编辑 / 删除完全可用，不依赖地图。"/>
+                            <Button Content="🔄 重试加载地图" Padding="16,7" Margin="0,16,0,0"
+                                    HorizontalAlignment="Center" Click="RetryMap_Click"
+                                    Background="{StaticResource AccentBrush}" Foreground="White"
+                                    BorderThickness="0" Cursor="Hand"/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
             </Border>
 
             <Border Grid.Column="1" Style="{StaticResource CardStyle}" Padding="12" Margin="12,0,0,0">
