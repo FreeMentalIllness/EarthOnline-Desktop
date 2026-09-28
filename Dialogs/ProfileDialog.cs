@@ -100,6 +100,9 @@ public static class ProfileDialog
             Margin = new Thickness(0, 14, 0, 6)
         });
         string pendingAvatarPath = profile.AvatarPath ?? "";
+        // 记住打开对话框时的原值：取消 / 校验失败时要能撤销「已复制但没落库」的新头像
+        string originalAvatarPath = pendingAvatarPath;
+        void DiscardPendingAvatar() => AvatarService.Discard(pendingAvatarPath, originalAvatarPath);
         var imgRow = new StackPanel { Orientation = Orientation.Horizontal };
         var previewBorder = new Border
         {
@@ -141,28 +144,16 @@ public static class ProfileDialog
         var pickImgBtn = MkBtn("选择图片…");
         pickImgBtn.Click += (_, _) =>
         {
-            var dlg = new Microsoft.Win32.OpenFileDialog
-            {
-                Title = "选择头像图片",
-                Filter = "图片文件|*.png;*.jpg;*.jpeg;*.bmp;*.webp|所有文件|*.*"
-            };
-            if (dlg.ShowDialog() != true) return;
-            try
-            {
-                AppPaths.EnsureDirectories();
-                // 原图完整复制进私有目录（保留扩展名、不重编码），文件名随机避免冲突
-                var dest = Path.Combine(AppPaths.AvatarDir,
-                    Guid.NewGuid().ToString("N") + Path.GetExtension(dlg.FileName));
-                File.Copy(dlg.FileName, dest, overwrite: true);
-                pendingAvatarPath = dest;
-                LoadPreview(dest);
-                imgNameText.Text = Path.GetFileName(dlg.FileName);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("复制头像失败：" + ex.Message, "地球Online",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+            // 连续选图时先把上一张「已选但未提交」的临时图删掉，避免留下孤儿文件
+            DiscardPendingAvatar();
+            pendingAvatarPath = originalAvatarPath;
+
+            // 选图 + 原图完整复制进私有目录（保留扩展名、不重编码）
+            var dest = AvatarService.PickAndCopy();
+            if (dest is null) return;
+            pendingAvatarPath = dest;
+            LoadPreview(dest);
+            imgNameText.Text = Path.GetFileName(dest);
         };
         var clearImgBtn = MkBtn("移除图片");
         clearImgBtn.Click += (_, _) =>
@@ -291,12 +282,17 @@ public static class ProfileDialog
 
         win.Content = new ScrollViewer { Content = root, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
 
-        if (win.ShowDialog() != true) return false;
+        if (win.ShowDialog() != true)
+        {
+            DiscardPendingAvatar();     // 取消：删掉已复制但没落库的头像
+            return false;
+        }
 
         // ===== 校验 + 回写 =====
         var birth = birthBox.Text.Trim();
         if (birth.Length > 0 && !DateTime.TryParse(birth, out _))
         {
+            DiscardPendingAvatar();     // 校验失败同样算放弃本次编辑
             MessageBox.Show("生日格式不对，请用 YYYY-MM-DD（例如 1995-08-20）", "地球Online",
                 MessageBoxButton.OK, MessageBoxImage.Warning);
             return false;
@@ -309,7 +305,7 @@ public static class ProfileDialog
         profile.Signature = signatureBox.Text.Trim();
         profile.Gender = (genderBox.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "";
         profile.AvatarKey = chosenAvatar;
-        profile.AvatarPath = string.IsNullOrWhiteSpace(pendingAvatarPath) ? null : pendingAvatarPath;
+        AvatarService.Apply(profile, pendingAvatarPath);
         profile.CustomFieldsJson = ProfileService.WriteCustomFields(fields);
         return true;
     }
