@@ -54,6 +54,18 @@ public class SettingsStore
     /// <summary>本地自动备份开关（对齐安卓 AutoBackupManager 的常开行为）。</summary>
     public bool AutoBackup { get; set; } = true;
 
+    /// <summary>
+    /// 是否已完成首次启动引导（对齐安卓 OnboardingScreen 只看一次的行为）。
+    /// 设置页「重新查看引导」可置回 false 再次唤起。
+    /// </summary>
+    public bool Onboarded { get; set; }
+
+    /// <summary>高德地图 API Key（DPAPI 加密后的 Base64；留空则用内置回退 Key）。</summary>
+    public string AmapKeyEnc { get; set; } = "";
+
+    /// <summary>高德 JS API 安全密钥（DPAPI 加密；可留空 —— 部分 Key 类型不需要）。</summary>
+    public string AmapSecEnc { get; set; } = "";
+
     private static string FilePath => Path.Combine(AppPaths.RootDir, "settings.json");
 
     private static readonly JsonSerializerOptions Opts = new()

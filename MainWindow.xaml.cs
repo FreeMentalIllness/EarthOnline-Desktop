@@ -70,7 +70,29 @@ public partial class MainWindow : Window
             // 若此处不补一次，就会出现「侧栏选中项」与「右侧内容区」不一致（例如选中数据页却显示主页）。
             // 以侧栏选中项为准补一次导航，保证两者始终同步。
             Navigate(CurrentNavKey());
+
+            // 首次启动先看引导（只看一次；设置页可重新唤起）
+            try
+            {
+                if (!SettingsStore.Load().Onboarded) Navigate("onboarding");
+            }
+            catch { /* 标记读取失败就当已引导，绝不拦住用户 */ }
         };
+    }
+
+    /// <summary>引导完成：标记已引导并回到主页。</summary>
+    public void FinishOnboarding()
+    {
+        try
+        {
+            var s = SettingsStore.Load();
+            s.Onboarded = true;
+            s.Save();
+        }
+        catch { /* 标记失败最多是下次再看一次 */ }
+
+        if (NavList.Items.Count > 0) NavList.SelectedIndex = 0;
+        else Navigate("home");
     }
 
     /// <summary>当前侧栏选中项对应的页面 key（无选中时回落主页）。</summary>
@@ -136,6 +158,7 @@ public partial class MainWindow : Window
                 "report" => new ReportPage(),
                 "settings" => new SettingsPage(),
                 "ai" => new AiPage(),
+                "onboarding" => new OnboardingPage { OnFinished = FinishOnboarding },
                 _ => new HomePage(),
             };
             _pages[key] = page;
