@@ -39,6 +39,21 @@ public class SettingsStore
     /// <summary>自定义壁纸图片路径（空 = 使用纯色背景）。</summary>
     public string WallpaperPath { get; set; } = "";
 
+    /// <summary>AI 接口根地址（OpenAI 兼容；程序内自动拼 /chat/completions）。不预设默认值。</summary>
+    public string AiBaseUrl { get; set; } = "";
+
+    /// <summary>AI 模型名（必填，由用户按服务商文档填写；不设默认值）。</summary>
+    public string AiModel { get; set; } = "";
+
+    /// <summary>
+    /// AI API Key —— 只存 DPAPI 加密后的 Base64（SecretProtector.Protect），**绝不存明文**。
+    /// 密文与当前 Windows 用户绑定，复制给别人 / 换机器都是废数据。
+    /// </summary>
+    public string AiKeyEnc { get; set; } = "";
+
+    /// <summary>本地自动备份开关（对齐安卓 AutoBackupManager 的常开行为）。</summary>
+    public bool AutoBackup { get; set; } = true;
+
     private static string FilePath => Path.Combine(AppPaths.RootDir, "settings.json");
 
     private static readonly JsonSerializerOptions Opts = new()
