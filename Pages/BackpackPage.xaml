@@ -71,6 +71,22 @@
                                     <EventSetter Event="PreviewMouseRightButtonDown" Handler="ListBoxItem_RightClick"/>
                                 </Style>
                             </ListBox.ItemContainerStyle>
+                            <!-- 分类分组头置顶显示：分类名 + 数量（对齐移动端分组语义） -->
+                            <ListBox.GroupStyle>
+                                <GroupStyle>
+                                    <GroupStyle.HeaderTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal" Margin="0,8,0,4">
+                                                <TextBlock Text="{Binding Name}" FontSize="13" FontWeight="SemiBold"
+                                                           Foreground="{StaticResource AccentBrush}"/>
+                                                <TextBlock Text="{Binding ItemCount, StringFormat=（{0}）}"
+                                                           FontSize="11" Margin="4,1,0,0"
+                                                           Foreground="{StaticResource TextMutedBrush}"/>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </GroupStyle.HeaderTemplate>
+                                </GroupStyle>
+                            </ListBox.GroupStyle>
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
                                     <StackPanel Orientation="Horizontal" Margin="0,4">
@@ -79,8 +95,6 @@
                                                    Foreground="{StaticResource TextPrimaryBrush}"/>
                                         <TextBlock Text="{Binding TypeLabel}" FontSize="11" Margin="8,2,0,0"
                                                    Foreground="{StaticResource TextMutedBrush}"/>
-                                        <TextBlock Text="{Binding CategoryLabel}" FontSize="12" Margin="8,2,0,0"
-                                                   Foreground="{StaticResource TextSecondaryBrush}"/>
                                         <TextBlock Text="{Binding CreatedAtLabel}" FontSize="12" Margin="8,2,0,0"
                                                    Foreground="{StaticResource TextMutedBrush}"/>
                                     </StackPanel>
@@ -136,14 +150,28 @@
                                     <EventSetter Event="PreviewMouseRightButtonDown" Handler="ListBoxItem_RightClick"/>
                                 </Style>
                             </ListBox.ItemContainerStyle>
+                            <!-- 分类分组头置顶显示：分类名 + 数量 -->
+                            <ListBox.GroupStyle>
+                                <GroupStyle>
+                                    <GroupStyle.HeaderTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal" Margin="0,8,0,4">
+                                                <TextBlock Text="{Binding Name}" FontSize="13" FontWeight="SemiBold"
+                                                           Foreground="{StaticResource AccentBrush}"/>
+                                                <TextBlock Text="{Binding ItemCount, StringFormat=（{0}）}"
+                                                           FontSize="11" Margin="4,1,0,0"
+                                                           Foreground="{StaticResource TextMutedBrush}"/>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </GroupStyle.HeaderTemplate>
+                                </GroupStyle>
+                            </ListBox.GroupStyle>
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
                                     <StackPanel Orientation="Horizontal" Margin="0,4">
                                         <TextBlock Text="📚" Width="24"/>
                                         <TextBlock Text="{Binding Title}" FontSize="14"
                                                    Foreground="{StaticResource TextPrimaryBrush}"/>
-                                        <TextBlock Text="{Binding CategoryLabel}" FontSize="12" Margin="8,2,0,0"
-                                                   Foreground="{StaticResource TextSecondaryBrush}"/>
                                         <TextBlock Text="{Binding FileLabel}" FontSize="12" Margin="8,2,0,0"
                                                    Foreground="{StaticResource TextMutedBrush}"/>
                                         <TextBlock Text="{Binding CreatedAtLabel}" FontSize="12" Margin="8,2,0,0"

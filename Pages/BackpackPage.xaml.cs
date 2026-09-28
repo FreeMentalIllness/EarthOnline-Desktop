@@ -2,6 +2,7 @@ using System.IO;
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Input;
 using EarthOnline.Desktop.Data;
 using EarthOnline.Desktop.Data.Entities;
@@ -186,11 +187,18 @@ public partial class BackpackPage : Page
             if (f == "__none__") q = q.Where(i => i.Category == null || i.Category == "");
             else if (!string.IsNullOrEmpty(f)) q = q.Where(i => i.Category == f);
 
-            var catNames = db.BagCategories.AsNoTracking()
+            var catList = db.BagCategories.AsNoTracking()
                 .Where(c => c.Scope == BagScope.Item)
-                .ToDictionary(c => c.Id, c => c.Name);
+                .OrderBy(c => c.SortOrder)
+                .ToList();
+            var catNames = catList.ToDictionary(c => c.Id, c => c.Name);
+            var catOrder = new Dictionary<string, int>();
+            for (int i = 0; i < catList.Count; i++) catOrder[catList[i].Id] = i;
             var keyword = (ItemSearchBox?.Text ?? "").Trim();
-            var rows = q.OrderByDescending(i => i.CreatedAt).ToList()
+            var rows = q.ToList()
+                // 分组顺序 = 分类定义顺序（SortOrder）；未分类排最后，组内按创建时间倒序
+                .OrderBy(i => i.Category is { Length: > 0 } && catOrder.TryGetValue(i.Category, out var oi) ? oi : int.MaxValue)
+                .ThenByDescending(i => i.CreatedAt)
                 .Select(i =>
                 {
                     var catName = i.Category is { Length: > 0 } && catNames.TryGetValue(i.Category, out var n)
@@ -204,7 +212,11 @@ public partial class BackpackPage : Page
                 })
                 .Where(r => keyword.Length == 0 || r.SearchText.Contains(keyword.ToLowerInvariant()))
                 .ToList();
-            ItemList.ItemsSource = rows;
+
+            // 分类分组顶置显示：CollectionView 分组，头显示分类名 + 数量
+            var view = new ListCollectionView(rows);
+            view.GroupDescriptions.Add(new PropertyGroupDescription(nameof(ItemRow.CategoryLabel)));
+            ItemList.ItemsSource = view;
         }
         finally
         {
@@ -298,11 +310,18 @@ public partial class BackpackPage : Page
             if (f == "__none__") q = q.Where(c => c.Category == null || c.Category == "");
             else if (!string.IsNullOrEmpty(f)) q = q.Where(c => c.Category == f);
 
-            var catNames = db.BagCategories.AsNoTracking()
+            var catList = db.BagCategories.AsNoTracking()
                 .Where(c => c.Scope == BagScope.Collection)
-                .ToDictionary(c => c.Id, c => c.Name);
+                .OrderBy(c => c.SortOrder)
+                .ToList();
+            var catNames = catList.ToDictionary(c => c.Id, c => c.Name);
+            var catOrder = new Dictionary<string, int>();
+            for (int i = 0; i < catList.Count; i++) catOrder[catList[i].Id] = i;
             var keyword = (CollectionSearchBox?.Text ?? "").Trim();
-            var rows = q.OrderByDescending(c => c.CreatedAt).ToList()
+            var rows = q.ToList()
+                // 分组顺序 = 分类定义顺序（SortOrder）；未分类排最后，组内按创建时间倒序
+                .OrderBy(c => c.Category is { Length: > 0 } && catOrder.TryGetValue(c.Category, out var oi) ? oi : int.MaxValue)
+                .ThenByDescending(c => c.CreatedAt)
                 .Select(c =>
                 {
                     var catName = c.Category is { Length: > 0 } && catNames.TryGetValue(c.Category, out var n)
@@ -335,7 +354,11 @@ public partial class BackpackPage : Page
                 })
                 .Where(r => keyword.Length == 0 || r.SearchText.Contains(keyword.ToLowerInvariant()))
                 .ToList();
-            CollectionList.ItemsSource = rows;
+
+            // 分类分组顶置显示：CollectionView 分组，头显示分类名 + 数量
+            var view = new ListCollectionView(rows);
+            view.GroupDescriptions.Add(new PropertyGroupDescription(nameof(CollectionRow.CategoryLabel)));
+            CollectionList.ItemsSource = view;
         }
         finally
         {
