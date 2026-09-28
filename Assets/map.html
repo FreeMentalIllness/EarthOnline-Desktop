@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>足迹地图</title>
+<!--
+  桌面端地图页：复用网页端同一套高德 JS API Key 与安全密钥（硬编码，用户无需配置）。
+  坐标一律 [lng, lat]，与安卓 / 网页端一致。
+  C# → JS：window.render(locs) / window.focusOn(lng,lat) / window.setUser(lng,lat)
+  JS  → C#：window.chrome.webview.postMessage(JSON) —— ready / fail / click / drag / focus
+-->
+<meta http-equiv="Content-Security-Policy"
+      content="default-src 'self' https://*.amap.com 'unsafe-inline' 'unsafe-eval';
+               img-src 'self' data: https://*.amap.com;
+               script-src 'self' https://webapi.amap.com 'unsafe-inline' 'unsafe-eval';
+               style-src 'self' 'unsafe-inline';
+               connect-src 'self' https://*.amap.com;">
+<style>
+  html, body { width:100%; height:100%; margin:0; padding:0;
+               font-family:"Microsoft YaHei","Segoe UI",sans-serif; background:#F8F6F2; }
+  #container { width:100%; height:100%; background:#F8F6F2; }
+  #tip { position:absolute; left:0; right:0; top:0; padding:8px 12px; font-size:12px;
+         color:#7A7268; background:rgba(255,255,255,.92); border-bottom:1px solid #E8E2DA; display:none; }
+</style>
+<script>
+  // 安全密钥必须在 SDK 加载前注入（AMap 2.0 读取带下划线的 _AMapSecurityConfig）
+  window._AMapSecurityConfig = { securityJsCode: 'd4e92781da1ca5996c246d315af66031' };
+</script>
+<script src="https://webapi.amap.com/maps?v=2.0&key=07672883965ec7a6f0948813c0a90915"></script>
+</head>
+<body>
+<div id="container"></div>
+<div id="tip"></div>
+
+<script>
+  var map = null, markers = {}, userMarker = null, popup = null;
+
+  function post(msg) {
+    try {
+      if (window.chrome && window.chrome.webview) window.chrome.webview.postMessage(JSON.stringify(msg));
+    } catch (e) { /* 宿主未监听则忽略 */ }
+  }
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+    });
+  }
+  function showTip(text) {
+    var el = document.getElementById('tip');
+    if (!el) return;
+    el.textContent = text || '';
+    el.style.display = text ? 'block' : 'none';
+  }
+
+  function init() {
+    if (typeof AMap === 'undefined') {
+      showTip('地图加载失败：高德地图 SDK 未就绪（请检查网络），下方列表功能仍可正常使用。');
+      post({ type: 'fail' });
+      return;
+    }
+    try {
+      map = new AMap.Map('container', {
+        zoom: 4, center: [105, 35], viewMode: '2D', doubleClickZoom: false
+      });
+    } catch (e) {
+      showTip('地图初始化失败：' + (e && e.message ? e.message : e));
+      post({ type: 'fail' });
+      return;
+    }
+    post({ type: 'ready' });
+
+    // 点击空白处：把坐标回传宿主，供「+ 添加足迹」预填
+    map.on('click', function (e) {
+      var lat = e.lnglat.getLat(), lng = e.lnglat.getLng();
+      post({ type: 'click', lat: lat, lng: lng });
+    });
+  }
+
+  /** 渲染足迹标记（全量重画：先清后画，与网页端口径一致） */
+  function render(locs) {
+    if (!map || typeof AMap === 'undefined') return;
+    for (var k in markers) { try { map.remove(markers[k]); } catch (e) { } }
+    markers = {};
+    (locs || []).forEach(function (l) {
+      var m = new AMap.Marker({
+        position: [l.lng, l.lat], map: map, draggable: true, title: l.name
+      });
+      m.on('click', function () { showPopup(l); post({ type: 'focus', id: l.id }); });
+      m.on('dragend', function () {
+        var p = m.getPosition();
+        post({ type: 'drag', id: l.id, lat: p.getLat(), lng: p.getLng() });
+      });
+      markers[l.id] = m;
+    });
+    if (locs && locs.length === 1) { map.setCenter([locs[0].lng, locs[0].lat]); map.setZoom(12); }
+    else if (locs && locs.length > 1) { try { map.setFitView(); } catch (e) { } }
+    showTip('');
+  }
+
+  function showPopup(l) {
+    if (!map || typeof AMap === 'undefined') return;
+    if (!popup) popup = new AMap.InfoWindow({ offset: new AMap.Pixel(0, -28) });
+    popup.setContent('<b>' + esc(l.name) + '</b><br>' + esc(l.note || ''));
+    popup.open(map, [l.lng, l.lat]);
+  }
+
+  /** 聚焦单个足迹（列表点击 → 地图平移 + 弹窗） */
+  function focusOn(lng, lat, name, note) {
+    if (!map) return;
+    map.setCenter([lng, lat]);
+    map.setZoom(12);
+    if (name) showPopup({ name: name, note: note });
+  }
+
+  /** 用户定位蓝点（纯 CSS，无图片依赖） */
+  function setUser(lng, lat) {
+    if (!map || typeof AMap === 'undefined') return;
+    if (userMarker) { try { userMarker.setPosition([lng, lat]); return; } catch (e) { userMarker = null; } }
+    userMarker = new AMap.Marker({
+      position: [lng, lat], map: map, anchor: 'center', zIndex: 200,
+      content: '<div style="width:14px;height:14px;border-radius:50%;background:#1E90FF;' +
+               'border:3px solid #fff;box-shadow:0 0 6px rgba(0,0,0,.35)"></div>'
+    });
+  }
+
+  window.addEventListener('load', init);
+</script>
+</body>
+</html>
