@@ -1,0 +1,120 @@
+<Page x:Class="EarthOnline.Desktop.Pages.AiPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:d="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      mc:Ignorable="d"
+      Title="AI 助手"
+      Background="{StaticResource AppBgBrush}">
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0">
+            <TextBlock Text="🤖 AI 助手" Style="{StaticResource PageTitleStyle}"/>
+            <TextBlock Text="接入任意 OpenAI 兼容接口；提问时会带上你的任务 / 背包 / 成就 / 日志作为上下文"
+                       Style="{StaticResource PageSubTitleStyle}"/>
+        </StackPanel>
+
+        <Grid Grid.Row="1" Margin="0,4,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="330"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- ============ 接口配置 ============ -->
+            <Border Grid.Column="0" Style="{StaticResource CardStyle}" Margin="0,0,12,0">
+                <StackPanel>
+                    <TextBlock Text="接口配置" Style="{StaticResource SectionTitleStyle}"/>
+
+                    <TextBlock Text="API 地址" FontSize="12" Margin="0,12,0,4"
+                               Foreground="{StaticResource TextSecondaryBrush}"/>
+                    <TextBox x:Name="BaseUrlBox" Padding="8,6" FontSize="12"
+                             ToolTip="接口根地址，照抄厂商文档里的 Base URL；程序会自动拼接 /chat/completions"/>
+
+                    <TextBlock Text="API Key" FontSize="12" Margin="0,12,0,4"
+                               Foreground="{StaticResource TextSecondaryBrush}"/>
+                    <PasswordBox x:Name="KeyBox" Padding="8,6" FontSize="12"
+                                 ToolTip="本机用 Windows DPAPI 加密后保存，只对你当前的 Windows 账户可解"/>
+
+                    <TextBlock Text="模型" FontSize="12" Margin="0,12,0,4"
+                               Foreground="{StaticResource TextSecondaryBrush}"/>
+                    <TextBox x:Name="ModelBox" Padding="8,6" FontSize="12"
+                             ToolTip="必填，请按服务商文档填写，例如 deepseek-chat"/>
+
+                    <TextBlock Text="提问时会把你的任务 / 背包 / 成就 / 日志等数据作为上下文一并发给该接口，请确认你信任这个服务方。"
+                               FontSize="11" Margin="0,12,0,0" TextWrapping="Wrap"
+                               Foreground="{StaticResource TextMutedBrush}"/>
+
+                    <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                        <Button Content="保存配置" Padding="14,6" Click="Save_Click"
+                                Background="{StaticResource AccentBrush}" Foreground="White"
+                                BorderThickness="0" Cursor="Hand"/>
+                        <Button Content="清空对话" Padding="14,6" Margin="8,0,0,0"
+                                Click="Clear_Click" Cursor="Hand"/>
+                    </StackPanel>
+
+                    <TextBlock x:Name="ConfigStatusText" Margin="0,10,0,0" FontSize="11" TextWrapping="Wrap"
+                               Foreground="{StaticResource TextMutedBrush}"/>
+                </StackPanel>
+            </Border>
+
+            <!-- ============ 对话 ============ -->
+            <Border Grid.Column="1" Style="{StaticResource CardStyle}" Padding="0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock x:Name="WarnText" Grid.Row="0" Margin="14,12,14,0" FontSize="12" TextWrapping="Wrap"
+                               Foreground="{StaticResource TextSecondaryBrush}"
+                               Text="⚠️ 还未配置接口，发送前请先在左侧填写 API 地址、密钥与模型。"/>
+
+                    <ScrollViewer x:Name="ConvoScroll" Grid.Row="1" Margin="14,12,14,14"
+                                  VerticalScrollBarVisibility="Auto">
+                        <ItemsControl x:Name="ConvoList">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="{Binding BubbleBg}" CornerRadius="12"
+                                            Padding="12,9" Margin="0,0,0,10"
+                                            MaxWidth="620" HorizontalAlignment="{Binding Align}">
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding RoleLabel}" FontSize="11"
+                                                       Foreground="{StaticResource TextMutedBrush}"/>
+                                            <TextBlock Text="{Binding Content}" FontSize="13" Margin="0,4,0,0"
+                                                       TextWrapping="Wrap"
+                                                       Foreground="{StaticResource TextPrimaryBrush}"/>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- ============ 输入区 ============ -->
+        <Border Grid.Row="2" Style="{StaticResource CardStyle}" Padding="12" Margin="0,12,0,0">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBox x:Name="InputBox" Grid.Column="0" Height="62" Padding="10,8"
+                         FontSize="13" AcceptsReturn="True" TextWrapping="Wrap"
+                         VerticalScrollBarVisibility="Auto"
+                         ToolTip="Enter 发送，Shift+Enter 换行"
+                         KeyDown="InputBox_KeyDown"/>
+                <Button x:Name="SendBtn" Grid.Column="1" Content="发送" Padding="20,10" Margin="10,0,0,0"
+                        VerticalAlignment="Bottom" Click="Send_Click"
+                        Background="{StaticResource AccentBrush}" Foreground="White"
+                        BorderThickness="0" Cursor="Hand"/>
+            </Grid>
+        </Border>
+    </Grid>
+</Page>

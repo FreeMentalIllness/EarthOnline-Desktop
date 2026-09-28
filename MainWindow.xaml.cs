@@ -135,6 +135,7 @@ public partial class MainWindow : Window
                 "data" => new DataPage(),
                 "report" => new ReportPage(),
                 "settings" => new SettingsPage(),
+                "ai" => new AiPage(),
                 _ => new HomePage(),
             };
             _pages[key] = page;
@@ -196,6 +197,7 @@ public partial class MainWindow : Window
                 case Key.D6 or Key.NumPad6: e.Handled = true; NavList.SelectedIndex = 5; break;
                 case Key.D7 or Key.NumPad7: e.Handled = true; NavList.SelectedIndex = 6; break;
                 case Key.D8 or Key.NumPad8: e.Handled = true; NavList.SelectedIndex = 7; break;
+                case Key.D9 or Key.NumPad9: e.Handled = true; NavList.SelectedIndex = 8; break;
             }
         }
     }

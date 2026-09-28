@@ -116,6 +116,12 @@
                             <TextBlock Text="设置" Style="{StaticResource NavTextStyle}" Margin="10,0,0,0"/>
                         </StackPanel>
                     </ListBoxItem>
+                    <ListBoxItem Tag="ai">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="🤖" Style="{StaticResource NavIconStyle}"/>
+                            <TextBlock Text="AI 助手" Style="{StaticResource NavTextStyle}" Margin="10,0,0,0"/>
+                        </StackPanel>
+                    </ListBoxItem>
                 </ListBox>
 
                 <!-- 底部版本 -->
