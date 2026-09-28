@@ -6,6 +6,8 @@
     <RootNamespace>EarthOnline.Desktop</RootNamespace>
     <!-- 产物名固定为 EarthOnline.exe（便携版/Release 资产名），与仓库文件名无关 -->
     <AssemblyName>EarthOnline</AssemblyName>
+    <!-- 应用图标：与移动端同一套 logo（由安卓 mipmap ic_launcher 生成，16~256 全尺寸） -->
+    <ApplicationIcon>Assets\app_logo.ico</ApplicationIcon>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
@@ -14,6 +16,12 @@
     <AssemblyTitle>地球Online 桌面端</AssemblyTitle>
     <Product>地球Online</Product>
   </PropertyGroup>
+
+  <ItemGroup>
+    <!-- 界面内图标资源：窗口/托盘/标题栏共用（与移动端一致） -->
+    <Resource Include="Assets\app_logo.ico"/>
+    <Resource Include="Assets\app_logo.png"/>
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.11">

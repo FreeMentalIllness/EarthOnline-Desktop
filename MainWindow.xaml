@@ -9,6 +9,7 @@
         Width="1180" Height="740"
         MinWidth="760" MinHeight="520"
         WindowStartupLocation="CenterScreen"
+        Icon="pack://application:,,,/Assets/app_logo.ico"
         Background="{StaticResource AppBgBrush}"
         SizeChanged="Window_SizeChanged">
 
@@ -38,7 +39,10 @@
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <TextBlock Text="🌍" FontSize="20" VerticalAlignment="Center"/>
+                        <!-- 应用 logo：与移动端/任务栏图标同一套资源 -->
+                        <Image Source="pack://application:,,,/Assets/app_logo.png"
+                               Width="22" Height="22" VerticalAlignment="Center"
+                               RenderOptions.BitmapScalingMode="HighQuality"/>
                         <TextBlock Text="地球Online"
                                    Style="{StaticResource NavTextStyle}"
                                    FontWeight="SemiBold"

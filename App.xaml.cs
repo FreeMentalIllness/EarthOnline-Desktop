@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System.IO;
+using System.Windows;
 using System.Windows.Controls;
 using EarthOnline.Desktop.Data;
 using EarthOnline.Desktop.Services;
@@ -60,7 +61,7 @@ public partial class App : Application
     {
         _tray = new TaskbarIcon
         {
-            Icon = System.Drawing.SystemIcons.Application,
+            Icon = LoadTrayIcon() ?? System.Drawing.SystemIcons.Application,
             ToolTipText = "地球Online（左键/双击显示，右键菜单）",
             Visibility = Visibility.Visible
         };
@@ -80,6 +81,21 @@ public partial class App : Application
 
         _tray.ContextMenu = menu;
         _tray.TrayMouseDoubleClick += (_, _) => ShowMainWindow();
+    }
+
+    /// <summary>从打包资源加载应用 logo 作为托盘图标（与移动端一致）；失败回落系统默认。</summary>
+    private static System.Drawing.Icon? LoadTrayIcon()
+    {
+        try
+        {
+            var sri = Application.GetResourceStream(new Uri("pack://application:,,,/Assets/app_logo.ico"));
+            if (sri?.Stream is null) return null;
+            using var ms = new MemoryStream();
+            sri.Stream.CopyTo(ms);
+            ms.Position = 0;
+            return new System.Drawing.Icon(ms);
+        }
+        catch { return null; }
     }
 
     /// <summary>把已隐藏/最小化的主窗口恢复到前台。</summary>
