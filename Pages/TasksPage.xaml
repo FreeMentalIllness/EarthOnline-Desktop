@@ -49,39 +49,127 @@
             </DockPanel>
         </Border>
 
-        <!-- 任务树（右键菜单：编辑 / 标记完成 / 删除） -->
-        <Border Grid.Row="2" Style="{StaticResource CardStyle}" Padding="8">
-            <TreeView x:Name="TaskTree" BorderThickness="0" Background="Transparent"
-                      ContextMenuOpening="TaskContextMenu_Opening">
-                <TreeView.ContextMenu>
-                    <ContextMenu>
-                        <MenuItem Header="✏️ 编辑" Click="Edit_Click"/>
-                        <MenuItem x:Name="ToggleDoneItem" Header="✅ 标记完成" Click="ToggleDone_Click"/>
-                        <MenuItem Header="🗑 删除" Click="Delete_Click"/>
-                    </ContextMenu>
-                </TreeView.ContextMenu>
-                <TreeView.Resources>
-                    <!-- 折叠状态双向绑定到节点模型；右键命中节点时先选中它 -->
-                    <Style TargetType="TreeViewItem">
-                        <EventSetter Event="PreviewMouseRightButtonDown" Handler="TreeViewItem_RightClick"/>
-                        <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}"/>
-                    </Style>
-                    <HierarchicalDataTemplate DataType="{x:Type local:TaskNode}" ItemsSource="{Binding Children}">
-                        <StackPanel Orientation="Horizontal" Margin="0,3">
-                            <TextBlock Text="{Binding Connector}" FontSize="12" Margin="0,0,2,0"
-                                       Foreground="{StaticResource TextMutedBrush}"
-                                       Visibility="{Binding HasParent, Converter={StaticResource BoolToVis}}"/>
-                            <TextBlock Text="{Binding StatusEmoji}" Width="22" FontSize="13"/>
-                            <TextBlock Text="{Binding Title}" FontSize="14"
-                                       Foreground="{StaticResource TextPrimaryBrush}"/>
-                            <TextBlock Text="{Binding ProgressText}" FontSize="12" Margin="10,0,0,0"
-                                       Foreground="{StaticResource TextMutedBrush}"/>
-                            <TextBlock Text="{Binding DueText}" FontSize="12" Margin="10,0,0,0"
+        <!-- 任务树（右键菜单：编辑 / 标记完成 / 删除）+ 右侧明细面板 -->
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="290"/>
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0" Style="{StaticResource CardStyle}" Padding="8">
+                <TreeView x:Name="TaskTree" BorderThickness="0" Background="Transparent"
+                          ContextMenuOpening="TaskContextMenu_Opening"
+                          SelectedItemChanged="TaskTree_SelectedItemChanged">
+                    <TreeView.ContextMenu>
+                        <ContextMenu>
+                            <MenuItem Header="✏️ 编辑" Click="Edit_Click"/>
+                            <MenuItem x:Name="ToggleDoneItem" Header="✅ 标记完成" Click="ToggleDone_Click"/>
+                            <MenuItem Header="🗑 删除" Click="Delete_Click"/>
+                        </ContextMenu>
+                    </TreeView.ContextMenu>
+                    <TreeView.Resources>
+                        <!-- 折叠状态双向绑定到节点模型；右键命中节点时先选中它 -->
+                        <Style TargetType="TreeViewItem">
+                            <EventSetter Event="PreviewMouseRightButtonDown" Handler="TreeViewItem_RightClick"/>
+                            <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}"/>
+                        </Style>
+                        <HierarchicalDataTemplate DataType="{x:Type local:TaskNode}" ItemsSource="{Binding Children}">
+                            <StackPanel Orientation="Horizontal" Margin="0,3">
+                                <TextBlock Text="{Binding Connector}" FontSize="12" Margin="0,0,2,0"
+                                           Foreground="{StaticResource TextMutedBrush}"
+                                           Visibility="{Binding HasParent, Converter={StaticResource BoolToVis}}"/>
+                                <TextBlock Text="{Binding StatusEmoji}" Width="22" FontSize="13"/>
+                                <TextBlock Text="{Binding Title}" FontSize="14"
+                                           Foreground="{StaticResource TextPrimaryBrush}"/>
+                                <TextBlock Text="{Binding ProgressText}" FontSize="12" Margin="10,0,0,0"
+                                           Foreground="{StaticResource TextMutedBrush}"/>
+                                <TextBlock Text="{Binding DueText}" FontSize="12" Margin="10,0,0,0"
+                                           Foreground="{StaticResource TextSecondaryBrush}"/>
+                            </StackPanel>
+                        </HierarchicalDataTemplate>
+                    </TreeView.Resources>
+                </TreeView>
+            </Border>
+
+            <!-- 明细面板：选中任务的完整字段（对标移动端任务详情） -->
+            <Border Grid.Column="1" Style="{StaticResource CardStyle}" Padding="16" Margin="12,0,0,0">
+                <StackPanel>
+                    <DockPanel>
+                        <TextBlock Text="任务明细" Style="{StaticResource SectionTitleStyle}"/>
+                        <Button DockPanel.Dock="Right" Content="✏️ 编辑" Padding="10,4" FontSize="12"
+                                HorizontalAlignment="Right" Cursor="Hand" Click="EditDetail_Click"/>
+                    </DockPanel>
+
+                    <TextBlock x:Name="DetailEmpty" Text="在左侧选中一个任务查看明细"
+                               FontSize="12" Foreground="{StaticResource TextMutedBrush}" TextWrapping="Wrap"/>
+
+                    <StackPanel x:Name="DetailPanel" Visibility="Collapsed">
+                        <TextBlock x:Name="DetailTitle" FontSize="15" FontWeight="SemiBold"
+                                   Foreground="{StaticResource TextPrimaryBrush}" TextWrapping="Wrap"
+                                   Margin="0,2,0,8"/>
+
+                        <ProgressBar x:Name="DetailProgress" Height="7" Minimum="0" Maximum="100"
+                                     BorderThickness="0" Background="{StaticResource AppBgBrush}"
+                                     Foreground="{StaticResource AccentBrush}" Margin="0,0,0,4"/>
+                        <TextBlock x:Name="DetailProgressText" FontSize="11"
+                                   Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,10"/>
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="76"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="状态" FontSize="12" Margin="0,3"
                                        Foreground="{StaticResource TextSecondaryBrush}"/>
-                        </StackPanel>
-                    </HierarchicalDataTemplate>
-                </TreeView.Resources>
-            </TreeView>
-        </Border>
+                            <TextBlock x:Name="DetailStatus" Grid.Row="0" Grid.Column="1" FontSize="12" Margin="0,3"
+                                       Foreground="{StaticResource TextPrimaryBrush}"/>
+
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="分类" FontSize="12" Margin="0,3"
+                                       Foreground="{StaticResource TextSecondaryBrush}"/>
+                            <TextBlock x:Name="DetailCategory" Grid.Row="1" Grid.Column="1" FontSize="12" Margin="0,3"
+                                       Foreground="{StaticResource TextPrimaryBrush}"/>
+
+                            <TextBlock Grid.Row="2" Grid.Column="0" Text="截止" FontSize="12" Margin="0,3"
+                                       Foreground="{StaticResource TextSecondaryBrush}"/>
+                            <TextBlock x:Name="DetailDue" Grid.Row="2" Grid.Column="1" FontSize="12" Margin="0,3"
+                                       Foreground="{StaticResource TextPrimaryBrush}"/>
+
+                            <TextBlock Grid.Row="3" Grid.Column="0" Text="备注" FontSize="12" Margin="0,3" VerticalAlignment="Top"
+                                       Foreground="{StaticResource TextSecondaryBrush}"/>
+                            <TextBlock x:Name="DetailNote" Grid.Row="3" Grid.Column="1" FontSize="12" Margin="0,3"
+                                       Foreground="{StaticResource TextPrimaryBrush}" TextWrapping="Wrap"/>
+
+                            <TextBlock Grid.Row="4" Grid.Column="0" Text="创建于" FontSize="12" Margin="0,3"
+                                       Foreground="{StaticResource TextSecondaryBrush}"/>
+                            <TextBlock x:Name="DetailCreated" Grid.Row="4" Grid.Column="1" FontSize="12" Margin="0,3"
+                                       Foreground="{StaticResource TextPrimaryBrush}"/>
+
+                            <TextBlock Grid.Row="5" Grid.Column="0" Text="最近修改" FontSize="12" Margin="0,3"
+                                       Foreground="{StaticResource TextSecondaryBrush}"/>
+                            <TextBlock x:Name="DetailModified" Grid.Row="5" Grid.Column="1" FontSize="12" Margin="0,3"
+                                       Foreground="{StaticResource TextPrimaryBrush}"/>
+
+                            <TextBlock Grid.Row="6" Grid.Column="0" Text="完成时间" FontSize="12" Margin="0,3"
+                                       Foreground="{StaticResource TextSecondaryBrush}"/>
+                            <TextBlock x:Name="DetailDoneAt" Grid.Row="6" Grid.Column="1" FontSize="12" Margin="0,3"
+                                       Foreground="{StaticResource TextPrimaryBrush}"/>
+                        </Grid>
+
+                        <TextBlock x:Name="DetailChildren" FontSize="12" Margin="0,10,0,0"
+                                   Foreground="{StaticResource TextSecondaryBrush}"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Grid>
     </Grid>
 </Page>

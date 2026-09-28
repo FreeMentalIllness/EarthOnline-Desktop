@@ -155,6 +155,69 @@ public partial class TasksPage : Page
 
     private void CollapseAll_Click(object sender, RoutedEventArgs e) => SetAllExpanded(false);
 
+    // ==================== 明细面板 ====================
+
+    /// <summary>选中变化 → 右侧明细联动刷新（未选中显示占位文案）。</summary>
+    private void TaskTree_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+    {
+        if (DetailPanel is null || DetailEmpty is null) return;   // InitializeComponent 期间防御
+        UpdateDetail(SelectedTask());
+    }
+
+    private void UpdateDetail(TaskEntity? t)
+    {
+        bool has = t is not null;
+        DetailPanel.Visibility = has ? Visibility.Visible : Visibility.Collapsed;
+        DetailEmpty.Visibility = has ? Visibility.Collapsed : Visibility.Visible;
+        if (!has) return;
+
+        var task = t!;
+        DetailTitle.Text = string.IsNullOrWhiteSpace(task.Title) ? "（未命名任务）" : task.Title;
+
+        int p = task.Status == "done" ? 100 : task.Progress;
+        DetailProgress.Value = p;
+        DetailProgressText.Text = $"进度 {p}%";
+
+        DetailStatus.Text = task.Status switch
+        {
+            "done" => "✅ 已完成",
+            "active" => "🔥 进行中",
+            "paused" => "⏸ 已暂停",
+            _ => "📝 规划中"
+        };
+        DetailCategory.Text = task.Category switch
+        {
+            "main" => "主线",
+            "side" => "支线",
+            _ => "待办"
+        };
+        DetailDue.Text = string.IsNullOrEmpty(task.DueDate) ? "—" : task.DueDate;
+        DetailNote.Text = string.IsNullOrWhiteSpace(task.Note) ? "—" : task.Note;
+        DetailCreated.Text = string.IsNullOrEmpty(task.CreatedAt) ? "—" : task.CreatedAt;
+        DetailModified.Text = string.IsNullOrEmpty(task.LastModified) ? "—" : task.LastModified;
+        DetailDoneAt.Text = string.IsNullOrEmpty(task.DoneAt)
+            ? "—"
+            : DateTime.TryParse(task.DoneAt, out var dt) ? dt.ToString("yyyy-MM-dd HH:mm") : task.DoneAt;
+
+        // 子任务数（直接子级 + 全部后代）
+        int direct = _all.Count(c => c.ParentId == task.Id);
+        int total = CountDescendants(task.Id);
+        DetailChildren.Text = direct == 0 ? "无子任务" : $"子任务 {direct} 个（含后代共 {total} 个）";
+    }
+
+    private int CountDescendants(string id)
+    {
+        int n = 0;
+        foreach (var c in _all.Where(x => x.ParentId == id))
+        {
+            n += 1 + CountDescendants(c.Id);
+        }
+        return n;
+    }
+
+    /// <summary>明细面板的编辑按钮（与工具条编辑一致）。</summary>
+    private void EditDetail_Click(object sender, RoutedEventArgs e) => Edit_Click(sender, e);
+
     private TaskEntity? SelectedTask()
     {
         if (TaskTree == null) return null;
