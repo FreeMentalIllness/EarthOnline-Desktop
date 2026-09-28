@@ -16,3 +16,6 @@ obj/
 # 发布产物（体积过大，GitHub 单文件上限 100MB）
 publish/
 publish-single/
+# 本任务自包含发布产物（自包含 exe + WPF 原生 DLL / 压缩包）
+publish_win/
+*.zip
