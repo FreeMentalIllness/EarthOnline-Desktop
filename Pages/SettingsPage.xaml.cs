@@ -15,7 +15,204 @@ public partial class SettingsPage : Page
     {
         InitializeComponent();
         DbPathText.Text = AppPaths.DbFile;
-        Loaded += (_, _) => { LoadProfile(); LoadConfig(); };
+        Loaded += (_, _) => { LoadProfile(); LoadConfig(); LoadGeneral(); LoadAppearance(); };
+    }
+
+    // ==================== 外观（主题 / 字号 / 壁纸） ====================
+
+    private void LoadAppearance()
+    {
+        var s = SettingsStore.Load();
+        _suppressGeneral = true;
+        try
+        {
+            bool dark = ThemeService.IsDark(s);
+            ThemeDark.IsChecked = dark;
+            ThemeLight.IsChecked = !dark;
+
+            double scale = Math.Clamp(s.FontScale <= 0 ? 1.0 : s.FontScale, 0.8, 1.4);
+            (scale switch
+            {
+                <= 0.95 => FontSmall,
+                >= 1.1 => FontBig,
+                _ => FontStd
+            }).IsChecked = true;
+
+            WallpaperText.Text = string.IsNullOrEmpty(s.WallpaperPath)
+                ? "未设置（使用纯色背景）"
+                : Path.GetFileName(s.WallpaperPath);
+        }
+        finally { _suppressGeneral = false; }
+    }
+
+    /// <summary>主题 / 字号切换（RadioButton Checked 共用；初始化期由 _suppressGeneral 挡住）。</summary>
+    private void Appearance_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_suppressGeneral) return;
+        if (ThemeLight is null || ThemeDark is null || FontSmall is null) return; // 初始化期控件未就绪
+
+        try
+        {
+            var s = SettingsStore.Load();
+            s.Theme = ThemeDark.IsChecked == true ? "dark" : "light";
+            s.FontScale = double.Parse(
+                (FontSmall.IsChecked == true ? FontSmall : FontBig.IsChecked == true ? FontBig : FontStd).Tag?.ToString() ?? "1.0",
+                System.Globalization.CultureInfo.InvariantCulture);
+            s.Save();
+
+            ThemeService.ApplyTheme(s);
+            ThemeService.ApplyFontScale(s.FontScale);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show("应用外观设置失败：" + ex.Message, "地球Online",
+                MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    private void PickWallpaper_Click(object sender, RoutedEventArgs e)
+    {
+        var dlg = new OpenFileDialog
+        {
+            Title = "选择壁纸图片",
+            Filter = "图片文件|*.png;*.jpg;*.jpeg;*.bmp;*.webp|所有文件|*.*"
+        };
+        if (dlg.ShowDialog() != true) return;
+
+        try
+        {
+            var s = SettingsStore.Load();
+            s.WallpaperPath = dlg.FileName;
+            s.Save();
+            ThemeService.ApplyWallpaper(s);
+            WallpaperText.Text = Path.GetFileName(dlg.FileName);
+            (Application.Current.MainWindow as MainWindow)?.RefreshCurrentPage();
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show("设置壁纸失败：" + ex.Message, "地球Online",
+                MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    private void ClearWallpaper_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var s = SettingsStore.Load();
+            s.WallpaperPath = "";
+            s.Save();
+            ThemeService.ApplyWallpaper(s);
+            WallpaperText.Text = "未设置（使用纯色背景）";
+            (Application.Current.MainWindow as MainWindow)?.RefreshCurrentPage();
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show("清除壁纸失败：" + ex.Message, "地球Online",
+                MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    private void OpenRepo_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = "https://github.com/FreeMentalIllness/EarthOnline-Desktop",
+                UseShellExecute = true
+            });
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show("打开浏览器失败：" + ex.Message, "地球Online",
+                MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    private void OpenDataFolder_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = AppPaths.RootDir,
+                UseShellExecute = true
+            });
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show("打开文件夹失败：" + ex.Message, "地球Online",
+                MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    // ==================== 通用（自启 / 更新） ====================
+
+    private void LoadGeneral()
+    {
+        UpdateStatusText.Text = $"当前版本 v{UpdateService.CurrentVersion}";
+        AboutVersionText.Text = $"版本 v{UpdateService.CurrentVersion} · 数据库与设置存于 %LOCALAPPDATA%\\EarthOnline";
+        // 初始化期间会触发 Checked/Unchecked，先挂再设值的顺序由 _suppressGeneral 保证
+        _suppressGeneral = true;
+        try { AutoStartBox.IsChecked = AutoStartService.IsEnabled(); }
+        finally { _suppressGeneral = false; }
+    }
+
+    private bool _suppressGeneral;
+
+    private void AutoStart_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_suppressGeneral) return; // 初始化赋值时不写注册表
+        try
+        {
+            AutoStartService.SetEnabled(AutoStartBox.IsChecked == true);
+            UpdateStatusText.Text = AutoStartBox.IsChecked == true
+                ? "已开启开机自启。" + UpdateStatusText.Text
+                : "已关闭开机自启。" + UpdateStatusText.Text;
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show("设置开机自启失败：" + ex.Message, "地球Online",
+                MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    private async void CheckUpdate_Click(object sender, RoutedEventArgs e)
+    {
+        UpdateStatusText.Text = $"当前版本 v{UpdateService.CurrentVersion}，正在检查更新…";
+        var r = await UpdateService.CheckAsync();
+        UpdateStatusText.Text = r.Message;
+        if (r.Ok && r.LatestVersion is not null && r.DownloadPage is not null
+            && r.Message.StartsWith("发现新版本"))
+        {
+            if (MessageBox.Show(r.Message + "\n\n现在打开 Releases 页面下载吗？", "地球Online",
+                    MessageBoxButton.YesNo, MessageBoxImage.Information) == MessageBoxResult.Yes)
+            {
+                OpenReleases_Click(sender, e);
+            }
+        }
+        else if (!r.Ok)
+        {
+            MessageBox.Show(r.Message, "地球Online", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+    }
+
+    private void OpenReleases_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = "https://github.com/FreeMentalIllness/EarthOnline-Desktop/releases",
+                UseShellExecute = true
+            });
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show("打开浏览器失败：" + ex.Message, "地球Online",
+                MessageBoxButton.OK, MessageBoxImage.Error);
+        }
     }
 
     // ==================== 资料 ====================
@@ -43,6 +240,30 @@ public partial class SettingsPage : Page
         LoadProfile();
     }
 
+    private void EditProfileFull_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            using var db = new AppDbContext(AppPaths.DbFile);
+            var p = db.Profile.FirstOrDefault() ?? new Data.Entities.ProfileEntity { Id = 1 };
+
+            if (!ProfileDialog.Show(p)) return;
+
+            using var db2 = new AppDbContext(AppPaths.DbFile);
+            var row = db2.Profile.Find(1);
+            if (row is null) { db2.Profile.Add(p); }
+            else { db2.Entry(row).CurrentValues.SetValues(p); }
+            db2.SaveChanges();
+            AchievementNotifier.Check();
+            LoadProfile();
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show("保存资料失败：" + ex.Message, "地球Online",
+                MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
     private void EditBirth_Click(object sender, RoutedEventArgs e)
     {
         using var db = new AppDbContext(AppPaths.DbFile);
@@ -63,7 +284,7 @@ public partial class SettingsPage : Page
         if (db2.Entry(row).State == EntityState.Detached) db2.Profile.Add(row);
         row.BirthDate = v;
         db2.SaveChanges();
-        AchievementEngine.Evaluate();   // 生日影响「成长」类成就
+        AchievementNotifier.Check();   // 生日影响「成长」类成就
         LoadProfile();
     }
 
@@ -74,7 +295,8 @@ public partial class SettingsPage : Page
         var dlg = new SaveFileDialog
         {
             Title = "导出备份",
-            FileName = $"earth_online_backup_{DateTime.Now:yyyyMMdd_HHmm}.json",
+            // 与网页端导出文件名前缀完全一致（earth-online-backup-），便于人眼区分三端备份
+            FileName = $"earth-online-backup-{DateTime.Now:yyyy-MM-dd-HHmmss}.json",
             Filter = "JSON 文件|*.json"
         };
         if (dlg.ShowDialog() != true) return;
@@ -96,7 +318,7 @@ public partial class SettingsPage : Page
         try
         {
             int n = BackupService.ImportJson(File.ReadAllText(dlg.FileName));
-            AchievementEngine.Evaluate();
+            AchievementNotifier.Check();
             LoadProfile();
             MessageBox.Show($"已导入 {n} 条数据（按主键合并，未清空原有内容）。",
                 "地球Online", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -163,7 +385,7 @@ public partial class SettingsPage : Page
         SyncStatusText.Text = r.Message;
         LoadConfig();
         LoadProfile();
-        AchievementEngine.Evaluate();
+        AchievementNotifier.Check();
         MessageBox.Show(r.Message, "地球Online",
             MessageBoxButton.OK, r.Ok ? MessageBoxImage.Information : MessageBoxImage.Warning);
     }

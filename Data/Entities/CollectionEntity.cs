@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace EarthOnline.Desktop.Data.Entities;
 
 /// <summary>
@@ -6,20 +8,20 @@ namespace EarthOnline.Desktop.Data.Entities;
 /// </summary>
 public class CollectionEntity
 {
-    public string Id { get; set; } = "";
+    [JsonPropertyName("id")] public string Id { get; set; } = "";
 
     /// <summary>可空 = 未分类</summary>
-    public string? Category { get; set; }
+    [JsonPropertyName("category")] public string? Category { get; set; }
 
-    public string Title { get; set; } = "";
-    public string? Note { get; set; }
+    [JsonPropertyName("title")] public string Title { get; set; } = "";
+    [JsonPropertyName("note")] public string? Note { get; set; }
 
     /// <summary>{name,mime,size} 元信息 JSON</summary>
-    public string? FileMetaJson { get; set; }
+    [JsonPropertyName("fileMetaJson")] public string? FileMetaJson { get; set; }
 
     /// <summary>本地持久化文件的路径（替代安卓的沙盒 Uri）</summary>
-    public string? FileUri { get; set; }
+    [JsonPropertyName("fileUri")] public string? FileUri { get; set; }
 
     /// <summary>YYYY-MM-DD</summary>
-    public string CreatedAt { get; set; } = "";
+    [JsonPropertyName("createdAt")] public string CreatedAt { get; set; } = "";
 }

@@ -30,6 +30,15 @@ public class SettingsStore
     /// </summary>
     public int BlankTitleTries { get; set; }
 
+    /// <summary>界面主题：light / dark（画刷颜色即时生效）。</summary>
+    public string Theme { get; set; } = "light";
+
+    /// <summary>全局字号缩放：0.9 小 / 1.0 标准 / 1.15 大（窗口 LayoutTransform）。</summary>
+    public double FontScale { get; set; } = 1.0;
+
+    /// <summary>自定义壁纸图片路径（空 = 使用纯色背景）。</summary>
+    public string WallpaperPath { get; set; } = "";
+
     private static string FilePath => Path.Combine(AppPaths.RootDir, "settings.json");
 
     private static readonly JsonSerializerOptions Opts = new()

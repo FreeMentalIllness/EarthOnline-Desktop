@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace EarthOnline.Desktop.Data.Entities;
 
 /// <summary>
@@ -5,36 +7,34 @@ namespace EarthOnline.Desktop.Data.Entities;
 /// </summary>
 public class TaskEntity
 {
-    public string Id { get; set; } = "";
-    public string? ParentId { get; set; }
+    [JsonPropertyName("id")] public string Id { get; set; } = "";
+    [JsonPropertyName("parentId")] public string? ParentId { get; set; }
 
     /// <summary>main / side / todo</summary>
-    public string Category { get; set; } = "todo";
+    [JsonPropertyName("category")] public string Category { get; set; } = "todo";
 
-    public string Title { get; set; } = "";
+    [JsonPropertyName("title")] public string Title { get; set; } = "";
 
     /// <summary>planning / active / paused / done</summary>
-    public string Status { get; set; } = "planning";
+    [JsonPropertyName("status")] public string Status { get; set; } = "planning";
 
     /// <summary>0-100</summary>
-    public int Progress { get; set; }
+    [JsonPropertyName("progress")] public int Progress { get; set; }
 
-    public string? Note { get; set; }
+    [JsonPropertyName("note")] public string? Note { get; set; }
 
     /// <summary>仅 todo 使用，YYYY-MM-DD</summary>
-    public string? DueDate { get; set; }
+    [JsonPropertyName("dueDate")] public string? DueDate { get; set; }
 
     /// <summary>YYYY-MM-DD</summary>
-    public string CreatedAt { get; set; } = "";
+    [JsonPropertyName("createdAt")] public string CreatedAt { get; set; } = "";
 
     /// <summary>YYYY-MM-DD</summary>
-    public string LastModified { get; set; } = "";
+    [JsonPropertyName("lastModified")] public string LastModified { get; set; } = "";
 
-    /// <summary>
-    /// 最近一次进入 done 的时间（ISO）。非 done 时为 null —— 完成任务数的唯一口径。
-    /// </summary>
-    public string? DoneAt { get; set; }
+    /// <summary>最近一次进入 done 的时间（ISO）。非 done 时为 null —— 完成任务数唯一口径。</summary>
+    [JsonPropertyName("doneAt")] public string? DoneAt { get; set; }
 
-    /// <summary>排序号。安卓列名为 sort_order（`order` 是 SQL 关键字，故改名）。</summary>
-    public int Order { get; set; }
+    /// <summary>排序号。安卓列名 sort_order（`order` 是 SQL 关键字，故改名）。</summary>
+    [JsonPropertyName("order")] public int Order { get; set; }
 }

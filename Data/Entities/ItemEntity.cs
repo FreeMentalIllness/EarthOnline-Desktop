@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace EarthOnline.Desktop.Data.Entities;
 
 /// <summary>
@@ -5,17 +7,17 @@ namespace EarthOnline.Desktop.Data.Entities;
 /// </summary>
 public class ItemEntity
 {
-    public string Id { get; set; } = "";
-    public string Name { get; set; } = "";
+    [JsonPropertyName("id")] public string Id { get; set; } = "";
+    [JsonPropertyName("name")] public string Name { get; set; } = "";
 
     /// <summary>virtual / physical（兼容字段）</summary>
-    public string Type { get; set; } = "physical";
+    [JsonPropertyName("type")] public string Type { get; set; } = "physical";
 
-    public string? Description { get; set; }
+    [JsonPropertyName("description")] public string? Description { get; set; }
 
     /// <summary>自定义分类 id 或空</summary>
-    public string? Category { get; set; }
+    [JsonPropertyName("category")] public string? Category { get; set; }
 
     /// <summary>YYYY-MM-DD</summary>
-    public string CreatedAt { get; set; } = "";
+    [JsonPropertyName("createdAt")] public string CreatedAt { get; set; } = "";
 }

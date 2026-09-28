@@ -75,6 +75,36 @@
 
                 <Border Style="{StaticResource CardStyle}">
                     <StackPanel>
+                        <TextBlock Text="任务完成度" Style="{StaticResource SectionTitleStyle}"/>
+                        <Grid MinHeight="170">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="170"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid Grid.Column="0">
+                                <Canvas x:Name="StatusDonut" SizeChanged="StatusDonut_SizeChanged"/>
+                                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <TextBlock x:Name="DonutCenterNum" Text="0" FontSize="20" FontWeight="SemiBold"
+                                               HorizontalAlignment="Center"
+                                               Foreground="{StaticResource TextPrimaryBrush}"/>
+                                    <TextBlock Text="总任务" FontSize="11" HorizontalAlignment="Center"
+                                               Foreground="{StaticResource TextMutedBrush}"/>
+                                </StackPanel>
+                            </Grid>
+                            <WrapPanel x:Name="DonutLegend" Grid.Column="1" VerticalAlignment="Center"
+                                       Margin="10,0,0,0"/>
+                            <TextBlock x:Name="DonutEmpty"
+                                       Text="还没有任务，创建第一个试试。"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                                       FontSize="13" Foreground="{StaticResource TextSecondaryBrush}"
+                                       Background="{StaticResource AppBgBrush}" Padding="12,6"
+                                       Visibility="Collapsed"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource CardStyle}">
+                    <StackPanel>
                         <TextBlock Text="完成任务趋势" Style="{StaticResource SectionTitleStyle}"/>
                         <Grid Height="200">
                             <Canvas x:Name="TrendChart" SizeChanged="TrendChart_SizeChanged"/>

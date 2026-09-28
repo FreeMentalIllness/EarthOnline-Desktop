@@ -122,6 +122,123 @@ public static class ChartRenderer
         }
     }
 
+    /// <summary>进度环（0~1），中心叠文字由调用方放（Canvas 同一 Grid 里更简单）。</summary>
+    public static void DrawProgressRing(Canvas canvas, double fraction, double thickness = 9)
+    {
+        canvas.Children.Clear();
+        double size = Math.Min(canvas.ActualWidth, canvas.ActualHeight);
+        if (size <= 0) return;
+        double r = (size - thickness) / 2;
+        double cx = canvas.ActualWidth / 2, cy = canvas.ActualHeight / 2;
+
+        // 底环
+        canvas.Children.Add(new Ellipse
+        {
+            Width = r * 2, Height = r * 2,
+            StrokeThickness = thickness,
+            Stroke = new SolidColorBrush(Grid),
+            Fill = Brushes.Transparent
+        });
+        Canvas.SetLeft(canvas.Children[^1], cx - r);
+        Canvas.SetTop(canvas.Children[^1], cy - r);
+
+        fraction = Math.Clamp(fraction, 0, 1);
+        if (fraction <= 0) return;
+
+        var arc = new Path
+        {
+            StrokeThickness = thickness,
+            Stroke = new SolidColorBrush(Line),
+            StrokeStartLineCap = PenLineCap.Round,
+            StrokeEndLineCap = PenLineCap.Round
+        };
+        // 从顶部（-90°）顺时针
+        double a = fraction >= 1 ? 359.99 : 360 * fraction;
+        var rad = a * Math.PI / 180;
+        var start = new Point(cx, cy - r);
+        var end = new Point(cx + r * Math.Sin(rad), cy - r * Math.Cos(rad));
+        var geo = new PathGeometry(new[]
+        {
+            new PathFigure(start, new[]
+            {
+                new ArcSegment(end, new Size(r, r), 0, fraction > 0.5, SweepDirection.Clockwise, true)
+            }, false)
+        });
+        arc.Data = geo;
+        canvas.Children.Add(arc);
+    }
+
+    /// <summary>
+    /// 环形占比图（任务完成度等）：全 0 时返回 false，调用方叠空状态文案。
+    /// slices: (标签, 数值, 颜色)。
+    /// </summary>
+    public static bool DrawDonut(Canvas canvas,
+        IReadOnlyList<(string Label, int Value, Color Color)> slices, double thickness = 22)
+    {
+        canvas.Children.Clear();
+        double size = Math.Min(canvas.ActualWidth, canvas.ActualHeight);
+        if (size <= 0 || slices.Count == 0) return false;
+        int total = slices.Sum(s => s.Value);
+        if (total <= 0) return false;
+
+        double r = (size - thickness) / 2;
+        double cx = canvas.ActualWidth / 2, cy = canvas.ActualHeight / 2;
+
+        // 底环
+        canvas.Children.Add(new Ellipse
+        {
+            Width = r * 2, Height = r * 2,
+            StrokeThickness = thickness,
+            Stroke = new SolidColorBrush(Grid),
+            Fill = Brushes.Transparent
+        });
+        Canvas.SetLeft(canvas.Children[^1], cx - r);
+        Canvas.SetTop(canvas.Children[^1], cy - r);
+
+        double angle = 0; // 从顶部顺时针累计
+        foreach (var (label, value, color) in slices)
+        {
+            if (value <= 0) continue;
+            double sweep = 360.0 * value / total;
+            var brush = new SolidColorBrush(color);
+
+            if (sweep >= 359.9)
+            {
+                // 单一扇区占满：直接画整圆
+                canvas.Children.Add(new Ellipse
+                {
+                    Width = r * 2, Height = r * 2,
+                    StrokeThickness = thickness,
+                    Stroke = brush,
+                    Fill = Brushes.Transparent
+                });
+                Canvas.SetLeft(canvas.Children[^1], cx - r);
+                Canvas.SetTop(canvas.Children[^1], cy - r);
+            }
+            else
+            {
+                var rad0 = angle * Math.PI / 180;
+                var rad1 = (angle + sweep) * Math.PI / 180;
+                var start = new Point(cx + r * Math.Sin(rad0), cy - r * Math.Cos(rad0));
+                var end = new Point(cx + r * Math.Sin(rad1), cy - r * Math.Cos(rad1));
+                canvas.Children.Add(new Path
+                {
+                    StrokeThickness = thickness,
+                    Stroke = brush,
+                    Data = new PathGeometry(new[]
+                    {
+                        new PathFigure(start, new[]
+                        {
+                            new ArcSegment(end, new Size(r, r), 0, sweep > 180, SweepDirection.Clockwise, true)
+                        }, false)
+                    })
+                });
+            }
+            angle += sweep;
+        }
+        return true;
+    }
+
     /// <summary>柱状图（labelStep 控制隔几个显示一次 X 轴标签）。</summary>
     public static void DrawBar(Canvas canvas, IReadOnlyList<string> labels, IReadOnlyList<int> values, int labelStep = 1)
     {

@@ -6,8 +6,12 @@
       mc:Ignorable="d"
       Title="成就"
       Background="{StaticResource AppBgBrush}">
+    <Page.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+    </Page.Resources>
     <Grid Margin="24">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
@@ -18,7 +22,31 @@
             <TextBlock x:Name="SummaryText" Text="自动成就与自定义成就" Style="{StaticResource PageSubTitleStyle}"/>
         </StackPanel>
 
-        <Border Grid.Row="1" Style="{StaticResource CardStyle}" Padding="12">
+        <!-- ============ 总览卡：进度环 + 仅看未解锁 ============ -->
+        <Border Grid.Row="1" Style="{StaticResource CardStyle}" Padding="16" Margin="0,0,0,12">
+            <DockPanel>
+                <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
+                    <Grid Width="76" Height="76">
+                        <Canvas x:Name="OverviewRing"/>
+                        <TextBlock x:Name="RingText" Text="0%" FontSize="14" FontWeight="SemiBold"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"
+                                   Foreground="{StaticResource TextPrimaryBrush}"/>
+                    </Grid>
+                    <StackPanel VerticalAlignment="Center" Margin="16,0,0,0">
+                        <TextBlock x:Name="OverviewText" Text="已解锁 0 / 0" FontSize="17" FontWeight="SemiBold"
+                                   Foreground="{StaticResource TextPrimaryBrush}"/>
+                        <TextBlock x:Name="OverviewSub" Text="" FontSize="12" Margin="0,3,0,0"
+                                   Foreground="{StaticResource TextSecondaryBrush}"/>
+                    </StackPanel>
+                </StackPanel>
+                <CheckBox x:Name="OnlyUnlocked" Content="仅看未解锁" VerticalAlignment="Center"
+                          DockPanel.Dock="Right" FontSize="13"
+                          Foreground="{StaticResource TextSecondaryBrush}"
+                          Checked="OnlyUnlocked_Changed" Unchecked="OnlyUnlocked_Changed"/>
+            </DockPanel>
+        </Border>
+
+        <Border Grid.Row="2" Style="{StaticResource CardStyle}" Padding="12" Margin="0,0,0,12">
             <DockPanel>
                 <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
                     <ComboBox x:Name="CategoryFilter" Width="130" Padding="8" SelectedIndex="0"
@@ -44,7 +72,7 @@
             </DockPanel>
         </Border>
 
-        <Border Grid.Row="2" Style="{StaticResource CardStyle}" Padding="8">
+        <Border Grid.Row="3" Style="{StaticResource CardStyle}" Padding="8">
             <ListBox x:Name="AchList" BorderThickness="0" Background="Transparent">
                 <ListBox.ItemTemplate>
                     <DataTemplate>
@@ -52,6 +80,7 @@
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="36"/>
                                 <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="150"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Text="{Binding Emoji}" FontSize="18" VerticalAlignment="Center"/>
@@ -61,7 +90,16 @@
                                 <TextBlock Text="{Binding DisplayDesc}" FontSize="12" Margin="0,2,0,0"
                                            Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap"/>
                             </StackPanel>
-                            <TextBlock Grid.Column="2" Text="{Binding StatusText}" FontSize="12"
+                            <!-- current/goal 进度条（仅自动成就且未解锁时显示） -->
+                            <StackPanel Grid.Column="2" VerticalAlignment="Center"
+                                        Visibility="{Binding ShowProgress, Converter={StaticResource BoolToVis}}">
+                                <ProgressBar Value="{Binding ProgressValue}" Maximum="100" Height="6"
+                                             BorderThickness="0" Background="#F5E9DC" Foreground="#D4A373"/>
+                                <TextBlock Text="{Binding ProgressText}" FontSize="11" Margin="0,3,0,0"
+                                           HorizontalAlignment="Center"
+                                           Foreground="{StaticResource TextMutedBrush}"/>
+                            </StackPanel>
+                            <TextBlock Grid.Column="3" Text="{Binding StatusText}" FontSize="12"
                                        VerticalAlignment="Center" Margin="12,0,8,0"
                                        Foreground="{StaticResource TextMutedBrush}"/>
                         </Grid>

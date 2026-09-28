@@ -30,7 +30,11 @@ public static class BackupService
         WriteIndented = true
     };
 
-    private sealed class Payload
+    /// <summary>
+    /// 备份负载 DTO（安卓 BackupRepository.Payload 的 C# 镜像）。
+    /// 所有嵌套实体都已显式标注 [JsonPropertyName]，与安卓 kotlinx camelCase 逐字一致。
+    /// </summary>
+    public sealed class BackupPayload
     {
         public int Version { get; set; } = 1;
         public string ExportedAt { get; set; } = "";
@@ -50,7 +54,7 @@ public static class BackupService
     public static string ExportJson(string? dbPath = null)
     {
         using var db = new AppDbContext(dbPath ?? AppPaths.DbFile);
-        var payload = new Payload
+        var payload = new BackupPayload
         {
             Version = 1,
             ExportedAt = DateTime.Now.ToString("o"),
@@ -169,13 +173,13 @@ public static class BackupService
 
     // ==================== 解析（兼容裸格式 / 网页信封格式）====================
 
-    private static Payload Parse(string text)
+    private static BackupPayload Parse(string text)
     {
         using var doc = JsonDocument.Parse(text);
         var root = doc.RootElement;
 
         // 顶层裸字段（安卓 / 桌面端写的）
-        var p = new Payload();
+        var p = new BackupPayload();
         if (root.TryGetProperty("version", out var v) && v.ValueKind == JsonValueKind.Number)
             p.Version = v.GetInt32();
         if (root.TryGetProperty("exportedAt", out var ea) && ea.ValueKind == JsonValueKind.String)
@@ -204,6 +208,22 @@ public static class BackupService
         }
 
         return p;
+    }
+
+    /// <summary>
+    /// 仅解析不落库：供「数据兼容性自检」与任何只想读懂备份结构的场景使用。
+    /// 解析失败（JSON 不合法 / 不是备份结构）返回 null。
+    /// </summary>
+    public static BackupPayload? TryParsePayload(string text)
+    {
+        try
+        {
+            return Parse(text);
+        }
+        catch (Exception)
+        {
+            return null;
+        }
     }
 
     private static List<T> ReadList<T>(JsonElement obj, string name)

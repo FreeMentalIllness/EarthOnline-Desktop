@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace EarthOnline.Desktop.Data.Entities;
 
 /// <summary>
@@ -5,13 +7,13 @@ namespace EarthOnline.Desktop.Data.Entities;
 /// </summary>
 public class ActivityEntity
 {
-    public string Id { get; set; } = "";
+    [JsonPropertyName("id")] public string Id { get; set; } = "";
 
     /// <summary>ISO</summary>
-    public string Time { get; set; } = "";
+    [JsonPropertyName("time")] public string Time { get; set; } = "";
 
     /// <summary>ach / task / item / memo</summary>
-    public string Kind { get; set; } = "";
+    [JsonPropertyName("kind")] public string Kind { get; set; } = "";
 
-    public string Title { get; set; } = "";
+    [JsonPropertyName("title")] public string Title { get; set; } = "";
 }

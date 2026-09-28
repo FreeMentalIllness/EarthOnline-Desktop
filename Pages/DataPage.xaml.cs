@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Shapes;
 using EarthOnline.Desktop.Data.Entities;
 using EarthOnline.Desktop.Services;
 
@@ -19,6 +20,10 @@ public partial class DataPage : Page
     private List<AchievementEntity> _achs = new();
     private Dictionary<string, int> _doneByDay = new();
 
+    /// <summary>标记页面是否已 Loaded：避免 XAML 中 RadioButton 的 IsChecked="True" 在
+    /// InitializeComponent 期间触发 Checked 事件时，后续控件尚未创建而空引用。</summary>
+    private bool _loaded;
+
     /// <summary>日历当前停留的月份（恒为该月 1 号）。</summary>
     private DateTime _monthCursor = new(DateTime.Today.Year, DateTime.Today.Month, 1);
 
@@ -28,6 +33,7 @@ public partial class DataPage : Page
         Loaded += (_, _) =>
         {
             BuildWeekdayHeader();
+            _loaded = true;
             Reload();
         };
     }
@@ -36,6 +42,11 @@ public partial class DataPage : Page
 
     private void Reload()
     {
+        // 防御：控件未就绪时直接返回，杜绝 NullReferenceException
+        if (WeekStats == null || MonthStats == null || YearStats == null ||
+            YearTitle == null || TrendChart == null || TrendEmpty == null ||
+            MonthLabel == null || DayGrid == null || DayDetail == null) return;
+
         try
         {
             var (tasks, memos, achs) = StatsService.LoadAll();
@@ -52,6 +63,7 @@ public partial class DataPage : Page
             YearTitle.Text = year + " 年";
             FillStats(YearStats, StatsService.BuildYearSummary(_tasks, _memos, _achs, year));
 
+            DrawStatusDonut();
             DrawTrend();
             MonthLabel.Text = _monthCursor.ToString("yyyy 年 M 月", CultureInfo.InvariantCulture);
             BuildCalendar();
@@ -106,6 +118,62 @@ public partial class DataPage : Page
         border.Child = stack;
         return border;
     }
+
+    // ==================== 任务完成度环形图 ====================
+
+    /// <summary>状态配色（琥珀主题系，与 ChartRenderer 一致）。</summary>
+    private static readonly (string Status, string Label, Color Color)[] StatusSlices =
+    {
+        ("done", "已完成", Color.FromRgb(0xD4, 0xA3, 0x73)),
+        ("active", "进行中", Color.FromRgb(0x8A, 0xA7, 0x9B)),
+        ("paused", "已暂停", Color.FromRgb(0xE3, 0xC1, 0xA2)),
+        ("planning", "规划中", Color.FromRgb(0xC9, 0xC2, 0xB8))
+    };
+
+    private void DrawStatusDonut()
+    {
+        if (StatusDonut is null || DonutLegend is null || DonutEmpty is null || DonutCenterNum is null) return;
+
+        var slices = new List<(string, int, Color)>();
+        int total = 0;
+        foreach (var (status, label, color) in StatusSlices)
+        {
+            int n = _tasks.Count(t => t.Status == status);
+            total += n;
+            if (n > 0) slices.Add((label, n, color));
+        }
+
+        bool drew = ChartRenderer.DrawDonut(StatusDonut, slices);
+        DonutEmpty.Visibility = drew ? Visibility.Collapsed : Visibility.Visible;
+        DonutCenterNum.Text = total.ToString(CultureInfo.InvariantCulture);
+
+        DonutLegend.Children.Clear();
+        if (!drew) return;
+
+        foreach (var (status, label, color) in StatusSlices)
+        {
+            int n = _tasks.Count(t => t.Status == status);
+            if (n <= 0) continue;
+
+            var item = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 4, 18, 4) };
+            item.Children.Add(new Border
+            {
+                Width = 12, Height = 12, CornerRadius = new CornerRadius(3),
+                Background = new SolidColorBrush(color),
+                VerticalAlignment = VerticalAlignment.Center
+            });
+            item.Children.Add(new TextBlock
+            {
+                Text = $" {label} {n}",
+                FontSize = 13,
+                VerticalAlignment = VerticalAlignment.Center,
+                Foreground = Brush("#4A443C")
+            });
+            DonutLegend.Children.Add(item);
+        }
+    }
+
+    private void StatusDonut_SizeChanged(object sender, SizeChangedEventArgs e) => DrawStatusDonut();
 
     // ==================== 趋势图 ====================
 
@@ -166,6 +234,10 @@ public partial class DataPage : Page
         }
 
         var todayKey = StatsService.TodayStr();
+        var dueByDay = _tasks
+            .Where(t => t.Status != "done" && !string.IsNullOrEmpty(t.DueDate))
+            .GroupBy(t => t.DueDate!.Substring(0, 10))
+            .ToDictionary(g => g.Key, g => g.Count());
 
         for (int d = 1; d <= days; d++)
         {
@@ -177,11 +249,21 @@ public partial class DataPage : Page
             string key = day.ToString("yyyy-MM-dd");
             int count = _doneByDay.TryGetValue(key, out var c) ? c : 0;
 
+            // 热图 3 档：1 → 浅琥珀，2-3 → 中琥珀，4+ → 深琥珀（0 = 灰白）
+            string heat = count switch
+            {
+                >= 4 => "#D9B48A",
+                >= 2 => "#EBD3B3",
+                >= 1 => "#F5E9DC",
+                _ => "#FAF8F5"
+            };
+            int due = dueByDay.TryGetValue(key, out var dd) ? dd : 0;
+
             var cell = new Border
             {
                 Margin = new Thickness(2),
                 CornerRadius = new CornerRadius(8),
-                Background = count > 0 ? Brush("#F5E9DC") : Brush("#FAF8F5"),
+                Background = Brush(heat),
                 BorderBrush = key == todayKey ? Brush("#D4A373") : Brush("#E8E2DA"),
                 BorderThickness = key == todayKey ? new Thickness(2) : new Thickness(1),
                 Cursor = System.Windows.Input.Cursors.Hand,
@@ -203,8 +285,19 @@ public partial class DataPage : Page
                 HorizontalAlignment = HorizontalAlignment.Center,
                 FontSize = 11,
                 Margin = new Thickness(0, 2, 0, 0),
-                Foreground = Brush("#D4A373")
+                Foreground = Brush("#B07B3F")
             });
+            // 截止日红点（当天有未完成任务到期）
+            if (due > 0)
+            {
+                stack.Children.Add(new Ellipse
+                {
+                    Width = 6, Height = 6,
+                    Fill = new SolidColorBrush(Color.FromRgb(0xE7, 0x6F, 0x51)),
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    Margin = new Thickness(0, 2, 0, 0)
+                });
+            }
             cell.Child = stack;
 
             Grid.SetRow(cell, row);
@@ -215,20 +308,31 @@ public partial class DataPage : Page
 
     private void ShowDayDetail(string key)
     {
-        var titles = _tasks
+        var doneTitles = _tasks
             .Where(t => !string.IsNullOrEmpty(t.DoneAt) && StatsService.DayKeyOf(t.DoneAt) == key)
             .Select(t => string.IsNullOrWhiteSpace(t.Title) ? "（未命名任务）" : t.Title)
             .ToList();
+        var dueTitles = _tasks
+            .Where(t => t.Status != "done" && (t.DueDate ?? "").StartsWith(key))
+            .Select(t => string.IsNullOrWhiteSpace(t.Title) ? "（未命名任务）" : t.Title)
+            .ToList();
 
-        DayDetail.Text = titles.Count == 0
-            ? $"{key} 没有完成的任务。"
-            : $"{key} 完成 {titles.Count} 个任务：" + string.Join("、", titles);
+        var parts = new List<string>();
+        parts.Add(doneTitles.Count == 0
+            ? "没有完成的任务"
+            : $"完成 {doneTitles.Count} 个：" + string.Join("、", doneTitles));
+        if (dueTitles.Count > 0)
+            parts.Add($"📌 到期 {dueTitles.Count} 个：" + string.Join("、", dueTitles));
+
+        DayDetail.Text = $"{key} " + string.Join("；", parts);
     }
 
     // ==================== 交互 ====================
 
     private void View_Checked(object sender, RoutedEventArgs e)
     {
+        // 页面未加载完（InitializeComponent 期间）不处理，等 Loaded 后的首次 Reload 统一刷新
+        if (!_loaded) return;
         // XAML 解析期间 IsChecked 会提前触发，此时后续元素尚未创建
         if (OverviewPanel is null || CalendarPanel is null || TrendBar is null || MonthBar is null) return;
 
@@ -249,6 +353,8 @@ public partial class DataPage : Page
 
     private void Range_Checked(object sender, RoutedEventArgs e)
     {
+        // 页面未加载完（InitializeComponent 期间）不处理
+        if (!_loaded) return;
         if (TrendChart is null) return;
         DrawTrend();
     }

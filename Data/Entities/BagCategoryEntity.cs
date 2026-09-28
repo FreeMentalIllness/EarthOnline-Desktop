@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace EarthOnline.Desktop.Data.Entities;
 
 /// <summary>分类作用域：物品</summary>
@@ -14,12 +16,12 @@ public static class BagScope
 /// </summary>
 public class BagCategoryEntity
 {
-    public string Id { get; set; } = "";
-    public string Name { get; set; } = "";
+    [JsonPropertyName("id")] public string Id { get; set; } = "";
+    [JsonPropertyName("name")] public string Name { get; set; } = "";
 
     /// <summary>BagScope.Item 或 BagScope.Collection</summary>
-    public string Scope { get; set; } = BagScope.Item;
+    [JsonPropertyName("scope")] public string Scope { get; set; } = BagScope.Item;
 
     /// <summary>排序号，越小越靠前</summary>
-    public int SortOrder { get; set; }
+    [JsonPropertyName("sortOrder")] public int SortOrder { get; set; }
 }

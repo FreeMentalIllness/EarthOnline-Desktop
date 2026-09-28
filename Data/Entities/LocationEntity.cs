@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace EarthOnline.Desktop.Data.Entities;
 
 /// <summary>
@@ -6,16 +8,16 @@ namespace EarthOnline.Desktop.Data.Entities;
 /// </summary>
 public class LocationEntity
 {
-    public string Id { get; set; } = "";
-    public string Name { get; set; } = "";
-    public double Lat { get; set; }
-    public double Lng { get; set; }
+    [JsonPropertyName("id")] public string Id { get; set; } = "";
+    [JsonPropertyName("name")] public string Name { get; set; } = "";
+    [JsonPropertyName("lat")] public double Lat { get; set; }
+    [JsonPropertyName("lng")] public double Lng { get; set; }
 
     /// <summary>YYYY-MM-DD</summary>
-    public string Date { get; set; } = "";
+    [JsonPropertyName("date")] public string Date { get; set; } = "";
 
-    public string? Note { get; set; }
+    [JsonPropertyName("note")] public string? Note { get; set; }
 
     /// <summary>List&lt;string&gt; 的 JSON（多标签）</summary>
-    public string? TagsJson { get; set; }
+    [JsonPropertyName("tagsJson")] public string? TagsJson { get; set; }
 }

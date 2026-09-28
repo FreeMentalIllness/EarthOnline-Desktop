@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace EarthOnline.Desktop.Data.Entities;
 
 /// <summary>
@@ -5,24 +7,21 @@ namespace EarthOnline.Desktop.Data.Entities;
 /// </summary>
 public class AchievementEntity
 {
-    public string Id { get; set; } = "";
-    public string Title { get; set; } = "";
-    public string Desc { get; set; } = "";
+    [JsonPropertyName("id")] public string Id { get; set; } = "";
+    [JsonPropertyName("title")] public string Title { get; set; } = "";
+    [JsonPropertyName("desc")] public string Desc { get; set; } = "";
 
     /// <summary>auto / manual</summary>
-    public string Type { get; set; } = "manual";
+    [JsonPropertyName("type")] public string Type { get; set; } = "manual";
 
     /// <summary>自动成就规则 key</summary>
-    public string? AutoKey { get; set; }
+    [JsonPropertyName("autoKey")] public string? AutoKey { get; set; }
 
-    public bool Unlocked { get; set; }
+    [JsonPropertyName("unlocked")] public bool Unlocked { get; set; }
 
     /// <summary>ISO</summary>
-    public string? UnlockedAt { get; set; }
+    [JsonPropertyName("unlockedAt")] public string? UnlockedAt { get; set; }
 
-    /// <summary>
-    /// 分类 id（见安卓 AchievementCatalog.ACH_CATEGORIES）。
-    /// 空 = 未分类（旧行），UI 上归入「自定义」。
-    /// </summary>
-    public string? Category { get; set; }
+    /// <summary>分类 id（空 = 未分类，UI 归入「自定义」）。</summary>
+    [JsonPropertyName("category")] public string? Category { get; set; }
 }

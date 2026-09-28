@@ -6,13 +6,21 @@
       mc:Ignorable="d"
       Title="背包"
       Background="{StaticResource AppBgBrush}">
-    <Grid Margin="24">
+    <Page.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+    </Page.Resources>
+    <Grid Margin="24" AllowDrop="True" DragEnter="BackpackPage_DragEnter" Drop="BackpackPage_Drop">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
         <StackPanel Grid.Row="0">
+            <Border Background="{StaticResource CardBgBrush}" BorderBrush="{StaticResource BorderBrush}"
+                    BorderThickness="1" CornerRadius="8" Padding="10,6" Margin="0,0,0,10">
+                <TextBlock Text="💡 把电脑上的任意文件拖拽到本窗口，即可复制进本地私有目录并记录到背包"
+                           FontSize="12" Foreground="{StaticResource TextSecondaryBrush}"/>
+            </Border>
             <TextBlock Text="背包" Style="{StaticResource PageTitleStyle}"/>
             <TextBlock Text="物品与收藏（共用自定义分类）" Style="{StaticResource PageSubTitleStyle}"/>
         </StackPanel>
@@ -24,32 +32,56 @@
                 <Grid Margin="0,12,0,0">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
                     <DockPanel Grid.Row="0" Margin="0,0,0,10">
                         <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
-                            <ComboBox x:Name="ItemCategoryFilter" Width="140" Padding="8" SelectedIndex="0"
-                                      SelectionChanged="ItemFilter_Changed"/>
-                            <Button Content="＋ 新增物品" Margin="10,0,0,0" Padding="12,6" Click="AddItem_Click"
+                            <Button Content="⚙️ 分类" Padding="12,6" Click="ManageItemCategories_Click" Cursor="Hand"/>
+                            <ComboBox x:Name="ItemCategoryFilter" Width="140" Padding="8" Margin="8,0,0,0"
+                                      SelectedIndex="0" SelectionChanged="ItemFilter_Changed"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" HorizontalAlignment="Right">
+                            <Button Content="＋ 新增物品" Padding="12,6" Click="AddItem_Click"
                                     Background="{StaticResource AccentBrush}" Foreground="White"
                                     BorderThickness="0" Cursor="Hand"/>
                         </StackPanel>
-                        <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" HorizontalAlignment="Right">
-                            <Button Content="归类到…" Padding="12,6" Margin="6,0,0,0" Click="AssignItem_Click" Cursor="Hand"/>
-                            <Button Content="删除" Padding="12,6" Margin="6,0,0,0" Click="DeleteItem_Click" Cursor="Hand"/>
-                        </StackPanel>
                     </DockPanel>
 
-                    <Border Grid.Row="1" Style="{StaticResource CardStyle}" Padding="8">
-                        <ListBox x:Name="ItemList" BorderThickness="0" Background="Transparent">
+                    <!-- 搜索框（对标两端：按名称/描述/分类过滤） -->
+                    <TextBox x:Name="ItemSearchBox" Grid.Row="1" Height="34" Padding="10,0"
+                             VerticalContentAlignment="Center" FontSize="13" Margin="0,0,0,10"
+                             TextChanged="ItemSearch_TextChanged"/>
+                    <TextBlock x:Name="ItemSearchHint" Grid.Row="1" Text="🔍 搜索物品（名称 / 描述 / 分类）" FontSize="12" Margin="12,0,0,10"
+                               IsHitTestVisible="False" VerticalAlignment="Center"
+                               Foreground="{StaticResource TextMutedBrush}"/>
+
+                    <Border Grid.Row="2" Style="{StaticResource CardStyle}" Padding="8">
+                        <ListBox x:Name="ItemList" BorderThickness="0" Background="Transparent"
+                                 ContextMenuOpening="ItemList_ContextOpening">
+                            <ListBox.ContextMenu>
+                                <ContextMenu>
+                                    <MenuItem Header="✏️ 编辑" Click="EditItem_Click"/>
+                                    <MenuItem Header="🗑 删除" Click="DeleteItem_Click"/>
+                                </ContextMenu>
+                            </ListBox.ContextMenu>
+                            <ListBox.ItemContainerStyle>
+                                <Style TargetType="ListBoxItem">
+                                    <EventSetter Event="PreviewMouseRightButtonDown" Handler="ListBoxItem_RightClick"/>
+                                </Style>
+                            </ListBox.ItemContainerStyle>
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
                                     <StackPanel Orientation="Horizontal" Margin="0,4">
-                                        <TextBlock Text="📦" Width="24"/>
+                                        <TextBlock Text="{Binding Icon}" Width="24"/>
                                         <TextBlock Text="{Binding Name}" FontSize="14"
                                                    Foreground="{StaticResource TextPrimaryBrush}"/>
-                                        <TextBlock Text="{Binding Category}" FontSize="12" Margin="10,0,0,0"
+                                        <TextBlock Text="{Binding TypeLabel}" FontSize="11" Margin="8,2,0,0"
+                                                   Foreground="{StaticResource TextMutedBrush}"/>
+                                        <TextBlock Text="{Binding CategoryLabel}" FontSize="12" Margin="8,2,0,0"
+                                                   Foreground="{StaticResource TextSecondaryBrush}"/>
+                                        <TextBlock Text="{Binding CreatedAtLabel}" FontSize="12" Margin="8,2,0,0"
                                                    Foreground="{StaticResource TextMutedBrush}"/>
                                     </StackPanel>
                                 </DataTemplate>
@@ -64,32 +96,57 @@
                 <Grid Margin="0,12,0,0">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
                     <DockPanel Grid.Row="0" Margin="0,0,0,10">
                         <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
-                            <ComboBox x:Name="CollectionCategoryFilter" Width="140" Padding="8" SelectedIndex="0"
-                                      SelectionChanged="CollectionFilter_Changed"/>
-                            <Button Content="＋ 新增收藏" Margin="10,0,0,0" Padding="12,6" Click="AddCollection_Click"
+                            <Button Content="⚙️ 分类" Padding="12,6" Click="ManageCollectionCategories_Click" Cursor="Hand"/>
+                            <ComboBox x:Name="CollectionCategoryFilter" Width="140" Padding="8" Margin="8,0,0,0"
+                                      SelectedIndex="0" SelectionChanged="CollectionFilter_Changed"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" HorizontalAlignment="Right">
+                            <Button Content="＋ 新增收藏" Padding="12,6" Click="AddCollection_Click"
                                     Background="{StaticResource AccentBrush}" Foreground="White"
                                     BorderThickness="0" Cursor="Hand"/>
                         </StackPanel>
-                        <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" HorizontalAlignment="Right">
-                            <Button Content="归类到…" Padding="12,6" Margin="6,0,0,0" Click="AssignCollection_Click" Cursor="Hand"/>
-                            <Button Content="删除" Padding="12,6" Margin="6,0,0,0" Click="DeleteCollection_Click" Cursor="Hand"/>
-                        </StackPanel>
                     </DockPanel>
 
-                    <Border Grid.Row="1" Style="{StaticResource CardStyle}" Padding="8">
-                        <ListBox x:Name="CollectionList" BorderThickness="0" Background="Transparent">
+                    <!-- 搜索框（标题 / 备注） -->
+                    <TextBox x:Name="CollectionSearchBox" Grid.Row="1" Height="34" Padding="10,0"
+                             VerticalContentAlignment="Center" FontSize="13" Margin="0,0,0,10"
+                             TextChanged="CollectionSearch_TextChanged"/>
+                    <TextBlock x:Name="CollectionSearchHint" Grid.Row="1" Text="🔍 搜索收藏（标题 / 备注）" FontSize="12" Margin="12,0,0,10"
+                               IsHitTestVisible="False" VerticalAlignment="Center"
+                               Foreground="{StaticResource TextMutedBrush}"/>
+
+                    <Border Grid.Row="2" Style="{StaticResource CardStyle}" Padding="8">
+                        <ListBox x:Name="CollectionList" BorderThickness="0" Background="Transparent"
+                                 ContextMenuOpening="CollectionList_ContextOpening">
+                            <ListBox.ContextMenu>
+                                <ContextMenu>
+                                    <MenuItem Header="✏️ 编辑" Click="EditCollection_Click"/>
+                                    <MenuItem Header="📎 打开附件" Click="OpenCollectionFile_Click"/>
+                                    <MenuItem Header="🗑 删除" Click="DeleteCollection_Click"/>
+                                </ContextMenu>
+                            </ListBox.ContextMenu>
+                            <ListBox.ItemContainerStyle>
+                                <Style TargetType="ListBoxItem">
+                                    <EventSetter Event="PreviewMouseRightButtonDown" Handler="ListBoxItem_RightClick"/>
+                                </Style>
+                            </ListBox.ItemContainerStyle>
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
                                     <StackPanel Orientation="Horizontal" Margin="0,4">
                                         <TextBlock Text="📚" Width="24"/>
                                         <TextBlock Text="{Binding Title}" FontSize="14"
                                                    Foreground="{StaticResource TextPrimaryBrush}"/>
-                                        <TextBlock Text="{Binding Category}" FontSize="12" Margin="10,0,0,0"
+                                        <TextBlock Text="{Binding CategoryLabel}" FontSize="12" Margin="8,2,0,0"
+                                                   Foreground="{StaticResource TextSecondaryBrush}"/>
+                                        <TextBlock Text="{Binding FileLabel}" FontSize="12" Margin="8,2,0,0"
+                                                   Foreground="{StaticResource TextMutedBrush}"/>
+                                        <TextBlock Text="{Binding CreatedAtLabel}" FontSize="12" Margin="8,2,0,0"
                                                    Foreground="{StaticResource TextMutedBrush}"/>
                                     </StackPanel>
                                 </DataTemplate>

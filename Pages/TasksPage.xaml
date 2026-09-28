@@ -7,6 +7,9 @@
       mc:Ignorable="d"
       Title="任务"
       Background="{StaticResource AppBgBrush}">
+    <Page.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+    </Page.Resources>
     <Grid Margin="24">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -36,6 +39,8 @@
                 </StackPanel>
 
                 <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" HorizontalAlignment="Right">
+                    <Button Content="≡ 展开" Padding="10,6" Click="ExpandAll_Click" Cursor="Hand"/>
+                    <Button Content="≡ 折叠" Padding="10,6" Margin="6,0,0,0" Click="CollapseAll_Click" Cursor="Hand"/>
                     <Button Content="＋ 子任务" Padding="12,6" Margin="6,0,0,0" Click="AddChild_Click" Cursor="Hand"/>
                     <Button Content="编辑" Padding="12,6" Margin="6,0,0,0" Click="Edit_Click" Cursor="Hand"/>
                     <Button Content="标记完成" Padding="12,6" Margin="6,0,0,0" Click="ToggleDone_Click" Cursor="Hand"/>
@@ -44,12 +49,28 @@
             </DockPanel>
         </Border>
 
-        <!-- 任务树 -->
+        <!-- 任务树（右键菜单：编辑 / 标记完成 / 删除） -->
         <Border Grid.Row="2" Style="{StaticResource CardStyle}" Padding="8">
-            <TreeView x:Name="TaskTree" BorderThickness="0" Background="Transparent">
+            <TreeView x:Name="TaskTree" BorderThickness="0" Background="Transparent"
+                      ContextMenuOpening="TaskContextMenu_Opening">
+                <TreeView.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="✏️ 编辑" Click="Edit_Click"/>
+                        <MenuItem x:Name="ToggleDoneItem" Header="✅ 标记完成" Click="ToggleDone_Click"/>
+                        <MenuItem Header="🗑 删除" Click="Delete_Click"/>
+                    </ContextMenu>
+                </TreeView.ContextMenu>
                 <TreeView.Resources>
+                    <!-- 折叠状态双向绑定到节点模型；右键命中节点时先选中它 -->
+                    <Style TargetType="TreeViewItem">
+                        <EventSetter Event="PreviewMouseRightButtonDown" Handler="TreeViewItem_RightClick"/>
+                        <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}"/>
+                    </Style>
                     <HierarchicalDataTemplate DataType="{x:Type local:TaskNode}" ItemsSource="{Binding Children}">
                         <StackPanel Orientation="Horizontal" Margin="0,3">
+                            <TextBlock Text="{Binding Connector}" FontSize="12" Margin="0,0,2,0"
+                                       Foreground="{StaticResource TextMutedBrush}"
+                                       Visibility="{Binding HasParent, Converter={StaticResource BoolToVis}}"/>
                             <TextBlock Text="{Binding StatusEmoji}" Width="22" FontSize="13"/>
                             <TextBlock Text="{Binding Title}" FontSize="14"
                                        Foreground="{StaticResource TextPrimaryBrush}"/>

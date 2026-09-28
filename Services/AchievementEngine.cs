@@ -140,10 +140,25 @@ public static class AchievementEngine
     /// 计算统计 → 判定全部规则 → 写库（建行 / 回填分类 / 标记解锁）。
     /// 返回本次新解锁的条数。
     /// </summary>
+    /// <summary>判定并返回新增解锁的成就标题（供悬浮通知）。</summary>
+    public static (int Newly, List<string> Titles) EvaluateDetailed()
+    {
+        var titles = new List<string>();
+        using var db = new AppDbContext(AppPaths.DbFile);
+        var s = ComputeStats(db);
+        int newly = EvaluateCore(db, s, titles);
+        return (newly, titles);
+    }
+
     public static int Evaluate()
     {
         using var db = new AppDbContext(AppPaths.DbFile);
         var s = ComputeStats(db);
+        return EvaluateCore(db, s, null);
+    }
+
+    private static int EvaluateCore(AppDbContext db, AchStats s, List<string>? newlyTitles)
+    {
         int newly = 0;
 
         foreach (var rule in Rules)
@@ -165,7 +180,11 @@ public static class AchievementEngine
                     UnlockedAt = ok ? DateTime.Now.ToString("o") : null
                 };
                 db.Achievements.Add(row);
-                if (ok) newly++;
+                if (ok)
+                {
+                    newly++;
+                    newlyTitles?.Add(rule.Title);
+                }
             }
             else
             {
@@ -181,6 +200,7 @@ public static class AchievementEngine
                     row.Unlocked = true;
                     row.UnlockedAt = DateTime.Now.ToString("o");
                     newly++;
+                    newlyTitles?.Add(rule.Title);
                 }
                 // 已解锁的成就永不回退（与安卓一致：撤销只针对手动成就）
             }
@@ -188,6 +208,13 @@ public static class AchievementEngine
 
         db.SaveChanges();
         return newly;
+    }
+
+    /// <summary>实时统计（成就页进度条用；公开只读口径，不落库）。</summary>
+    public static AchStats ComputeStatsSnapshot()
+    {
+        using var db = new AppDbContext(AppPaths.DbFile);
+        return ComputeStats(db);
     }
 
     private static AchStats ComputeStats(AppDbContext db)

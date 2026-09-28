@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace EarthOnline.Desktop.Data.Entities;
 
 /// <summary>
@@ -5,12 +7,12 @@ namespace EarthOnline.Desktop.Data.Entities;
 /// </summary>
 public class MemoEntity
 {
-    public string Id { get; set; } = "";
-    public string Text { get; set; } = "";
+    [JsonPropertyName("id")] public string Id { get; set; } = "";
+    [JsonPropertyName("text")] public string Text { get; set; } = "";
 
     /// <summary>note / important / idea</summary>
-    public string Type { get; set; } = "note";
+    [JsonPropertyName("type")] public string Type { get; set; } = "note";
 
     /// <summary>ISO</summary>
-    public string CreatedAt { get; set; } = "";
+    [JsonPropertyName("createdAt")] public string CreatedAt { get; set; } = "";
 }

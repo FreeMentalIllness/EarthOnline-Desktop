@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace EarthOnline.Desktop.Data.Models;
 
 /// <summary>
@@ -6,7 +8,7 @@ namespace EarthOnline.Desktop.Data.Models;
 /// </summary>
 public class CustomField
 {
-    public string Id { get; set; } = "";
-    public string Label { get; set; } = "";
-    public string Value { get; set; } = "";
+    [JsonPropertyName("id")] public string Id { get; set; } = "";
+    [JsonPropertyName("label")] public string Label { get; set; } = "";
+    [JsonPropertyName("value")] public string Value { get; set; } = "";
 }

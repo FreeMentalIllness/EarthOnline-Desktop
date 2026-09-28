@@ -65,7 +65,6 @@ public static class SyncService
             if (!force && !s.AutoSync) return new SyncResult(false, "自动同步已关闭");
 
             var text = BackupService.ExportJson();
-            var at = BackupService.ReadExportedAt(text) > 0 ? text : text; // 导出串里已含 exportedAt
 
             await WebDavService.UploadTextAsync(DavOf(s), s.EffectiveRemotePath(), text);
 

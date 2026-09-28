@@ -14,14 +14,27 @@ public partial class ReportPage : Page
 {
     private ReportData? _data;
 
+    /// <summary>标记页面是否已 Loaded：避免 XAML 中 RadioButton 的 IsChecked="True" 在
+    /// InitializeComponent 期间触发 Checked 事件时，后续控件尚未创建而空引用。</summary>
+    private bool _loaded;
+
     public ReportPage()
     {
         InitializeComponent();
-        Loaded += (_, _) => Reload();
+        Loaded += (_, _) =>
+        {
+            _loaded = true;
+            Reload();
+        };
     }
 
     private void Reload()
     {
+        // 防御：控件未就绪时直接返回，杜绝 NullReferenceException
+        if (RangeLabel == null || ChartTitle == null || SummaryText == null ||
+            MetricStats == null || HighlightList == null || HighlightCard == null ||
+            HighlightEmpty == null || ReportChart == null || ChartEmpty == null) return;
+
         try
         {
             var kind = CurrentKind();
@@ -101,6 +114,8 @@ public partial class ReportPage : Page
 
     private void Kind_Checked(object sender, RoutedEventArgs e)
     {
+        // 页面未加载完（InitializeComponent 期间）不处理，等 Loaded 后的首次 Reload 统一构建
+        if (!_loaded) return;
         // XAML 解析期间 IsChecked 会提前触发，此时 ReportChart 等尚未创建
         if (ReportChart is null) return;
         Reload();

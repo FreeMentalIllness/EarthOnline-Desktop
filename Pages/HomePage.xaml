@@ -6,53 +6,270 @@
       mc:Ignorable="d"
       Title="主页"
       Background="{StaticResource AppBgBrush}">
+    <Page.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+    </Page.Resources>
     <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel Margin="24">
+        <StackPanel Margin="28,24,28,24" MaxWidth="1040">
             <TextBlock Text="主页" Style="{StaticResource PageTitleStyle}"/>
-            <TextBlock Text="地球Online · 桌面端骨架已就绪" Style="{StaticResource PageSubTitleStyle}"/>
+            <TextBlock Text="欢迎回来，今天也要好好生活 🌿" Style="{StaticResource PageSubTitleStyle}"/>
 
+            <!-- ============ 个人资料卡 ============ -->
             <Border Style="{StaticResource CardStyle}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- 头像（预设 emoji 圆圈，复用安卓 avatarKey） -->
+                    <Border Grid.Column="0" Width="76" Height="76" CornerRadius="38"
+                            Background="{StaticResource AppBgBrush}"
+                            Margin="0,0,20,0">
+                        <TextBlock Text="{Binding AvatarEmoji}" FontSize="36"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{Binding Name}" FontSize="20" FontWeight="SemiBold"
+                                       Foreground="{StaticResource TextPrimaryBrush}"/>
+                            <TextBlock Text="{Binding LevelText}" FontSize="15" FontWeight="SemiBold"
+                                       Margin="10,2,0,0" VerticalAlignment="Center"
+                                       Foreground="#B08045"
+                                       Visibility="{Binding HasLevel, Converter={StaticResource EmptyToCollapsed}}"/>
+                            <TextBlock Text="{Binding DaysLivedText}" FontSize="12" Margin="10,3,0,0"
+                                       VerticalAlignment="Center"
+                                       Foreground="{StaticResource TextMutedBrush}"
+                                       Visibility="{Binding DaysLivedText, Converter={StaticResource EmptyToCollapsed}}"/>
+                        </StackPanel>
+                        <TextBlock FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,4,0,0">
+                            <Run Text="{Binding BirthDate}"/>
+                            <Run Text=" · "/>
+                            <Run Text="{Binding Gender}"/>
+                        </TextBlock>
+                        <TextBlock Text="{Binding Signature}" FontSize="13"
+                                   Foreground="{StaticResource TextMutedBrush}"
+                                   Margin="0,4,0,0" TextWrapping="Wrap"
+                                   Visibility="{Binding Signature, Converter={StaticResource EmptyToCollapsed}}"/>
+                        <!-- 经验条：距下一个生日的进度（网页口径） -->
+                        <StackPanel Margin="0,8,0,0"
+                                    Visibility="{Binding HasLevel, Converter={StaticResource EmptyToCollapsed}}">
+                            <ProgressBar Height="8" Minimum="0" Maximum="100"
+                                         Value="{Binding LevelProgress, Mode=OneWay}"
+                                         BorderThickness="0" Background="{StaticResource AppBgBrush}"
+                                         Foreground="#D4A373"/>
+                            <TextBlock Text="{Binding LevelSubText}" FontSize="11" Margin="0,3,0,0"
+                                       Foreground="{StaticResource TextMutedBrush}"/>
+                        </StackPanel>
+                        <!-- 自定义字段 chips -->
+                        <ItemsControl ItemsSource="{Binding CustomFields}" Margin="0,8,0,0">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel Orientation="Horizontal"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="{StaticResource AppBgBrush}"
+                                            BorderBrush="{StaticResource BorderBrush}"
+                                            BorderThickness="1" CornerRadius="6"
+                                            Padding="8,3" Margin="0,4,6,0">
+                                        <TextBlock Text="{Binding}" FontSize="12"
+                                                   Foreground="{StaticResource TextSecondaryBrush}"/>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+
+                    <!-- 编辑资料 -->
+                    <Button Grid.Column="2" Content="✏️ 编辑资料" Padding="12,6"
+                            VerticalAlignment="Top" Click="EditProfile_Click" Cursor="Hand"/>
+                </Grid>
+            </Border>
+
+            <!-- ============ 四个统计卡 ============ -->
+            <TextBlock Text="概览" Style="{StaticResource SectionTitleStyle}" Margin="0,18,0,8"/>
+            <UniformGrid Columns="4" Margin="0,0,0,4">
+                <Border Style="{StaticResource StatCardStyle}" Margin="0,0,8,0">
+                    <StackPanel>
+                        <TextBlock Text="{Binding TaskCount}" Style="{StaticResource StatNumStyle}"/>
+                        <TextBlock Text="任务" Style="{StaticResource StatLabelStyle}"/>
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource StatCardStyle}" Margin="4,0,4,0">
+                    <StackPanel>
+                        <TextBlock Text="{Binding ItemCount}" Style="{StaticResource StatNumStyle}"/>
+                        <TextBlock Text="背包" Style="{StaticResource StatLabelStyle}"/>
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource StatCardStyle}" Margin="4,0,4,0">
+                    <StackPanel>
+                        <TextBlock Text="{Binding AchievementCount}" Style="{StaticResource StatNumStyle}"/>
+                        <TextBlock Text="成就" Style="{StaticResource StatLabelStyle}"/>
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource StatCardStyle}" Margin="8,0,0,0">
+                    <StackPanel>
+                        <TextBlock Text="{Binding InspirationCount}" Style="{StaticResource StatNumStyle}"/>
+                        <TextBlock Text="灵感" Style="{StaticResource StatLabelStyle}"/>
+                    </StackPanel>
+                </Border>
+            </UniformGrid>
+
+            <!-- ============ 人生卡 ============ -->
+            <Border Style="{StaticResource CardStyle}"
+                    Visibility="{Binding LifeCardText, Converter={StaticResource EmptyToCollapsed}}">
                 <StackPanel>
-                    <TextBlock Text="个人信息" FontWeight="SemiBold" FontSize="15"
-                               Foreground="{StaticResource TextPrimaryBrush}"/>
-                    <TextBlock x:Name="SummaryText"
-                               Margin="0,8,0,0"
-                               FontSize="13"
-                               Foreground="{StaticResource TextSecondaryBrush}"
-                               TextWrapping="Wrap"
-                               Text="加载中…"/>
+                    <TextBlock Text="🌱 人生卡" Style="{StaticResource SectionTitleStyle}"/>
+                    <TextBlock Text="{Binding LifeCardText}" FontSize="13" LineHeight="22"
+                               Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap"/>
                 </StackPanel>
             </Border>
 
+            <!-- ============ 最近动态 ============ -->
+            <TextBlock Text="⏱ 最近动态" Style="{StaticResource SectionTitleStyle}" Margin="0,18,0,8"/>
             <Border Style="{StaticResource CardStyle}">
                 <StackPanel>
-                    <TextBlock Text="统计概览" FontWeight="SemiBold" FontSize="15"
-                               Foreground="{StaticResource TextPrimaryBrush}"/>
-                    <UniformGrid Columns="3" Margin="0,12,0,0">
-                        <Border Background="{StaticResource AppBgBrush}" CornerRadius="8" Padding="12" Margin="0,0,8,0">
-                            <StackPanel>
-                                <TextBlock x:Name="TaskCountText" Text="-" FontSize="20" FontWeight="SemiBold"
-                                           Foreground="{StaticResource TextPrimaryBrush}"/>
-                                <TextBlock Text="任务总数" FontSize="12" Foreground="{StaticResource TextMutedBrush}"/>
-                            </StackPanel>
-                        </Border>
-                        <Border Background="{StaticResource AppBgBrush}" CornerRadius="8" Padding="12" Margin="4,0">
-                            <StackPanel>
-                                <TextBlock x:Name="ItemCountText" Text="-" FontSize="20" FontWeight="SemiBold"
-                                           Foreground="{StaticResource TextPrimaryBrush}"/>
-                                <TextBlock Text="背包物品" FontSize="12" Foreground="{StaticResource TextMutedBrush}"/>
-                            </StackPanel>
-                        </Border>
-                        <Border Background="{StaticResource AppBgBrush}" CornerRadius="8" Padding="12" Margin="8,0,0,0">
-                            <StackPanel>
-                                <TextBlock x:Name="MemoCountText" Text="-" FontSize="20" FontWeight="SemiBold"
-                                           Foreground="{StaticResource TextPrimaryBrush}"/>
-                                <TextBlock Text="世界日志" FontSize="12" Foreground="{StaticResource TextMutedBrush}"/>
-                            </StackPanel>
-                        </Border>
-                    </UniformGrid>
+                    <ItemsControl ItemsSource="{Binding RecentActivities}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1"
+                                        Padding="2,7">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="{Binding Emoji}" FontSize="13" Margin="0,0,8,0"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding Text}" FontSize="13"
+                                                   Foreground="{StaticResource TextPrimaryBrush}"
+                                                   TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock Grid.Column="2" Text="{Binding TimeText}" FontSize="11"
+                                                   Margin="8,2,0,0" VerticalAlignment="Top"
+                                                   Foreground="{StaticResource TextMutedBrush}"/>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBlock Text="还没有动态：完成任务、写日志、解锁成就都会出现在这里 ✨" FontSize="12"
+                               Foreground="{StaticResource TextMutedBrush}" Margin="2,10,0,0"
+                               Visibility="{Binding NoActivities, Converter={StaticResource BoolToVis}}"/>
                 </StackPanel>
             </Border>
+
+            <!-- ============ 世界日志 ============ -->
+            <TextBlock Text="🌍 世界日志" Style="{StaticResource SectionTitleStyle}" Margin="0,18,0,8"/>
+            <Border Style="{StaticResource CardStyle}">
+                <StackPanel>
+                    <DockPanel>
+                        <Button DockPanel.Dock="Right" Content="记录" Padding="14,0" Height="34"
+                                Margin="8,0,0,0" Click="MemoSave_Click"
+                                Background="{StaticResource AccentBrush}" Foreground="White"
+                                BorderThickness="0" Cursor="Hand"/>
+                        <ComboBox x:Name="MemoType" DockPanel.Dock="Right" Width="96" Height="34"
+                                  VerticalContentAlignment="Center" SelectedIndex="0">
+                            <ComboBoxItem Content="📝 随笔" Tag="note"/>
+                            <ComboBoxItem Content="❗ 重要" Tag="important"/>
+                            <ComboBoxItem Content="💡 灵感" Tag="idea"/>
+                        </ComboBox>
+                        <TextBox x:Name="MemoBox" Height="34" VerticalContentAlignment="Center"
+                                 Padding="10,0" FontSize="13"
+                                 KeyDown="MemoBox_KeyDown"/>
+                    </DockPanel>
+                    <TextBlock Text="记一条今天的世界日志（回车或点「记录」），选心情一键直达 ↓"
+                               FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="2,6,0,0"/>
+
+                    <!-- 心情 8 连（与安卓/网页 MOOD_CHOICES 一致） -->
+                    <WrapPanel Margin="0,8,0,0">
+                        <Button Content="😄 开心" Style="{StaticResource QuickButtonStyle}" Click="Mood_Click" Tag="😄 开心"/>
+                        <Button Content="😌 平静" Style="{StaticResource QuickButtonStyle}" Click="Mood_Click" Tag="😌 平静"/>
+                        <Button Content="🥱 疲惫" Style="{StaticResource QuickButtonStyle}" Click="Mood_Click" Tag="🥱 疲惫"/>
+                        <Button Content="😤 上头" Style="{StaticResource QuickButtonStyle}" Click="Mood_Click" Tag="😤 上头"/>
+                        <Button Content="😢 难过" Style="{StaticResource QuickButtonStyle}" Click="Mood_Click" Tag="😢 难过"/>
+                        <Button Content="🤯 爆炸" Style="{StaticResource QuickButtonStyle}" Click="Mood_Click" Tag="🤯 爆炸"/>
+                        <Button Content="🥳 庆祝" Style="{StaticResource QuickButtonStyle}" Click="Mood_Click" Tag="🥳 庆祝"/>
+                        <Button Content="😴 摆烂" Style="{StaticResource QuickButtonStyle}" Click="Mood_Click" Tag="😴 摆烂"/>
+                    </WrapPanel>
+
+                    <!-- 最近 5 条 -->
+                    <ItemsControl ItemsSource="{Binding RecentMemos}" Margin="0,12,0,0">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1"
+                                        Padding="2,7">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="{Binding TypeEmoji}" FontSize="13" Margin="0,0,8,0"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding Text}" FontSize="13"
+                                                   Foreground="{StaticResource TextPrimaryBrush}"
+                                                   TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock Grid.Column="2" Text="{Binding TimeText}" FontSize="11"
+                                                   Margin="8,2,0,0" VerticalAlignment="Top"
+                                                   Foreground="{StaticResource TextMutedBrush}"/>
+                                        <Button Grid.Column="3" Content="🗑" FontSize="12" Margin="8,0,0,0"
+                                                Background="Transparent" BorderThickness="0"
+                                                Cursor="Hand" Click="MemoDelete_Click" Tag="{Binding Id}"/>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBlock Text="还什么都没有，写下第一条日志吧 ✨" FontSize="12"
+                               Foreground="{StaticResource TextMutedBrush}" Margin="2,10,0,0"
+                               Visibility="{Binding NoMemos, Converter={StaticResource BoolToVis}}"/>
+                </StackPanel>
+            </Border>
+
+            <!-- ============ 快速入口 ============ -->
+            <TextBlock Text="快速入口" Style="{StaticResource SectionTitleStyle}" Margin="0,18,0,8"/>
+            <WrapPanel x:Name="QuickGrid">
+                <Button Style="{StaticResource QuickButtonStyle}" Tag="tasks" Click="Quick_Click">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="✅" FontSize="16" VerticalAlignment="Center"/>
+                        <TextBlock Text="任务" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+                <Button Style="{StaticResource QuickButtonStyle}" Tag="backpack" Click="Quick_Click">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="🎒" FontSize="16" VerticalAlignment="Center"/>
+                        <TextBlock Text="背包" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+                <Button Style="{StaticResource QuickButtonStyle}" Tag="achievements" Click="Quick_Click">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="🏆" FontSize="16" VerticalAlignment="Center"/>
+                        <TextBlock Text="成就" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+                <Button Style="{StaticResource QuickButtonStyle}" Tag="data" Click="Quick_Click">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="📊" FontSize="16" VerticalAlignment="Center"/>
+                        <TextBlock Text="数据" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+                <Button Style="{StaticResource QuickButtonStyle}" Tag="report" Click="Quick_Click">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="🗒️" FontSize="16" VerticalAlignment="Center"/>
+                        <TextBlock Text="报告" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+                <Button Style="{StaticResource QuickButtonStyle}" Tag="settings" Click="Quick_Click">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="⚙️" FontSize="16" VerticalAlignment="Center"/>
+                        <TextBlock Text="设置" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+            </WrapPanel>
         </StackPanel>
     </ScrollViewer>
 </Page>

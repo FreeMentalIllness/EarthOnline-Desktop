@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace EarthOnline.Desktop.Pages;
 
-/// <summary>成就展示行（含彩蛋打码）。</summary>
+/// <summary>成就展示行（含彩蛋打码与 current/goal 进度）。</summary>
 public class AchRow
 {
     public string Id { get; set; } = "";
@@ -17,6 +17,11 @@ public class AchRow
     public string DisplayDesc { get; set; } = "";
     public string StatusText { get; set; } = "";
     public bool IsCustom { get; set; }
+
+    /// <summary>自动成就且未解锁时显示 0~100 进度。</summary>
+    public bool ShowProgress { get; set; }
+    public int ProgressValue { get; set; }
+    public string ProgressText { get; set; } = "";
 }
 
 public partial class AchievementsPage : Page
@@ -35,58 +40,127 @@ public partial class AchievementsPage : Page
         ["custom"] = ("✍️", "自定义")
     };
 
+    // 标记页面是否已 Loaded：避免 XAML 中 ComboBox 的 SelectedIndex="0"
+    // 在 InitializeComponent 期间触发 SelectionChanged -> Reload 时 AchList 尚为 null 而崩溃。
+    private bool _loaded;
+
     public AchievementsPage()
     {
         InitializeComponent();
-        Loaded += (_, _) => Reload();
+        Loaded += (_, _) =>
+        {
+            _loaded = true;
+            Reload();
+        };
     }
 
     private void Reload()
     {
-        // 先跑一次引擎（建行 / 回填分类 / 判定解锁），再展示
-        AchievementEngine.Evaluate();
+        // 防御：控件未就绪时直接返回，杜绝 NullReferenceException
+        if (CategoryFilter == null || AchList == null || SummaryText == null ||
+            OverviewRing == null || RingText == null || OverviewText == null || OverviewSub == null) return;
 
-        using var db = new AppDbContext(AppPaths.DbFile);
-        var rows = db.Achievements.AsNoTracking().ToList();
-
-        var filter = (CategoryFilter.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "";
-        var view = new List<AchRow>();
-
-        foreach (var a in rows)
+        try
         {
-            var cat = string.IsNullOrEmpty(a.Category) ? "custom" : a.Category;
-            if (!string.IsNullOrEmpty(filter) && cat != filter) continue;
+            // 先跑一次引擎（建行 / 回填分类 / 判定解锁），再取实时统计画进度
+            AchievementEngine.Evaluate();
+            var stats = AchievementEngine.ComputeStatsSnapshot();
+            var ruleByAutoKey = AchievementEngine.Rules.ToDictionary(r => r.Key, r => r);
 
-            var (emoji, _) = CatMap.TryGetValue(cat, out var v) ? v : ("🏅", "自定义");
-            bool isEgg = cat == "egg";
-            bool masked = isEgg && !a.Unlocked;
+            using var db = new AppDbContext(AppPaths.DbFile);
+            var rows = db.Achievements.AsNoTracking().ToList();
 
-            view.Add(new AchRow
+            var filter = (CategoryFilter.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "";
+            bool onlyUnlocked = OnlyUnlocked?.IsChecked == true;
+            var view = new List<AchRow>();
+
+            foreach (var a in rows)
             {
-                Id = a.Id,
-                Emoji = a.Unlocked ? emoji : (isEgg ? "🥚" : "🔒"),
-                DisplayTitle = masked ? AchievementEngine.EggMaskTitle : a.Title,
-                DisplayDesc = masked ? AchievementEngine.EggMaskDesc : a.Desc,
-                StatusText = a.Unlocked
-                    ? (string.IsNullOrEmpty(a.UnlockedAt) ? "已解锁" : "✅ " + a.UnlockedAt.Substring(0, 10))
-                    : "未解锁",
-                IsCustom = a.Type != "auto"
-            });
-        }
+                if (onlyUnlocked && a.Unlocked) continue;
 
-        AchList.ItemsSource = view;
-        var unlocked = rows.Count(r => r.Unlocked);
-        SummaryText.Text = $"已解锁 {unlocked} / {rows.Count} 条（共 {AchievementEngine.Rules.Count} 条自动成就，含彩蛋）";
+                var cat = string.IsNullOrEmpty(a.Category) ? "custom" : a.Category;
+                if (!string.IsNullOrEmpty(filter) && cat != filter) continue;
+
+                var (emoji, _) = CatMap.TryGetValue(cat, out var v) ? v : ("🏅", "自定义");
+                bool isEgg = cat == "egg";
+                bool masked = isEgg && !a.Unlocked;
+
+                var row = new AchRow
+                {
+                    Id = a.Id,
+                    Emoji = a.Unlocked ? emoji : (isEgg ? "🥚" : "🔒"),
+                    DisplayTitle = masked ? AchievementEngine.EggMaskTitle : a.Title,
+                    DisplayDesc = masked ? AchievementEngine.EggMaskDesc : a.Desc,
+                    StatusText = a.Unlocked
+                        ? (string.IsNullOrEmpty(a.UnlockedAt) ? "已解锁" : "✅ " + a.UnlockedAt.Substring(0, 10))
+                        : "未解锁",
+                    IsCustom = a.Type != "auto"
+                };
+
+                // 未解锁的自动成就展示 current/goal（彩蛋打码的除外——保持神秘感）
+                if (!a.Unlocked && !masked && !string.IsNullOrEmpty(a.AutoKey) &&
+                    ruleByAutoKey.TryGetValue(a.AutoKey, out var rule))
+                {
+                    int cur = rule.ProgressOf(stats);
+                    int goal = rule.GoalOf();
+                    row.ShowProgress = true;
+                    row.ProgressValue = (int)Math.Round(100.0 * cur / goal);
+                    row.ProgressText = $"{cur} / {goal}";
+                }
+
+                view.Add(row);
+            }
+
+            AchList.ItemsSource = view;
+
+            // 总览：进度环 + 计数
+            int unlocked = rows.Count(r => r.Unlocked);
+            int total = rows.Count;
+            double frac = total == 0 ? 0 : (double)unlocked / total;
+            ChartRenderer.DrawProgressRing(OverviewRing, frac);
+            RingText.Text = $"{(int)Math.Round(frac * 100)}%";
+            OverviewText.Text = $"已解锁 {unlocked} / {total}";
+            OverviewSub.Text = $"共 {AchievementEngine.Rules.Count} 条自动成就，含隐藏彩蛋";
+
+            SummaryText.Text = "自动成就与自定义成就";
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show("加载成就失败：" + ex.Message, "地球Online", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
     }
 
-    private void CategoryFilter_SelectionChanged(object sender, SelectionChangedEventArgs e) => Reload();
+    private void CategoryFilter_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        // 只响应下拉框自身的选择变化：SelectionChanged 是冒泡路由事件，
+        // 未来若卡片子树加入其它 Selector，也不会把本页拖进递归。
+        if (!ReferenceEquals(e.OriginalSource, CategoryFilter)) return;
+        // 页面未加载完（InitializeComponent 期间）不处理，等 Loaded 后的首次 Reload 统一构建
+        if (!_loaded) return;
+        Reload();
+    }
+
+    private void OnlyUnlocked_Changed(object sender, RoutedEventArgs e)
+    {
+        if (!_loaded) return;
+        Reload();
+    }
 
     private void Refresh_Click(object sender, RoutedEventArgs e)
     {
-        int newly = AchievementEngine.Evaluate();
+        var (newly, titles) = AchievementEngine.EvaluateDetailed();
         Reload();
-        MessageBox.Show(newly > 0 ? $"新增解锁 {newly} 条成就！" : "已重新判定，没有新的解锁。",
-            "地球Online", MessageBoxButton.OK, MessageBoxImage.Information);
+        if (newly > 0)
+        {
+            // 常规弹窗只做兜底提示；Steam 风格通知在业务页自动触发
+            MessageBox.Show($"新增解锁 {newly} 条成就！" +
+                (newly > 3 ? $"等 {newly} 条" : "：" + string.Join("、", titles)),
+                "地球Online", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+        else
+        {
+            MessageBox.Show("已重新判定，没有新的解锁。", "地球Online", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
     }
 
     private void AddCustom_Click(object sender, RoutedEventArgs e)

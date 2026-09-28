@@ -1,6 +1,12 @@
-﻿using System.Windows;
+﻿using System.ComponentModel;
+using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
+using System.Windows.Media;
+using EarthOnline.Desktop.Data;
+using EarthOnline.Desktop.Dialogs;
 using EarthOnline.Desktop.Pages;
+using EarthOnline.Desktop.Services;
 
 namespace EarthOnline.Desktop;
 
@@ -32,9 +38,14 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        Closing += MainWindow_Closing;
+        PreviewKeyDown += MainWindow_PreviewKeyDown;
         Loaded += (_, _) =>
         {
             ApplyLayoutMode();
+            // 启动后应用持久化的字号缩放（窗口就绪才可设 LayoutTransform）
+            try { ThemeService.ApplyFontScale(SettingsStore.Load().FontScale); }
+            catch { /* 外观失败用默认 */ }
             // XAML 解析期间 SelectedIndex 触发的首次导航会被 Navigate() 的 null 守卫吞掉，
             // 若此处不补一次，就会出现「侧栏选中项」与「右侧内容区」不一致（例如选中数据页却显示主页）。
             // 以侧栏选中项为准补一次导航，保证两者始终同步。
@@ -89,5 +100,74 @@ public partial class MainWindow : Window
         }
 
         ContentFrame.Navigate(page);
+    }
+
+    /// <summary>供页面（如主页快速入口）触发导航。</summary>
+    public void NavigateTo(string key) => Navigate(key);
+
+    /// <summary>
+    /// 清空页面缓存并重导航当前页（壁纸 / 主题大改后让内容区完全重建）。
+    /// 供设置页外观切换后调用。
+    /// </summary>
+    public void RefreshCurrentPage()
+    {
+        _pages.Clear();
+        Navigate(CurrentNavKey());
+    }
+
+    // ==================== 键盘快捷键 ====================
+
+    private void MainWindow_PreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.KeyboardDevice.Modifiers.HasFlag(ModifierKeys.Control))
+        {
+            switch (e.Key)
+            {
+                case Key.S:
+                    e.Handled = true;
+                    _ = SaveShortcutAsync();
+                    break;
+                case Key.D1 or Key.NumPad1: e.Handled = true; NavList.SelectedIndex = 0; break;
+                case Key.D2 or Key.NumPad2: e.Handled = true; NavList.SelectedIndex = 1; break;
+                case Key.D3 or Key.NumPad3: e.Handled = true; NavList.SelectedIndex = 2; break;
+                case Key.D4 or Key.NumPad4: e.Handled = true; NavList.SelectedIndex = 3; break;
+                case Key.D5 or Key.NumPad5: e.Handled = true; NavList.SelectedIndex = 4; break;
+                case Key.D6 or Key.NumPad6: e.Handled = true; NavList.SelectedIndex = 5; break;
+                case Key.D7 or Key.NumPad7: e.Handled = true; NavList.SelectedIndex = 6; break;
+            }
+        }
+    }
+
+    /// <summary>Ctrl+S：配置了 WebDAV 就立即推送，否则提示数据已即时落盘。</summary>
+    private static async Task SaveShortcutAsync()
+    {
+        try
+        {
+            var s = SettingsStore.Load();
+            if (s.HasConfig)
+            {
+                await SyncService.PushAsync();
+                UnlockToast.Show("已推送到云端", s.EffectiveRemotePath());
+            }
+            else
+            {
+                UnlockToast.Show("已保存", "数据实时写入本地数据库，无需手动保存");
+            }
+        }
+        catch (Exception ex)
+        {
+            UnlockToast.Show("同步失败", ex.Message);
+        }
+    }
+
+    /// <summary>关闭窗口不直接退出，而是最小化到系统托盘常驻后台（除非点了托盘「退出」）。</summary>
+    private void MainWindow_Closing(object? sender, CancelEventArgs e)
+    {
+        if (!App.ForceClose)
+        {
+            e.Cancel = true;
+            Hide();
+            App.NotifyTray("地球Online", "已最小化到系统托盘，常驻后台");
+        }
     }
 }
