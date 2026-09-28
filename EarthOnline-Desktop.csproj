@@ -4,6 +4,8 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows</TargetFramework>
     <RootNamespace>EarthOnline.Desktop</RootNamespace>
+    <!-- 产物名固定为 EarthOnline.exe（便携版/Release 资产名），与仓库文件名无关 -->
+    <AssemblyName>EarthOnline</AssemblyName>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
