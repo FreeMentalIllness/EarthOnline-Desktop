@@ -78,6 +78,34 @@
                 </StackPanel>
             </Border>
 
+            <!-- ============ 快捷键 ============ -->
+            <Border Style="{StaticResource CardStyle}">
+                <StackPanel>
+                    <TextBlock Text="⌨️ 快捷键" FontWeight="SemiBold" FontSize="15"
+                               Foreground="{StaticResource TextPrimaryBrush}"/>
+                    <TextBlock Text="按住 Ctrl 再按数字键即可在页面间跳转（顺序与左侧导航一致）。"
+                               FontSize="12" Margin="0,6,0,10"
+                               Foreground="{StaticResource TextSecondaryBrush}"/>
+
+                    <UniformGrid Columns="2">
+                        <TextBlock Text="Ctrl + 1　主页" FontSize="12" Margin="0,3"/>
+                        <TextBlock Text="Ctrl + 2　任务" FontSize="12" Margin="0,3"/>
+                        <TextBlock Text="Ctrl + 3　背包" FontSize="12" Margin="0,3"/>
+                        <TextBlock Text="Ctrl + 4　成就" FontSize="12" Margin="0,3"/>
+                        <TextBlock Text="Ctrl + 5　地图" FontSize="12" Margin="0,3"/>
+                        <TextBlock Text="Ctrl + 6　数据" FontSize="12" Margin="0,3"/>
+                        <TextBlock Text="Ctrl + 7　报告" FontSize="12" Margin="0,3"/>
+                        <TextBlock Text="Ctrl + 8　设置" FontSize="12" Margin="0,3"/>
+                        <TextBlock Text="Ctrl + 9　AI 助手" FontSize="12" Margin="0,3"/>
+                        <TextBlock Text="Ctrl + S　保存 / 推送到 WebDAV" FontSize="12" Margin="0,3"/>
+                    </UniformGrid>
+
+                    <TextBlock Text="对话输入框内 Enter 发送、Shift + Enter 换行。"
+                               FontSize="12" Margin="0,10,0,0"
+                               Foreground="{StaticResource TextMutedBrush}"/>
+                </StackPanel>
+            </Border>
+
             <!-- ============ 个人资料 ============ -->
             <Border Style="{StaticResource CardStyle}">
                 <StackPanel>
@@ -130,6 +158,35 @@
                         <Button Content="导出备份到文件…" Padding="12,6" Click="ExportLocal_Click" Cursor="Hand"/>
                         <Button Content="从文件导入…" Padding="12,6" Margin="8,0,0,0" Click="ImportLocal_Click" Cursor="Hand"/>
                     </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- 本地自动备份（对齐安卓 AutoBackupManager） -->
+            <Border Style="{StaticResource CardStyle}">
+                <StackPanel>
+                    <TextBlock Text="🛟 自动备份" FontWeight="SemiBold" FontSize="15"
+                               Foreground="{StaticResource TextPrimaryBrush}"/>
+                    <TextBlock Text="数据变更后自动在本机留一份 JSON 快照（防抖 4 秒，两次快照至少间隔 60 秒），只保留最近 3 份。"
+                               FontSize="12" Margin="0,6,0,0" TextWrapping="Wrap"
+                               Foreground="{StaticResource TextSecondaryBrush}"/>
+
+                    <CheckBox x:Name="AutoBackupBox" Content="开启自动备份" FontSize="13" Margin="0,10,0,0"
+                              Foreground="{StaticResource TextPrimaryBrush}"
+                              Checked="AutoBackup_Changed" Unchecked="AutoBackup_Changed"/>
+
+                    <ListBox x:Name="BackupList" Margin="0,10,0,0" MaxHeight="132" BorderThickness="0"
+                             Background="Transparent" SelectionMode="Single"/>
+
+                    <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                        <Button Content="立即备份" Padding="12,6" Click="BackupNow_Click" Cursor="Hand"/>
+                        <Button Content="从此快照恢复" Padding="12,6" Margin="8,0,0,0"
+                                Click="RestoreBackup_Click" Cursor="Hand"/>
+                        <Button Content="打开备份文件夹" Padding="12,6" Margin="8,0,0,0"
+                                Click="OpenBackupFolder_Click" Cursor="Hand"/>
+                    </StackPanel>
+
+                    <TextBlock x:Name="BackupStatusText" Margin="0,10,0,0" FontSize="12" TextWrapping="Wrap"
+                               Foreground="{StaticResource TextSecondaryBrush}"/>
                 </StackPanel>
             </Border>
 
@@ -233,6 +290,12 @@
                     <TextBlock Text="· 背包与成就按分类分组（分组头置顶 / 可展开）" FontSize="12"
                                Margin="0,3,0,0" TextWrapping="Wrap" Foreground="{StaticResource TextMutedBrush}"/>
                     <TextBlock Text="· 新增足迹地图页（高德地图，与网页端同 Key）" FontSize="12"
+                               Margin="0,3,0,0" TextWrapping="Wrap" Foreground="{StaticResource TextMutedBrush}"/>
+                    <TextBlock Text="· 新增 AI 助手（OpenAI 兼容接口，密钥经 Windows DPAPI 加密后存于本机）" FontSize="12"
+                               Margin="0,3,0,0" TextWrapping="Wrap" Foreground="{StaticResource TextMutedBrush}"/>
+                    <TextBlock Text="· 新增本地自动备份（保留最近 3 份快照，命名与安卓一致）" FontSize="12"
+                               Margin="0,3,0,0" TextWrapping="Wrap" Foreground="{StaticResource TextMutedBrush}"/>
+                    <TextBlock Text="· 快捷键说明与地图离线降级提示" FontSize="12"
                                Margin="0,3,0,0" TextWrapping="Wrap" Foreground="{StaticResource TextMutedBrush}"/>
 
                     <TextBlock Text="v1.0.0 · 首个正式版" FontSize="12" Margin="0,10,0,0"

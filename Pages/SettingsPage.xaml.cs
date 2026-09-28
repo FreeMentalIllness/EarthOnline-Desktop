@@ -15,7 +15,10 @@ public partial class SettingsPage : Page
     {
         InitializeComponent();
         DbPathText.Text = AppPaths.DbFile;
-        Loaded += (_, _) => { LoadProfile(); LoadConfig(); LoadGeneral(); LoadAppearance(); };
+        Loaded += (_, _) =>
+        {
+            LoadProfile(); LoadConfig(); LoadGeneral(); LoadAppearance(); LoadBackups();
+        };
     }
 
     // ==================== 外观（主题 / 字号 / 壁纸） ====================
@@ -380,6 +383,105 @@ public partial class SettingsPage : Page
         catch (Exception ex)
         {
             MessageBox.Show("导入失败：" + ex.Message, "地球Online", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    // ==================== 自动备份（对齐安卓 AutoBackupManager） ====================
+
+    private void LoadBackups()
+    {
+        _suppressGeneral = true;
+        try
+        {
+            AutoBackupBox.IsChecked = SettingsStore.Load().AutoBackup;
+        }
+        finally { _suppressGeneral = false; }
+
+        var list = AutoBackupService.ListSnapshots();
+        BackupList.ItemsSource = list;
+        BackupStatusText.Text = list.Count == 0
+            ? "还没有自动备份快照。数据发生变更并静置 4 秒后会自动生成第一份。"
+            : $"共 {list.Count} 份（最多保留 {AutoBackupService.Keep} 份）　目录：{AppPaths.BackupDir}";
+    }
+
+    private void AutoBackup_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_suppressGeneral) return;   // 初始化赋值时不写文件
+        try
+        {
+            var s = SettingsStore.Load();
+            s.AutoBackup = AutoBackupBox.IsChecked == true;
+            s.Save();
+            AutoBackupService.RefreshEnabled();
+            BackupStatusText.Text = s.AutoBackup
+                ? "已开启自动备份：数据变更静置 4 秒后自动生成快照。"
+                : "已关闭自动备份（不会影响已生成的快照，也不会关闭 WebDAV 同步）。";
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show("设置自动备份失败：" + ex.Message, "地球Online",
+                MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    private void BackupNow_Click(object sender, RoutedEventArgs e)
+    {
+        var path = AutoBackupService.Snapshot(force: true);
+        if (path is null)
+        {
+            MessageBox.Show("没有生成快照：可能数据为空，或写入失败。", "地球Online",
+                MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+        LoadBackups();
+        BackupStatusText.Text = "已生成快照：" + Path.GetFileName(path);
+    }
+
+    private void RestoreBackup_Click(object sender, RoutedEventArgs e)
+    {
+        if (BackupList.SelectedItem is not BackupSnapshot snap)
+        {
+            MessageBox.Show("请先在上方列表里选择一份快照。", "地球Online",
+                MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+        if (!SimpleDialogs.Confirm(
+                $"确定用 {snap.Label} 的快照恢复？\n按主键合并覆盖本地同 id 的记录，不会清空其他内容。"))
+        {
+            return;
+        }
+
+        try
+        {
+            int n = AutoBackupService.Restore(snap.Path);
+            AchievementNotifier.Check();
+            LoadProfile();
+            LoadBackups();
+            MessageBox.Show($"已从 {snap.Label} 恢复 {n} 条数据。",
+                "地球Online", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show("恢复失败：" + ex.Message, "地球Online",
+                MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    private void OpenBackupFolder_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            Directory.CreateDirectory(AppPaths.BackupDir);
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = AppPaths.BackupDir,
+                UseShellExecute = true
+            });
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show("打开文件夹失败：" + ex.Message, "地球Online",
+                MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
