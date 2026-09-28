@@ -1,6 +1,9 @@
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Text.Json;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using EarthOnline.Desktop.Data;
 using EarthOnline.Desktop.Data.Entities;
@@ -41,6 +44,10 @@ public partial class HomeViewModel : ObservableObject
     [ObservableProperty] private string _avatarEmoji = "🌍";
     [ObservableProperty] private string _gender = "";
 
+    // ---- 自定义头像图片（非空时优先于 emoji 显示；圆形裁剪由视图负责，对齐安卓 Coil Crop） ----
+    [ObservableProperty] private ImageSource? _avatarImage;
+    [ObservableProperty] private bool _hasAvatarImage;
+
     // ---- 等级 / 经验条（Lv=周岁，进度=距下一个生日的天数占比） ----
     [ObservableProperty] private bool _hasLevel;
     [ObservableProperty] private string _levelText = "";
@@ -78,6 +85,7 @@ public partial class HomeViewModel : ObservableObject
             Signature = p?.Signature ?? "";
             Gender = ProfileService.GenderLabel(p?.Gender);
             AvatarEmoji = ProfileService.AvatarEmoji(p?.AvatarKey);
+            LoadAvatarImage(p?.AvatarPath);
 
             // Lv = 周岁（安卓口径）；经验条 = 距下一级生日进度（网页口径）
             var (age, daysToNext, progress, hasBirth) = LifeStats.Compute(p?.BirthDate);
@@ -117,8 +125,30 @@ public partial class HomeViewModel : ObservableObject
         ReloadActivities();
     }
 
-    // ==================== 最近动态（合成时间轴） ====================
+    /// <summary>
+    /// 加载自定义头像图片：路径存在才启用；OnLoad 一次性读入并 Freeze，
+    /// 不持有文件句柄（之后替换/删除头像文件不会被锁）。
+    /// </summary>
+    private void LoadAvatarImage(string? path)
+    {
+        AvatarImage = null;
+        HasAvatarImage = false;
+        if (string.IsNullOrWhiteSpace(path) || !File.Exists(path)) return;
+        try
+        {
+            var bmp = new BitmapImage();
+            bmp.BeginInit();
+            bmp.CacheOption = BitmapCacheOption.OnLoad;
+            bmp.UriSource = new Uri(path);
+            bmp.EndInit();
+            bmp.Freeze();
+            AvatarImage = bmp;
+            HasAvatarImage = true;
+        }
+        catch { /* 坏图静默回落 emoji */ }
+    }
 
+    // ==================== 最近动态（合成时间轴） ====================
     private static DateTime? TryTime(string? v)
         => DateTime.TryParse(v, out var t) ? t : null;
 

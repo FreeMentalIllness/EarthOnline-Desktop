@@ -1,3 +1,4 @@
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -37,6 +38,7 @@ public partial class HomePage : Page
             using var db = new AppDbContext(AppPaths.DbFile);
             var p = db.Profile.FirstOrDefault() ?? new ProfileEntity { Id = 1 };
             bool isNew = db.Entry(p).State == EntityState.Detached;
+            var oldAvatarPath = p.AvatarPath;
 
             if (!ProfileDialog.Show(p)) return;
 
@@ -45,6 +47,16 @@ public partial class HomePage : Page
             if (row is null) { db2.Profile.Add(p); }
             else { db2.Entry(row).CurrentValues.SetValues(p); }
             db2.SaveChanges();
+
+            // 落库成功后再清理被替换的旧头像文件（仅限本应用 avatar 目录内，对齐安卓规则）
+            if (!string.IsNullOrEmpty(oldAvatarPath) &&
+                !string.Equals(oldAvatarPath, p.AvatarPath, StringComparison.OrdinalIgnoreCase) &&
+                oldAvatarPath.StartsWith(AppPaths.AvatarDir, StringComparison.OrdinalIgnoreCase) &&
+                File.Exists(oldAvatarPath))
+            {
+                try { File.Delete(oldAvatarPath); } catch { /* 清理失败不影响 */ }
+            }
+
             AchievementNotifier.Check();   // 性别彩蛋等依赖资料
             _vm.Load();
         }

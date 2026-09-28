@@ -23,12 +23,30 @@
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
-                    <!-- 头像（预设 emoji 圆圈，复用安卓 avatarKey） -->
+                    <!-- 头像：自定义图片优先（圆形裁剪），否则 emoji 预设（复用安卓 avatarKey） -->
                     <Border Grid.Column="0" Width="76" Height="76" CornerRadius="38"
                             Background="{StaticResource AppBgBrush}"
                             Margin="0,0,20,0">
-                        <TextBlock Text="{Binding AvatarEmoji}" FontSize="36"
-                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <Grid>
+                            <TextBlock Text="{Binding AvatarEmoji}" FontSize="36"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding HasAvatarImage}" Value="True">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                            <Image Source="{Binding AvatarImage}" Width="76" Height="76"
+                                   Visibility="{Binding HasAvatarImage, Converter={StaticResource BoolToVis}}">
+                                <Image.Clip>
+                                    <EllipseGeometry Center="38,38" RadiusX="38" RadiusY="38"/>
+                                </Image.Clip>
+                            </Image>
+                        </Grid>
                     </Border>
 
                     <StackPanel Grid.Column="1" VerticalAlignment="Center">

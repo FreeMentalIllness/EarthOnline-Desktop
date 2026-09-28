@@ -1,6 +1,8 @@
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using EarthOnline.Desktop.Data;
 using EarthOnline.Desktop.Data.Entities;
 using EarthOnline.Desktop.Data.Models;
@@ -90,6 +92,90 @@ public static class ProfileDialog
             avatarPanel.Children.Add(b);
         }
         root.Children.Add(avatarPanel);
+
+        // ===== 自定义头像图片（可选；原图完整复制不重编码 —— 对齐安卓端规则） =====
+        root.Children.Add(new TextBlock
+        {
+            Text = "自定义头像图片（优先于 emoji 显示）", FontSize = 13, Foreground = TextSub,
+            Margin = new Thickness(0, 14, 0, 6)
+        });
+        string pendingAvatarPath = profile.AvatarPath ?? "";
+        var imgRow = new StackPanel { Orientation = Orientation.Horizontal };
+        var previewBorder = new Border
+        {
+            Width = 46, Height = 46, CornerRadius = new CornerRadius(23),
+            Background = Chip, BorderBrush = Border, BorderThickness = new Thickness(1),
+            VerticalAlignment = VerticalAlignment.Center
+        };
+        var previewImage = new Image { Width = 44, Height = 44, Stretch = Stretch.UniformToFill };
+        previewImage.Clip = new EllipseGeometry(new Point(22, 22), 22, 22);
+        previewBorder.Child = previewImage;
+        var imgNameText = new TextBlock
+        {
+            FontSize = 12, Foreground = TextSub, VerticalAlignment = VerticalAlignment.Center,
+            Margin = new Thickness(10, 0, 10, 0), MaxWidth = 180, TextTrimming = TextTrimming.CharacterEllipsis
+        };
+        void LoadPreview(string path)
+        {
+            try
+            {
+                var bmp = new BitmapImage();
+                bmp.BeginInit();
+                bmp.CacheOption = BitmapCacheOption.OnLoad;   // 读完即释放文件句柄，避免锁定
+                bmp.UriSource = new Uri(path);
+                bmp.EndInit();
+                bmp.Freeze();
+                previewImage.Source = bmp;
+            }
+            catch { previewImage.Source = null; }
+        }
+        if (File.Exists(pendingAvatarPath))
+        {
+            LoadPreview(pendingAvatarPath);
+            imgNameText.Text = Path.GetFileName(pendingAvatarPath);
+        }
+        else
+        {
+            imgNameText.Text = "（未设置，使用 emoji）";
+        }
+        var pickImgBtn = MkBtn("选择图片…");
+        pickImgBtn.Click += (_, _) =>
+        {
+            var dlg = new Microsoft.Win32.OpenFileDialog
+            {
+                Title = "选择头像图片",
+                Filter = "图片文件|*.png;*.jpg;*.jpeg;*.bmp;*.webp|所有文件|*.*"
+            };
+            if (dlg.ShowDialog() != true) return;
+            try
+            {
+                AppPaths.EnsureDirectories();
+                // 原图完整复制进私有目录（保留扩展名、不重编码），文件名随机避免冲突
+                var dest = Path.Combine(AppPaths.AvatarDir,
+                    Guid.NewGuid().ToString("N") + Path.GetExtension(dlg.FileName));
+                File.Copy(dlg.FileName, dest, overwrite: true);
+                pendingAvatarPath = dest;
+                LoadPreview(dest);
+                imgNameText.Text = Path.GetFileName(dlg.FileName);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("复制头像失败：" + ex.Message, "地球Online",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        };
+        var clearImgBtn = MkBtn("移除图片");
+        clearImgBtn.Click += (_, _) =>
+        {
+            pendingAvatarPath = "";
+            previewImage.Source = null;
+            imgNameText.Text = "（未设置，使用 emoji）";
+        };
+        imgRow.Children.Add(previewBorder);
+        imgRow.Children.Add(imgNameText);
+        imgRow.Children.Add(pickImgBtn);
+        imgRow.Children.Add(clearImgBtn);
+        root.Children.Add(imgRow);
 
         // ===== 基础字段 =====
         var nameBox = Field(root, "昵称", profile.Name);
@@ -223,6 +309,7 @@ public static class ProfileDialog
         profile.Signature = signatureBox.Text.Trim();
         profile.Gender = (genderBox.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "";
         profile.AvatarKey = chosenAvatar;
+        profile.AvatarPath = string.IsNullOrWhiteSpace(pendingAvatarPath) ? null : pendingAvatarPath;
         profile.CustomFieldsJson = ProfileService.WriteCustomFields(fields);
         return true;
     }
