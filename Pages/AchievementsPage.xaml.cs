@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using EarthOnline.Desktop.Data;
 using EarthOnline.Desktop.Data.Entities;
 using EarthOnline.Desktop.Dialogs;
@@ -22,6 +23,12 @@ public class AchRow
     public bool ShowProgress { get; set; }
     public int ProgressValue { get; set; }
     public string ProgressText { get; set; } = "";
+
+    /// <summary>分组键字符串（含分类 emoji / 名称 / 已解锁 x/y），同分类行共享同一字符串才归入一组。</summary>
+    public string CategoryGroupLabel { get; set; } = "";
+
+    /// <summary>分组排序号（按 CatMap 定义顺序）。</summary>
+    public int SortOrder { get; set; }
 }
 
 public partial class AchievementsPage : Page
@@ -38,6 +45,12 @@ public partial class AchievementsPage : Page
         ["general"] = ("🏅", "综合"),
         ["egg"] = ("🥚", "彩蛋"),
         ["custom"] = ("✍️", "自定义")
+    };
+
+    /// <summary>分组展示顺序（与安卓分类顺序一致）。</summary>
+    private static readonly string[] CatOrder =
+    {
+        "task", "bag", "collection", "map", "memo", "growth", "general", "egg", "custom"
     };
 
     // 标记页面是否已 Loaded：避免 XAML 中 ComboBox 的 SelectedIndex="0"
@@ -74,6 +87,24 @@ public partial class AchievementsPage : Page
             bool onlyUnlocked = OnlyUnlocked?.IsChecked == true;
             var view = new List<AchRow>();
 
+            // 各分类的「已解锁 / 总数」统计（基于全量，避免筛选导致分组头计数失真）
+            var catUnlocked = new Dictionary<string, int>();
+            var catTotal = new Dictionary<string, int>();
+            foreach (var a in rows)
+            {
+                var c = string.IsNullOrEmpty(a.Category) ? "custom" : a.Category;
+                catTotal[c] = catTotal.TryGetValue(c, out var t) ? t + 1 : 1;
+                if (a.Unlocked) catUnlocked[c] = catUnlocked.TryGetValue(c, out var u) ? u + 1 : 1;
+            }
+
+            string GroupLabelOf(string cat)
+            {
+                var (emj, lbl) = CatMap.TryGetValue(cat, out var cv) ? cv : ("🏅", "自定义");
+                int un = catUnlocked.TryGetValue(cat, out var u) ? u : 0;
+                int tt = catTotal.TryGetValue(cat, out var t) ? t : 0;
+                return $"{emj} {lbl} · 已解锁 {un}/{tt}";
+            }
+
             foreach (var a in rows)
             {
                 if (onlyUnlocked && a.Unlocked) continue;
@@ -94,7 +125,9 @@ public partial class AchievementsPage : Page
                     StatusText = a.Unlocked
                         ? (string.IsNullOrEmpty(a.UnlockedAt) ? "已解锁" : "✅ " + a.UnlockedAt.Substring(0, 10))
                         : "未解锁",
-                    IsCustom = a.Type != "auto"
+                    IsCustom = a.Type != "auto",
+                    CategoryGroupLabel = GroupLabelOf(cat),
+                    SortOrder = Array.IndexOf(CatOrder, cat) is var idx && idx >= 0 ? idx : CatOrder.Length
                 };
 
                 // 未解锁的自动成就展示 current/goal（彩蛋打码的除外——保持神秘感）
@@ -111,7 +144,11 @@ public partial class AchievementsPage : Page
                 view.Add(row);
             }
 
-            AchList.ItemsSource = view;
+            // 按分类顺序排好后交给 CollectionView 分组（Expander 分区由 GroupStyle.ContainerStyle 渲染）
+            var ordered = view.OrderBy(r => r.SortOrder).ThenBy(r => r.DisplayTitle).ToList();
+            var grouped = new ListCollectionView(ordered);
+            grouped.GroupDescriptions.Add(new PropertyGroupDescription(nameof(AchRow.CategoryGroupLabel)));
+            AchList.ItemsSource = grouped;
 
             // 总览：进度环 + 计数
             int unlocked = rows.Count(r => r.Unlocked);
