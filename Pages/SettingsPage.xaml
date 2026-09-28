@@ -190,6 +190,47 @@
                 </StackPanel>
             </Border>
 
+            <!-- 地图（高德）Key 配置：用户自填优先，内置回退次之，都没有则地图降级为列表 -->
+            <Border Style="{StaticResource CardStyle}">
+                <StackPanel>
+                    <TextBlock Text="🗺️ 地图（高德）" FontWeight="SemiBold" FontSize="15"
+                               Foreground="{StaticResource TextPrimaryBrush}"/>
+                    <TextBlock Text="填入自己的高德 Web 端 JS API Key；留空则使用内置回退 Key，都没有时地图自动降级为列表视图（足迹增删改不受影响）。"
+                               FontSize="12" Margin="0,6,0,0" TextWrapping="Wrap"
+                               Foreground="{StaticResource TextSecondaryBrush}"/>
+
+                    <Grid Margin="0,12,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="90"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="API Key" FontSize="13" VerticalAlignment="Center"
+                                   Foreground="{StaticResource TextSecondaryBrush}"/>
+                        <TextBox x:Name="AmapKeyBox" Grid.Row="0" Grid.Column="1" Padding="8,6" Margin="0,3"
+                                 ToolTip="在高德开放平台申请「Web端(JS API)」Key；本机用 Windows DPAPI 加密保存"/>
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="安全密钥" FontSize="13" VerticalAlignment="Center"
+                                   Foreground="{StaticResource TextSecondaryBrush}"/>
+                        <TextBox x:Name="AmapSecBox" Grid.Row="1" Grid.Column="1" Padding="8,6" Margin="0,3"
+                                 ToolTip="JS API 的安全密钥 securityJsCode；若你的 Key 类型不需要可留空"/>
+                    </Grid>
+
+                    <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                        <Button Content="保存 Key" Padding="12,6" Click="SaveAmapKey_Click"
+                                Background="{StaticResource AccentBrush}" Foreground="White"
+                                BorderThickness="0" Cursor="Hand"/>
+                        <Button Content="清空（回落内置）" Padding="12,6" Margin="8,0,0,0"
+                                Click="ClearAmapKey_Click" Cursor="Hand"/>
+                    </StackPanel>
+
+                    <TextBlock x:Name="AmapStatusText" Margin="0,10,0,0" FontSize="12" TextWrapping="Wrap"
+                               Foreground="{StaticResource TextSecondaryBrush}"/>
+                </StackPanel>
+            </Border>
+
             <Border Style="{StaticResource CardStyle}">
                 <StackPanel>
                     <TextBlock Text="WebDAV 同步" FontWeight="SemiBold" FontSize="15"
@@ -248,6 +289,9 @@
 
                     <TextBlock x:Name="SyncStatusText" Margin="0,12,0,0" FontSize="12"
                                Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                        <Button Content="🎓 重新查看首次引导" Padding="12,6" Click="RestartOnboarding_Click" Cursor="Hand"/>
+                    </StackPanel>
                 </StackPanel>
             </Border>
 

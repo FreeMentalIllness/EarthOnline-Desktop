@@ -17,7 +17,7 @@ public partial class SettingsPage : Page
         DbPathText.Text = AppPaths.DbFile;
         Loaded += (_, _) =>
         {
-            LoadProfile(); LoadConfig(); LoadGeneral(); LoadAppearance(); LoadBackups();
+            LoadProfile(); LoadConfig(); LoadGeneral(); LoadAppearance(); LoadBackups(); LoadAmap();
         };
     }
 
@@ -378,6 +378,74 @@ public partial class SettingsPage : Page
         {
             MessageBox.Show("导入失败：" + ex.Message, "地球Online", MessageBoxButton.OK, MessageBoxImage.Error);
         }
+    }
+
+    // ==================== 地图 Key（高德） ====================
+
+    private void LoadAmap()
+    {
+        var cfg = AmapConfig.Load();
+        // 界面只显示用户自填的那份（内置回退不回显，避免把回退 Key 暴露在输入框里）
+        AmapKeyBox.Text = cfg.IsCustom ? cfg.Key : "";
+        AmapSecBox.Text = cfg.IsCustom ? cfg.Sec : "";
+        AmapStatusText.Text = cfg.IsCustom
+            ? "已使用你自己的 Key（加密存于本机）。清空后回落到内置回退 Key。"
+            : AmapConfig.HasDefault
+                ? "当前使用内置回退 Key（来自本地可选文件 Assets/amap_default.json，不入库）。填入你自己的 Key 可覆盖。"
+                : "未配置 Key，也没有内置回退：地图页会自动降级为列表视图（足迹增删改不受影响）。";
+    }
+
+    private void SaveAmapKey_Click(object sender, RoutedEventArgs e)
+    {
+        var key = AmapKeyBox.Text.Trim();
+        if (key.Length == 0)
+        {
+            MessageBox.Show("要清空请点「清空（回落内置）」；保存需要填写 Key。", "地球Online",
+                MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+        try
+        {
+            AmapConfig.Save(key, AmapSecBox.Text.Trim());
+            LoadAmap();
+            MessageBox.Show("已保存（密钥经 Windows DPAPI 加密后存于本机）。重新打开地图页生效。",
+                "地球Online", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show("保存失败：" + ex.Message, "地球Online", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    private void ClearAmapKey_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            AmapConfig.Save("", "");
+            LoadAmap();
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show("清空失败：" + ex.Message, "地球Online", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    /// <summary>重新唤起首次引导（标记置回未完成并跳转）。</summary>
+    private void RestartOnboarding_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var s = SettingsStore.Load();
+            s.Onboarded = false;
+            s.Save();
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show("重置引导状态失败：" + ex.Message, "地球Online",
+                MessageBoxButton.OK, MessageBoxImage.Error);
+            return;
+        }
+        (Application.Current.MainWindow as MainWindow)?.NavigateTo("onboarding");
     }
 
     // ==================== 自动备份（对齐安卓 AutoBackupManager） ====================

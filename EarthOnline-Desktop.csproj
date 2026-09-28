@@ -23,6 +23,12 @@
     <Resource Include="Assets\app_logo.png" />
     <!-- 地图页：内嵌为资源，运行时释放到数据目录再加载（兼容单文件发布） -->
     <Resource Include="Assets\map.html" />
+    <!--
+      内置回退的高德 Key（可选）。该文件默认不存在、且已在 .gitignore 中 —— 谁想内置自己的 Key
+      就自己放一份到 Assets/amap_default.json（{"key":"...","securityJsCode":"..."}）。
+      【红线】源码与已入库资源里不允许出现任何明文 Key，故这里用「存在才嵌入」的条件包含。
+    -->
+    <Resource Include="Assets\amap_default.json" Condition="Exists('Assets\amap_default.json')" />
   </ItemGroup>
 
   <ItemGroup>

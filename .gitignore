@@ -19,3 +19,6 @@ publish-single/
 # 本任务自包含发布产物（自包含 exe + WPF 原生 DLL / 压缩包）
 publish_win/
 *.zip
+
+# 【红线】内置回退的高德 Key（本地可选文件，任何人可放自己的 Key 覆盖；严禁入库）
+Assets/amap_default.json
