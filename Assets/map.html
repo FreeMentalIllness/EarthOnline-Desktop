@@ -5,7 +5,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>足迹地图</title>
 <!--
-  桌面端地图页：复用网页端同一套高德 JS API Key 与安全密钥（硬编码，用户无需配置）。
+  桌面端地图页：Key / 安全密钥**由宿主在运行时注入**（window.__AMAP_KEY__ / __AMAP_SEC__），
+  本文件不含任何硬编码密钥（红线）。取 Key 顺序：用户自填（设置页，DPAPI 加密）→ 内置回退文件
+  Assets/amap_default.json（gitignore，默认不存在）→ 无 Key 则降级为列表视图。
   坐标一律 [lng, lat]，与安卓 / 网页端一致。
   C# → JS：window.render(locs) / window.focusOn(lng,lat) / window.setUser(lng,lat)
   JS  → C#：window.chrome.webview.postMessage(JSON) —— ready / fail / click / drag / focus
@@ -31,11 +33,7 @@
   #offline .b { margin-top:16px; font-size:13px; padding:8px 16px; cursor:pointer;
                 border:1px solid #E8E2DA; background:#fff; color:#1E1A16; border-radius:6px; }
 </style>
-<script>
-  // 安全密钥必须在 SDK 加载前注入（AMap 2.0 读取带下划线的 _AMapSecurityConfig）
-  window._AMapSecurityConfig = { securityJsCode: 'd4e92781da1ca5996c246d315af66031' };
-</script>
-<script src="https://webapi.amap.com/maps?v=2.0&key=07672883965ec7a6f0948813c0a90915"></script>
+<!-- SDK 不再写死在 HTML 里：等宿主注入 Key 后按 Key 动态加载（见下方 boot） -->
 </head>
 <body>
 <div id="container"></div>
@@ -77,6 +75,27 @@
     if (el) { el.style.display = 'flex'; }
     showTip('');
     post({ type: 'fail', reason: reason, detail: detail || '' });
+  }
+
+  /**
+   * 启动：读宿主注入的 Key → 注入安全密钥 → 动态加载 SDK → init。
+   * 没有 Key 就直接降级（nokey），不发起任何外部请求。
+   */
+  function boot() {
+    var key = window.__AMAP_KEY__ || '';
+    var sec = window.__AMAP_SEC__ || '';
+    if (!key) {
+      fail('nokey', '未配置高德 API Key');
+      return;
+    }
+    // 安全密钥必须在 SDK 加载前注入（AMap 2.0 读取带下划线的 _AMapSecurityConfig）
+    if (sec) window._AMapSecurityConfig = { securityJsCode: sec };
+
+    var s = document.createElement('script');
+    s.src = 'https://webapi.amap.com/maps?v=2.0&key=' + encodeURIComponent(key);
+    s.onload = init;
+    s.onerror = function () { fail('sdk', 'script load error'); };
+    document.head.appendChild(s);
   }
 
   function init() {
@@ -153,7 +172,7 @@
     });
   }
 
-  window.addEventListener('load', init);
+  window.addEventListener('load', boot);
 </script>
 </body>
 </html>

@@ -120,9 +120,25 @@ public partial class MapPage : Page
             }
 
 
+            // Key 注入必须在导航之前：AddScriptToExecuteOnDocumentCreated 对后续文档生效。
+            // 无 Key（用户未填且无内置回退）→ 直接降级，不发起任何外部请求。
+            var cfg = AmapConfig.Load();
+            if (string.IsNullOrWhiteSpace(cfg.Key))
+            {
+                ShowFallback(true,
+                    "未配置高德地图 API Key。可在「设置 → 地图」填入自己的 Key；" +
+                    "未配置时可直接使用右侧列表视图管理足迹（新增 / 编辑 / 删除完全可用）。");
+                SetHint("未配置地图 Key，使用列表视图");
+                return;
+            }
+
+            await MapView.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync(
+                "window.__AMAP_KEY__ = " + JsonSerializer.Serialize(cfg.Key) + ";" +
+                "window.__AMAP_SEC__ = " + JsonSerializer.Serialize(cfg.Sec) + ";");
+
             var file = ExtractMapHtml();
             MapView.Source = new Uri(file);
-            SetHint("地图加载中…");
+            SetHint(cfg.IsCustom ? "地图加载中…（使用你自己的 Key）" : "地图加载中…（使用内置回退 Key）");
             ShowFallback(false);
         }
         catch (Exception ex)
@@ -207,6 +223,14 @@ public partial class MapPage : Page
                 case "fail":
                     _mapReady = false;
                     var reason = root.TryGetProperty("reason", out var r) ? r.GetString() : "";
+                    if (reason == "nokey")
+                    {
+                        ShowFallback(true,
+                            "未配置高德地图 API Key。可在「设置 → 地图」填入自己的 Key；" +
+                            "未配置时可直接使用右侧列表视图管理足迹。");
+                        SetHint("未配置地图 Key，使用列表视图");
+                        break;
+                    }
                     ShowFallback(true, reason == "offline"
                         ? "当前无网络，地图不可用。可切换列表视图：右侧足迹列表的新增 / 编辑 / 删除完全可用，不依赖地图。"
                         : "地图加载失败（请检查网络），可切换列表视图管理足迹。");
