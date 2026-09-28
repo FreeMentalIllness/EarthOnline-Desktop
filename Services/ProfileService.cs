@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Text.Json;
 using EarthOnline.Desktop.Data;
 using EarthOnline.Desktop.Data.Entities;
@@ -56,16 +57,31 @@ public static class ProfileService
 
     public static ProfileEntity? Load(AppDbContext db) => db.Profile.FirstOrDefault();
 
+    /// <summary>
+    /// 自定义字段共享序列化选项：严格 camelCase（对齐 Web/Android 契约）。
+    /// CustomField 已显式标注 [JsonPropertyName("id"/"label"/"value")]，因此反序列化只接受 camelCase 键。
+    /// </summary>
+    private static readonly JsonSerializerOptions CustomFieldOpts = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        PropertyNameCaseInsensitive = false
+    };
+
     /// <summary>读自定义字段（坏 JSON 忽略）。</summary>
     public static List<CustomField> ReadCustomFields(ProfileEntity? p)
     {
         if (string.IsNullOrWhiteSpace(p?.CustomFieldsJson)) return new List<CustomField>();
         try
         {
-            return JsonSerializer.Deserialize<List<CustomField>>(
-                       p.CustomFieldsJson,
-                       new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
-                   ?? new List<CustomField>();
+            // 默认按严格 camelCase 契约解析（与 Web/Android 完全一致）。
+            var strict = JsonSerializer.Deserialize<List<CustomField>>(p.CustomFieldsJson, CustomFieldOpts);
+            if (strict is { Count: > 0 } && strict.Any(f => !string.IsNullOrEmpty(f.Id)))
+                return strict;
+            // 兜底：兼容旧版 Windows 以 PascalCase 落库的自定义字段，避免升级后字段丢失。
+            var legacy = JsonSerializer.Deserialize<List<CustomField>>(
+                p.CustomFieldsJson,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            return legacy ?? new List<CustomField>();
         }
         catch
         {
@@ -73,6 +89,7 @@ public static class ProfileService
         }
     }
 
+    /// <summary>写自定义字段：统一以 camelCase 落库，与 Web/Android 契约对齐。</summary>
     public static string WriteCustomFields(List<CustomField> list) =>
-        JsonSerializer.Serialize(list);
+        JsonSerializer.Serialize(list, CustomFieldOpts);
 }

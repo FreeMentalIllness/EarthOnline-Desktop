@@ -21,11 +21,13 @@ public static class BackupService
 {
     /// <summary>
     /// camelCase 是硬要求：安卓 Room 实体与网页 state 全部用 camelCase（version / exportedAt / tasks…），
-    /// 桌面端必须逐字一致，否则跨端读不到字段。反序列化大小写不敏感，两种都能吃。
+    /// 桌面端必须逐字一致，否则跨端读不到字段。所有嵌套实体均已显式标注 [JsonPropertyName]（见 BackupPayload / 各 Entity），
+    /// 因此反序列化改为**严格区分大小写**——只接受契约规定的 camelCase 键，任何非 camelCase 字段会被视为未知键忽略，
+    /// 从而与 Web/Android 的 camelCase 契约严格对齐，避免错大小写静默错绑。
     /// </summary>
     private static readonly JsonSerializerOptions Opts = new()
     {
-        PropertyNameCaseInsensitive = true,
+        PropertyNameCaseInsensitive = false,
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         WriteIndented = true
     };
