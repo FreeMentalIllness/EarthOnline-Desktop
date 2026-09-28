@@ -44,6 +44,10 @@ public partial class App : Application
 
         SetupTray();
 
+        // 本地自动备份：监听落库信号，防抖留最近 3 份快照（对齐安卓 AutoBackupManager）
+        try { AutoBackupService.Start(); }
+        catch { /* 备份功能失败不影响使用 */ }
+
         // 自动同步开启时：冷启动后台拉取云端更新（不阻塞窗口显示）
         var s = SettingsStore.Load();
         if (s.HasConfig && s.AutoSync)

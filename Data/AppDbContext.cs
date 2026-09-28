@@ -1,4 +1,7 @@
+using System.Threading;
+using System.Threading.Tasks;
 using EarthOnline.Desktop.Data.Entities;
+using EarthOnline.Desktop.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace EarthOnline.Desktop.Data;
@@ -34,6 +37,26 @@ public class AppDbContext : DbContext
     public AppDbContext(DbContextOptions<AppDbContext> options, string dbPath) : base(options)
     {
         DbPath = dbPath;
+    }
+
+    /// <summary>
+    /// 统一写入出口：任何一次真实落库都触发一次「自动备份」防抖调度。
+    /// 对应安卓 Room InvalidationTracker 的角色 —— 所有写入都经过 DbContext，
+    /// 不需要在每个页面手动插桩，将来新增写入路径也不会漏。
+    /// 备份服务本身只写文件、不写库，因此不会自激循环。
+    /// </summary>
+    public override int SaveChanges()
+    {
+        var n = base.SaveChanges();
+        if (n > 0) AutoBackupService.Signal();
+        return n;
+    }
+
+    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        var n = await base.SaveChangesAsync(cancellationToken);
+        if (n > 0) AutoBackupService.Signal();
+        return n;
     }
 
     protected override void OnConfiguring(DbContextOptionsBuilder options)
