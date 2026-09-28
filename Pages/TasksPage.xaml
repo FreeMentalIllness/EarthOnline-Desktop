@@ -1,0 +1,66 @@
+<Page x:Class="EarthOnline.Desktop.Pages.TasksPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:local="clr-namespace:EarthOnline.Desktop.Pages"
+      mc:Ignorable="d"
+      Title="任务"
+      Background="{StaticResource AppBgBrush}">
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0">
+            <TextBlock Text="任务" Style="{StaticResource PageTitleStyle}"/>
+            <TextBlock Text="主线 / 支线 / 待办（支持父子嵌套）" Style="{StaticResource PageSubTitleStyle}"/>
+        </StackPanel>
+
+        <!-- 工具条 -->
+        <Border Grid.Row="1" Style="{StaticResource CardStyle}" Padding="12">
+            <DockPanel>
+                <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
+                    <ComboBox x:Name="CategoryFilter" Width="120" Padding="8" SelectedIndex="0"
+                              SelectionChanged="CategoryFilter_SelectionChanged">
+                        <ComboBoxItem Content="全部" Tag=""/>
+                        <ComboBoxItem Content="主线" Tag="main"/>
+                        <ComboBoxItem Content="支线" Tag="side"/>
+                        <ComboBoxItem Content="待办" Tag="todo"/>
+                    </ComboBox>
+                    <Button Content="＋ 新建任务" Margin="10,0,0,0"
+                            Padding="12,6" Click="AddRoot_Click" Background="{StaticResource AccentBrush}"
+                            Foreground="White" BorderThickness="0" Cursor="Hand"/>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" HorizontalAlignment="Right">
+                    <Button Content="＋ 子任务" Padding="12,6" Margin="6,0,0,0" Click="AddChild_Click" Cursor="Hand"/>
+                    <Button Content="编辑" Padding="12,6" Margin="6,0,0,0" Click="Edit_Click" Cursor="Hand"/>
+                    <Button Content="标记完成" Padding="12,6" Margin="6,0,0,0" Click="ToggleDone_Click" Cursor="Hand"/>
+                    <Button Content="删除" Padding="12,6" Margin="6,0,0,0" Click="Delete_Click" Cursor="Hand"/>
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <!-- 任务树 -->
+        <Border Grid.Row="2" Style="{StaticResource CardStyle}" Padding="8">
+            <TreeView x:Name="TaskTree" BorderThickness="0" Background="Transparent">
+                <TreeView.Resources>
+                    <HierarchicalDataTemplate DataType="{x:Type local:TaskNode}" ItemsSource="{Binding Children}">
+                        <StackPanel Orientation="Horizontal" Margin="0,3">
+                            <TextBlock Text="{Binding StatusEmoji}" Width="22" FontSize="13"/>
+                            <TextBlock Text="{Binding Title}" FontSize="14"
+                                       Foreground="{StaticResource TextPrimaryBrush}"/>
+                            <TextBlock Text="{Binding ProgressText}" FontSize="12" Margin="10,0,0,0"
+                                       Foreground="{StaticResource TextMutedBrush}"/>
+                            <TextBlock Text="{Binding DueText}" FontSize="12" Margin="10,0,0,0"
+                                       Foreground="{StaticResource TextSecondaryBrush}"/>
+                        </StackPanel>
+                    </HierarchicalDataTemplate>
+                </TreeView.Resources>
+            </TreeView>
+        </Border>
+    </Grid>
+</Page>

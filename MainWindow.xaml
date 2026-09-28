@@ -1,0 +1,102 @@
+﻿<Window x:Class="EarthOnline.Desktop.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:EarthOnline.Desktop"
+        mc:Ignorable="d"
+        Title="地球Online"
+        Width="1180" Height="740"
+        MinWidth="760" MinHeight="520"
+        WindowStartupLocation="CenterScreen"
+        Background="{StaticResource AppBgBrush}"
+        SizeChanged="Window_SizeChanged">
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <!-- 侧栏宽度由代码按窗口尺寸自适应（200 / 64 图标模式） -->
+            <ColumnDefinition x:Name="NavColumn" Width="200"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- ============ 左侧导航栏 ============ -->
+        <Border Grid.Column="0"
+                Background="{StaticResource CardBgBrush}"
+                BorderBrush="{StaticResource BorderBrush}"
+                BorderThickness="0,0,1,0">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>  <!-- 应用标题 -->
+                    <RowDefinition Height="*"/>     <!-- 导航项 -->
+                    <RowDefinition Height="Auto"/>  <!-- 底部版本 -->
+                </Grid.RowDefinitions>
+
+                <!-- 应用标题 -->
+                <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="16,20,12,16">
+                    <TextBlock Text="🌍" FontSize="20" VerticalAlignment="Center"/>
+                    <TextBlock Text="地球Online"
+                               Style="{StaticResource NavTextStyle}"
+                               FontWeight="SemiBold"
+                               FontSize="15"
+                               Foreground="{StaticResource TextPrimaryBrush}"
+                               Margin="10,0,0,0"/>
+                </StackPanel>
+
+                <!-- 导航项 -->
+                <ListBox x:Name="NavList"
+                         Grid.Row="1"
+                         Background="Transparent"
+                         BorderThickness="0"
+                         ItemContainerStyle="{StaticResource NavItemStyle}"
+                         SelectionChanged="NavList_SelectionChanged"
+                         SelectedIndex="0">
+                    <ListBoxItem Tag="home">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="🏠" Style="{StaticResource NavIconStyle}"/>
+                            <TextBlock Text="主页" Style="{StaticResource NavTextStyle}" Margin="10,0,0,0"/>
+                        </StackPanel>
+                    </ListBoxItem>
+                    <ListBoxItem Tag="tasks">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="✅" Style="{StaticResource NavIconStyle}"/>
+                            <TextBlock Text="任务" Style="{StaticResource NavTextStyle}" Margin="10,0,0,0"/>
+                        </StackPanel>
+                    </ListBoxItem>
+                    <ListBoxItem Tag="backpack">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="🎒" Style="{StaticResource NavIconStyle}"/>
+                            <TextBlock Text="背包" Style="{StaticResource NavTextStyle}" Margin="10,0,0,0"/>
+                        </StackPanel>
+                    </ListBoxItem>
+                    <ListBoxItem Tag="achievements">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="🏆" Style="{StaticResource NavIconStyle}"/>
+                            <TextBlock Text="成就" Style="{StaticResource NavTextStyle}" Margin="10,0,0,0"/>
+                        </StackPanel>
+                    </ListBoxItem>
+                    <ListBoxItem Tag="settings">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="⚙️" Style="{StaticResource NavIconStyle}"/>
+                            <TextBlock Text="设置" Style="{StaticResource NavTextStyle}" Margin="10,0,0,0"/>
+                        </StackPanel>
+                    </ListBoxItem>
+                </ListBox>
+
+                <!-- 底部版本 -->
+                <TextBlock Grid.Row="2"
+                           Text="v1.0.1"
+                           Style="{StaticResource NavTextStyle}"
+                           FontSize="11"
+                           Foreground="{StaticResource TextMutedBrush}"
+                           Margin="18,0,12,16"/>
+            </Grid>
+        </Border>
+
+        <!-- ============ 右侧内容区 ============ -->
+        <Frame x:Name="ContentFrame"
+               Grid.Column="1"
+               NavigationUIVisibility="Hidden"
+               Background="{StaticResource AppBgBrush}"
+               JournalOwnership="OwnsJournal"/>
+    </Grid>
+</Window>

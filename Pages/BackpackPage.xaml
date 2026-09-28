@@ -1,0 +1,103 @@
+<Page x:Class="EarthOnline.Desktop.Pages.BackpackPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:d="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      mc:Ignorable="d"
+      Title="背包"
+      Background="{StaticResource AppBgBrush}">
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0">
+            <TextBlock Text="背包" Style="{StaticResource PageTitleStyle}"/>
+            <TextBlock Text="物品与收藏（共用自定义分类）" Style="{StaticResource PageSubTitleStyle}"/>
+        </StackPanel>
+
+        <TabControl x:Name="Tabs" Grid.Row="1" SelectionChanged="Tabs_SelectionChanged"
+                    Background="Transparent" BorderBrush="{StaticResource BorderBrush}">
+            <!-- 物品 -->
+            <TabItem Header="物品">
+                <Grid Margin="0,12,0,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <DockPanel Grid.Row="0" Margin="0,0,0,10">
+                        <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
+                            <ComboBox x:Name="ItemCategoryFilter" Width="140" Padding="8" SelectedIndex="0"
+                                      SelectionChanged="ItemFilter_Changed"/>
+                            <Button Content="＋ 新增物品" Margin="10,0,0,0" Padding="12,6" Click="AddItem_Click"
+                                    Background="{StaticResource AccentBrush}" Foreground="White"
+                                    BorderThickness="0" Cursor="Hand"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" HorizontalAlignment="Right">
+                            <Button Content="归类到…" Padding="12,6" Margin="6,0,0,0" Click="AssignItem_Click" Cursor="Hand"/>
+                            <Button Content="删除" Padding="12,6" Margin="6,0,0,0" Click="DeleteItem_Click" Cursor="Hand"/>
+                        </StackPanel>
+                    </DockPanel>
+
+                    <Border Grid.Row="1" Style="{StaticResource CardStyle}" Padding="8">
+                        <ListBox x:Name="ItemList" BorderThickness="0" Background="Transparent">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal" Margin="0,4">
+                                        <TextBlock Text="📦" Width="24"/>
+                                        <TextBlock Text="{Binding Name}" FontSize="14"
+                                                   Foreground="{StaticResource TextPrimaryBrush}"/>
+                                        <TextBlock Text="{Binding Category}" FontSize="12" Margin="10,0,0,0"
+                                                   Foreground="{StaticResource TextMutedBrush}"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </Border>
+                </Grid>
+            </TabItem>
+
+            <!-- 收藏 -->
+            <TabItem Header="收藏">
+                <Grid Margin="0,12,0,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <DockPanel Grid.Row="0" Margin="0,0,0,10">
+                        <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
+                            <ComboBox x:Name="CollectionCategoryFilter" Width="140" Padding="8" SelectedIndex="0"
+                                      SelectionChanged="CollectionFilter_Changed"/>
+                            <Button Content="＋ 新增收藏" Margin="10,0,0,0" Padding="12,6" Click="AddCollection_Click"
+                                    Background="{StaticResource AccentBrush}" Foreground="White"
+                                    BorderThickness="0" Cursor="Hand"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" HorizontalAlignment="Right">
+                            <Button Content="归类到…" Padding="12,6" Margin="6,0,0,0" Click="AssignCollection_Click" Cursor="Hand"/>
+                            <Button Content="删除" Padding="12,6" Margin="6,0,0,0" Click="DeleteCollection_Click" Cursor="Hand"/>
+                        </StackPanel>
+                    </DockPanel>
+
+                    <Border Grid.Row="1" Style="{StaticResource CardStyle}" Padding="8">
+                        <ListBox x:Name="CollectionList" BorderThickness="0" Background="Transparent">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal" Margin="0,4">
+                                        <TextBlock Text="📚" Width="24"/>
+                                        <TextBlock Text="{Binding Title}" FontSize="14"
+                                                   Foreground="{StaticResource TextPrimaryBrush}"/>
+                                        <TextBlock Text="{Binding Category}" FontSize="12" Margin="10,0,0,0"
+                                                   Foreground="{StaticResource TextMutedBrush}"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </Border>
+                </Grid>
+            </TabItem>
+        </TabControl>
+    </Grid>
+</Page>

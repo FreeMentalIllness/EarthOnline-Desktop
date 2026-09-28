@@ -1,0 +1,14 @@
+# 构建产物
+bin/
+obj/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userprefs
+
+# 本机数据库 / 备份（用户数据，不入库）
+*.db
+*.db-shm
+*.db-wal
