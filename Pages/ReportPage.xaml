@@ -1,0 +1,76 @@
+<Page x:Class="EarthOnline.Desktop.Pages.ReportPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      mc:Ignorable="d"
+      Title="报告"
+      Background="{StaticResource AppBgBrush}">
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0">
+            <TextBlock Text="报告" Style="{StaticResource PageTitleStyle}"/>
+            <TextBlock Text="日报 / 周报 / 年报 —— 与安卓端同口径" Style="{StaticResource PageSubTitleStyle}"/>
+        </StackPanel>
+
+        <!-- 工具条 -->
+        <Border Grid.Row="1" Style="{StaticResource CardStyle}" Padding="12">
+            <StackPanel Orientation="Horizontal">
+                <RadioButton x:Name="KindDay" GroupName="ReportKind" Content="📅 日报"
+                             Style="{StaticResource SegButtonStyle}" IsChecked="True" Checked="Kind_Checked"/>
+                <RadioButton x:Name="KindWeek" GroupName="ReportKind" Content="🗓️ 周报"
+                             Style="{StaticResource SegButtonStyle}" Margin="8,0,0,0" Checked="Kind_Checked"/>
+                <RadioButton x:Name="KindYear" GroupName="ReportKind" Content="📆 年报"
+                             Style="{StaticResource SegButtonStyle}" Margin="8,0,0,0" Checked="Kind_Checked"/>
+            </StackPanel>
+        </Border>
+
+        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <StackPanel>
+                <!-- 区间 + 指标 -->
+                <Border Style="{StaticResource CardStyle}">
+                    <StackPanel>
+                        <TextBlock x:Name="RangeLabel" Text="" Style="{StaticResource SectionTitleStyle}"/>
+                        <WrapPanel x:Name="MetricStats"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- 图表 -->
+                <Border Style="{StaticResource CardStyle}">
+                    <StackPanel>
+                        <TextBlock x:Name="ChartTitle" Text="活跃分布" Style="{StaticResource SectionTitleStyle}"/>
+                        <Grid Height="200">
+                            <Canvas x:Name="ReportChart" SizeChanged="ReportChart_SizeChanged"/>
+                            <TextBlock x:Name="ChartEmpty" Text="这段时间还没有任何记录。"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                                       FontSize="13" Foreground="{StaticResource TextSecondaryBrush}"
+                                       Background="{StaticResource AppBgBrush}" Padding="12,6"
+                                       Visibility="Collapsed"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- 总结 -->
+                <Border Style="{StaticResource CardStyle}">
+                    <TextBlock x:Name="SummaryText" Text="" FontSize="14" LineHeight="22"
+                               Foreground="{StaticResource TextPrimaryBrush}" TextWrapping="Wrap"/>
+                </Border>
+
+                <!-- 亮点（年报不展示） -->
+                <Border x:Name="HighlightCard" Style="{StaticResource CardStyle}">
+                    <StackPanel>
+                        <TextBlock Text="本期亮点" Style="{StaticResource SectionTitleStyle}"/>
+                        <StackPanel x:Name="HighlightList"/>
+                        <TextBlock x:Name="HighlightEmpty" Text="本期还没有可展示的记录。"
+                                   FontSize="13" Foreground="{StaticResource TextMutedBrush}"/>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</Page>

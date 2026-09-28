@@ -1,0 +1,106 @@
+<Page x:Class="EarthOnline.Desktop.Pages.DataPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      mc:Ignorable="d"
+      Title="数据"
+      Background="{StaticResource AppBgBrush}">
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0">
+            <TextBlock Text="数据" Style="{StaticResource PageTitleStyle}"/>
+            <TextBlock Text="任务 / 灵感 / 成就的周期汇总与日历视图" Style="{StaticResource PageSubTitleStyle}"/>
+        </StackPanel>
+
+        <!-- 工具条 -->
+        <Border Grid.Row="1" Style="{StaticResource CardStyle}" Padding="12">
+            <DockPanel>
+                <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
+                    <RadioButton x:Name="ViewOverview" GroupName="DashView" Content="数据概览"
+                                 Style="{StaticResource SegButtonStyle}" IsChecked="True" Checked="View_Checked"/>
+                    <RadioButton x:Name="ViewCalendar" GroupName="DashView" Content="日历视图"
+                                 Style="{StaticResource SegButtonStyle}" Margin="8,0,0,0" Checked="View_Checked"/>
+                </StackPanel>
+
+                <!-- 趋势区间（仅概览视图） -->
+                <StackPanel x:Name="TrendBar" Orientation="Horizontal" DockPanel.Dock="Right" HorizontalAlignment="Right">
+                    <RadioButton x:Name="Range7d" GroupName="TrendRange" Content="近 7 天"
+                                 Style="{StaticResource SegButtonStyle}" IsChecked="True" Checked="Range_Checked"/>
+                    <RadioButton x:Name="Range4w" GroupName="TrendRange" Content="近 4 周"
+                                 Style="{StaticResource SegButtonStyle}" Margin="8,0,0,0" Checked="Range_Checked"/>
+                </StackPanel>
+
+                <!-- 月份切换（仅日历视图） -->
+                <StackPanel x:Name="MonthBar" Orientation="Horizontal" DockPanel.Dock="Right"
+                            HorizontalAlignment="Right" Visibility="Collapsed">
+                    <Button Content="◀" Padding="10,4" Click="PrevMonth_Click" Cursor="Hand"/>
+                    <TextBlock x:Name="MonthLabel" VerticalAlignment="Center" Margin="14,0" FontSize="14"
+                               FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}"/>
+                    <Button Content="▶" Padding="10,4" Click="NextMonth_Click" Cursor="Hand"/>
+                    <Button Content="本月" Padding="10,4" Margin="12,0,0,0" Click="ThisMonth_Click" Cursor="Hand"/>
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <!-- ============ 概览视图 ============ -->
+        <ScrollViewer x:Name="OverviewPanel" Grid.Row="2" VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled">
+            <StackPanel>
+                <Border Style="{StaticResource CardStyle}">
+                    <StackPanel>
+                        <TextBlock Text="近 7 天" Style="{StaticResource SectionTitleStyle}"/>
+                        <WrapPanel x:Name="WeekStats"/>
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource CardStyle}">
+                    <StackPanel>
+                        <TextBlock Text="近 30 天" Style="{StaticResource SectionTitleStyle}"/>
+                        <WrapPanel x:Name="MonthStats"/>
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource CardStyle}">
+                    <StackPanel>
+                        <TextBlock x:Name="YearTitle" Text="今年" Style="{StaticResource SectionTitleStyle}"/>
+                        <WrapPanel x:Name="YearStats"/>
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource CardStyle}">
+                    <StackPanel>
+                        <TextBlock Text="完成任务趋势" Style="{StaticResource SectionTitleStyle}"/>
+                        <Grid Height="200">
+                            <Canvas x:Name="TrendChart" SizeChanged="TrendChart_SizeChanged"/>
+                            <TextBlock x:Name="TrendEmpty"
+                                       Text="这段时间还没有完成的任务，先完成一个小目标试试。"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                                       FontSize="13" Foreground="{StaticResource TextSecondaryBrush}"
+                                       Background="{StaticResource AppBgBrush}" Padding="12,6"
+                                       Visibility="Collapsed"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- ============ 日历视图 ============ -->
+        <Border x:Name="CalendarPanel" Grid.Row="2" Style="{StaticResource CardStyle}" Visibility="Collapsed">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Top">
+                    <Grid x:Name="WeekdayHeader" Margin="0,0,0,8"/>
+                    <Grid x:Name="DayGrid"/>
+                </StackPanel>
+                <TextBlock x:Name="DayDetail" DockPanel.Dock="Bottom" Margin="0,14,0,0"
+                           FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap"
+                           Text="点击某一天，查看当天完成的任务。"/>
+            </DockPanel>
+        </Border>
+    </Grid>
+</Page>

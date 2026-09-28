@@ -32,9 +32,19 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
-        Loaded += (_, _) => ApplyLayoutMode();
-        Navigate("home");
+        Loaded += (_, _) =>
+        {
+            ApplyLayoutMode();
+            // XAML 解析期间 SelectedIndex 触发的首次导航会被 Navigate() 的 null 守卫吞掉，
+            // 若此处不补一次，就会出现「侧栏选中项」与「右侧内容区」不一致（例如选中数据页却显示主页）。
+            // 以侧栏选中项为准补一次导航，保证两者始终同步。
+            Navigate(CurrentNavKey());
+        };
     }
+
+    /// <summary>当前侧栏选中项对应的页面 key（无选中时回落主页）。</summary>
+    private string CurrentNavKey()
+        => (NavList.SelectedItem as ListBoxItem)?.Tag?.ToString() ?? "home";
 
     private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
     {
@@ -70,6 +80,8 @@ public partial class MainWindow : Window
                 "tasks" => new TasksPage(),
                 "backpack" => new BackpackPage(),
                 "achievements" => new AchievementsPage(),
+                "data" => new DataPage(),
+                "report" => new ReportPage(),
                 "settings" => new SettingsPage(),
                 _ => new HomePage(),
             };

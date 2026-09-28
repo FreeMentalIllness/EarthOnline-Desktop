@@ -13,8 +13,11 @@ public static class AppPaths
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
         "EarthOnline");
 
-    /// <summary>数据库文件（文件名与安卓 earth_online.db 保持一致）。</summary>
-    public static string DbFile { get; } = Path.Combine(RootDir, "earth_online.db");
+    /// <summary>
+    /// 数据库文件（文件名与安卓 earth_online.db 保持一致）。
+    /// 可写：便于自检程序指向临时库，也便于将来支持「便携模式 / 自定义数据目录」。
+    /// </summary>
+    public static string DbFile { get; set; } = Path.Combine(RootDir, "earth_online.db");
 
     /// <summary>头像原图目录（对应安卓 filesDir/avatar）。</summary>
     public static string AvatarDir { get; } = Path.Combine(RootDir, "avatar");
