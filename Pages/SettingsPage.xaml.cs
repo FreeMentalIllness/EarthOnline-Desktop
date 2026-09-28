@@ -183,18 +183,43 @@ public partial class SettingsPage : Page
         UpdateStatusText.Text = $"当前版本 v{UpdateService.CurrentVersion}，正在检查更新…";
         var r = await UpdateService.CheckAsync();
         UpdateStatusText.Text = r.Message;
-        if (r.Ok && r.LatestVersion is not null && r.DownloadPage is not null
-            && r.Message.StartsWith("发现新版本"))
+
+        if (!r.Ok)
         {
-            if (MessageBox.Show(r.Message + "\n\n现在打开 Releases 页面下载吗？", "地球Online",
+            // 网络异常 / 解析失败：弹窗提示，绝不闪退
+            MessageBox.Show(r.Message, "地球Online · 检查更新",
+                MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        bool isNew = r.LatestVersion is not null
+            && r.Message.StartsWith("发现新版本");
+
+        if (isNew && r.ExeUrl is not null)
+        {
+            // 发现新版且 Release 带有 exe 资产 → 应用内下载 + bat 自更新
+            var sizeText = r.ExeSize > 0 ? $"（约 {r.ExeSize / 1024 / 1024} MB）" : "";
+            if (MessageBox.Show(
+                    r.Message + $"\n\n是否立即下载并自动安装{sizeText}？\n下载完成后程序将自动退出、覆盖并重启。",
+                    "地球Online · 更新",
+                    MessageBoxButton.YesNo, MessageBoxImage.Information) == MessageBoxResult.Yes)
+            {
+                await UpdateService.DownloadAndInstallAsync(r.ExeUrl, r.ExeSize,
+                    text => UpdateStatusText.Text = text);
+            }
+            else
+            {
+                UpdateStatusText.Text = $"已跳过更新（最新 v{r.LatestVersion}，可随时再次检查）。";
+            }
+        }
+        else if (isNew && r.DownloadPage is not null)
+        {
+            // 新版存在但资产里没有 exe（异常发布）→ 退回打开下载页
+            if (MessageBox.Show(r.Message + "\n\n现在打开 Releases 页面手动下载吗？", "地球Online",
                     MessageBoxButton.YesNo, MessageBoxImage.Information) == MessageBoxResult.Yes)
             {
                 OpenReleases_Click(sender, e);
             }
-        }
-        else if (!r.Ok)
-        {
-            MessageBox.Show(r.Message, "地球Online", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }
 
