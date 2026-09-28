@@ -131,6 +131,7 @@ public partial class MainWindow : Window
                 "tasks" => new TasksPage(),
                 "backpack" => new BackpackPage(),
                 "achievements" => new AchievementsPage(),
+                "map" => new MapPage(),
                 "data" => new DataPage(),
                 "report" => new ReportPage(),
                 "settings" => new SettingsPage(),
@@ -194,6 +195,7 @@ public partial class MainWindow : Window
                 case Key.D5 or Key.NumPad5: e.Handled = true; NavList.SelectedIndex = 4; break;
                 case Key.D6 or Key.NumPad6: e.Handled = true; NavList.SelectedIndex = 5; break;
                 case Key.D7 or Key.NumPad7: e.Handled = true; NavList.SelectedIndex = 6; break;
+                case Key.D8 or Key.NumPad8: e.Handled = true; NavList.SelectedIndex = 7; break;
             }
         }
     }

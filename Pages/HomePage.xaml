@@ -269,6 +269,12 @@
                         <TextBlock Text="成就" Margin="8,0,0,0" VerticalAlignment="Center"/>
                     </StackPanel>
                 </Button>
+                <Button Style="{StaticResource QuickButtonStyle}" Tag="map" Click="Quick_Click">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="🗺️" FontSize="16" VerticalAlignment="Center"/>
+                        <TextBlock Text="地图" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
                 <Button Style="{StaticResource QuickButtonStyle}" Tag="data" Click="Quick_Click">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="📊" FontSize="16" VerticalAlignment="Center"/>
