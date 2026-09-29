@@ -35,6 +35,19 @@ public static class AppPaths
     /// <summary>RootDir（= DataRoot 本身）。</summary>
     public static string RootDir => _dataRoot;
 
+    /// <summary>
+    /// 应用配置目录（固定，不随数据目录变化）。
+    /// 关键：settings.json 中保存着「数据目录」本身，若配置文件跟着数据目录走会形成循环依赖
+    /// （读设置需要目录 → 目录来自设置），导致自定义目录设置永远读不回来。故配置恒在应用侧。
+    /// 路径与 v1.0.2 及更早版本默认数据目录一致，老用户无需迁移。
+    /// </summary>
+    public static string ConfigDir { get; } = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+        "EarthOnline");
+
+    /// <summary>设置文件（固定位置）。</summary>
+    public static string SettingsFile => Path.Combine(ConfigDir, "settings.json");
+
     /// <summary>根据 DataRoot 重新派生所有子目录与 DbFile（DataRoot 变更后调用）。</summary>
     private static void Recompute()
     {

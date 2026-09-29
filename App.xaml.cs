@@ -116,10 +116,18 @@ public partial class App : Application
         try
         {
             System.IO.Directory.CreateDirectory(chosen);
-            foreach (var file in System.IO.Directory.EnumerateFiles(legacy))
+            // 递归复制（含 avatar / files / backups 子目录与数据库附属的 -wal / -shm 文件），保持相对结构
+            foreach (var file in System.IO.Directory.EnumerateFiles(legacy, "*", System.IO.SearchOption.AllDirectories))
             {
                 var name = System.IO.Path.GetFileName(file);
-                System.IO.File.Copy(file, System.IO.Path.Combine(chosen, name), overwrite: false);
+                // 设置文件恒留在应用配置目录，不随数据目录迁移
+                if (name.Equals("settings.json", System.StringComparison.OrdinalIgnoreCase)) continue;
+                var rel = System.IO.Path.GetRelativePath(legacy, file);
+                var dest = System.IO.Path.Combine(chosen, rel);
+                var destDir = System.IO.Path.GetDirectoryName(dest);
+                if (!string.IsNullOrEmpty(destDir)) System.IO.Directory.CreateDirectory(destDir);
+                if (!System.IO.File.Exists(dest))
+                    System.IO.File.Copy(file, dest, overwrite: false);
             }
         }
         catch { /* 迁移失败不阻塞启动 */ }

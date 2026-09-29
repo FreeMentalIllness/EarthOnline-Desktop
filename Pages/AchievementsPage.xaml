@@ -5,7 +5,7 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
       mc:Ignorable="d"
       Title="成就"
-      Background="{StaticResource AppBgBrush}">
+      Background="{DynamicResource AppBgBrush}">
     <Page.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
     </Page.Resources>
@@ -30,18 +30,18 @@
                         <Canvas x:Name="OverviewRing"/>
                         <TextBlock x:Name="RingText" Text="0%" FontSize="14" FontWeight="SemiBold"
                                    HorizontalAlignment="Center" VerticalAlignment="Center"
-                                   Foreground="{StaticResource TextPrimaryBrush}"/>
+                                   Foreground="{DynamicResource TextPrimaryBrush}"/>
                     </Grid>
                     <StackPanel VerticalAlignment="Center" Margin="16,0,0,0">
                         <TextBlock x:Name="OverviewText" Text="已解锁 0 / 0" FontSize="17" FontWeight="SemiBold"
-                                   Foreground="{StaticResource TextPrimaryBrush}"/>
+                                   Foreground="{DynamicResource TextPrimaryBrush}"/>
                         <TextBlock x:Name="OverviewSub" Text="" FontSize="12" Margin="0,3,0,0"
-                                   Foreground="{StaticResource TextSecondaryBrush}"/>
+                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
                     </StackPanel>
                 </StackPanel>
                 <CheckBox x:Name="OnlyUnlocked" Content="仅看未解锁" VerticalAlignment="Center"
                           DockPanel.Dock="Right" FontSize="13"
-                          Foreground="{StaticResource TextSecondaryBrush}"
+                          Foreground="{DynamicResource TextSecondaryBrush}"
                           Checked="OnlyUnlocked_Changed" Unchecked="OnlyUnlocked_Changed"/>
             </DockPanel>
         </Border>
@@ -66,7 +66,7 @@
                 <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" HorizontalAlignment="Right">
                     <Button Content="重新判定" Padding="12,6" Click="Refresh_Click" Cursor="Hand"/>
                     <Button Content="＋ 自定义成就" Padding="12,6" Margin="6,0,0,0" Click="AddCustom_Click"
-                            Background="{StaticResource AccentBrush}" Foreground="White" BorderThickness="0" Cursor="Hand"/>
+                            Background="{DynamicResource AccentBrush}" Foreground="White" BorderThickness="0" Cursor="Hand"/>
                     <Button Content="删除" Padding="12,6" Margin="6,0,0,0" Click="DeleteCustom_Click" Cursor="Hand"/>
                 </StackPanel>
             </DockPanel>
@@ -87,10 +87,10 @@
                                                     <StackPanel Orientation="Horizontal">
                                                         <TextBlock Text="{Binding Name}" FontSize="13"
                                                                    FontWeight="SemiBold"
-                                                                   Foreground="{StaticResource TextPrimaryBrush}"/>
+                                                                   Foreground="{DynamicResource TextPrimaryBrush}"/>
                                                         <TextBlock Text="{Binding ItemCount, StringFormat=（{0} 条）}"
                                                                    FontSize="11" Margin="6,1,0,0"
-                                                                   Foreground="{StaticResource TextMutedBrush}"/>
+                                                                   Foreground="{DynamicResource TextMutedBrush}"/>
                                                     </StackPanel>
                                                 </Expander.Header>
                                                 <ItemsPresenter/>
@@ -114,9 +114,9 @@
                             <TextBlock Grid.Column="0" Text="{Binding Emoji}" FontSize="18" VerticalAlignment="Center"/>
                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                 <TextBlock Text="{Binding DisplayTitle}" FontSize="14" FontWeight="SemiBold"
-                                           Foreground="{StaticResource TextPrimaryBrush}"/>
+                                           Foreground="{DynamicResource TextPrimaryBrush}"/>
                                 <TextBlock Text="{Binding DisplayDesc}" FontSize="12" Margin="0,2,0,0"
-                                           Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+                                           Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"/>
                             </StackPanel>
                             <!-- current/goal 进度条（仅自动成就且未解锁时显示） -->
                             <StackPanel Grid.Column="2" VerticalAlignment="Center"
@@ -125,11 +125,11 @@
                                              BorderThickness="0" Background="#F5E9DC" Foreground="#D4A373"/>
                                 <TextBlock Text="{Binding ProgressText}" FontSize="11" Margin="0,3,0,0"
                                            HorizontalAlignment="Center"
-                                           Foreground="{StaticResource TextMutedBrush}"/>
+                                           Foreground="{DynamicResource TextMutedBrush}"/>
                             </StackPanel>
                             <TextBlock Grid.Column="3" Text="{Binding StatusText}" FontSize="12"
                                        VerticalAlignment="Center" Margin="12,0,8,0"
-                                       Foreground="{StaticResource TextMutedBrush}"/>
+                                       Foreground="{DynamicResource TextMutedBrush}"/>
                         </Grid>
                     </DataTemplate>
                 </ListBox.ItemTemplate>

@@ -10,7 +10,7 @@
         MinWidth="760" MinHeight="520"
         WindowStartupLocation="CenterScreen"
         Icon="pack://application:,,,/Assets/app_logo.ico"
-        Background="{StaticResource AppBgBrush}"
+        Background="{DynamicResource AppBgBrush}"
         SizeChanged="Window_SizeChanged">
 
     <Grid x:Name="RootGrid">
@@ -22,8 +22,8 @@
 
         <!-- ============ 左侧导航栏 ============ -->
         <Border Grid.Column="0"
-                Background="{StaticResource CardBgBrush}"
-                BorderBrush="{StaticResource BorderBrush}"
+                Background="{DynamicResource CardBgBrush}"
+                BorderBrush="{DynamicResource BorderBrush}"
                 BorderThickness="0,0,1,0">
             <Grid>
                 <Grid.RowDefinitions>
@@ -58,7 +58,7 @@
                                    Style="{StaticResource NavTextStyle}"
                                    FontWeight="SemiBold"
                                    FontSize="15"
-                                   Foreground="{StaticResource TextPrimaryBrush}"
+                                   Foreground="{DynamicResource TextPrimaryBrush}"
                                    Margin="10,0,0,0"/>
                     </StackPanel>
                     <Button x:Name="ToggleNavBtn" Grid.Column="1"
@@ -67,7 +67,7 @@
                             Width="28" Height="28" ToolTip="收起/展开侧栏"
                             HorizontalAlignment="Right" VerticalAlignment="Center">
                         <TextBlock x:Name="ToggleIcon" Text="⟨" FontSize="16"
-                                   Foreground="{StaticResource TextSecondaryBrush}"/>
+                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
                     </Button>
                 </Grid>
 
@@ -141,7 +141,7 @@
                            Text="v1.0.3"
                            Style="{StaticResource NavTextStyle}"
                            FontSize="11"
-                           Foreground="{StaticResource TextMutedBrush}"
+                           Foreground="{DynamicResource TextMutedBrush}"
                            Margin="18,0,12,16"/>
             </Grid>
         </Border>
@@ -150,7 +150,7 @@
         <Frame x:Name="ContentFrame"
                Grid.Column="1"
                NavigationUIVisibility="Hidden"
-               Background="{StaticResource AppBgBrush}"
+               Background="{DynamicResource AppBgBrush}"
                JournalOwnership="OwnsJournal"/>
     </Grid>
 </Window>

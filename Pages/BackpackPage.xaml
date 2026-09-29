@@ -5,7 +5,7 @@
       xmlns:d="http://schemas.openxmlformats.org/markup-compatibility/2006"
       mc:Ignorable="d"
       Title="背包"
-      Background="{StaticResource AppBgBrush}">
+      Background="{DynamicResource AppBgBrush}">
     <Page.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
     </Page.Resources>
@@ -16,17 +16,17 @@
         </Grid.RowDefinitions>
 
         <StackPanel Grid.Row="0">
-            <Border Background="{StaticResource CardBgBrush}" BorderBrush="{StaticResource BorderBrush}"
+            <Border Background="{DynamicResource CardBgBrush}" BorderBrush="{DynamicResource BorderBrush}"
                     BorderThickness="1" CornerRadius="8" Padding="10,6" Margin="0,0,0,10">
                 <TextBlock Text="💡 把电脑上的任意文件拖拽到本窗口，即可复制进本地私有目录并记录到背包"
-                           FontSize="12" Foreground="{StaticResource TextSecondaryBrush}"/>
+                           FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
             </Border>
             <TextBlock Text="背包" Style="{StaticResource PageTitleStyle}"/>
             <TextBlock Text="物品与收藏（共用自定义分类）" Style="{StaticResource PageSubTitleStyle}"/>
         </StackPanel>
 
         <TabControl x:Name="Tabs" Grid.Row="1" SelectionChanged="Tabs_SelectionChanged"
-                    Background="Transparent" BorderBrush="{StaticResource BorderBrush}">
+                    Background="Transparent" BorderBrush="{DynamicResource BorderBrush}">
             <!-- 物品 -->
             <TabItem Header="物品">
                 <Grid Margin="0,12,0,0">
@@ -41,13 +41,14 @@
                             <Button Content="⚙️ 分类" Padding="12,6" Click="ManageItemCategories_Click" Cursor="Hand"/>
                             <!-- v1.0.3：分类标签常驻横向滚动，新分类直接出现在按钮右侧 -->
                             <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled"
-                                          Margin="8,0,0,0" MaxWidth="560" VerticalAlignment="Center">
+                                          Margin="8,0,0,0" MaxWidth="560" VerticalAlignment="Center"
+                                          PreviewMouseWheel="ChipScroll_PreviewMouseWheel">
                                 <StackPanel x:Name="ItemCategoryChips" Orientation="Horizontal"/>
                             </ScrollViewer>
                         </StackPanel>
                         <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" HorizontalAlignment="Right">
                             <Button Content="＋ 新增物品" Padding="12,6" Click="AddItem_Click"
-                                    Background="{StaticResource AccentBrush}" Foreground="White"
+                                    Background="{DynamicResource AccentBrush}" Foreground="White"
                                     BorderThickness="0" Cursor="Hand"/>
                         </StackPanel>
                     </DockPanel>
@@ -58,7 +59,7 @@
                              TextChanged="ItemSearch_TextChanged"/>
                     <TextBlock x:Name="ItemSearchHint" Grid.Row="1" Text="🔍 搜索物品（名称 / 描述 / 分类）" FontSize="12" Margin="12,0,0,10"
                                IsHitTestVisible="False" VerticalAlignment="Center"
-                               Foreground="{StaticResource TextMutedBrush}"/>
+                               Foreground="{DynamicResource TextMutedBrush}"/>
 
                     <Border Grid.Row="2" Style="{StaticResource CardStyle}" Padding="8">
                         <ListBox x:Name="ItemList" BorderThickness="0" Background="Transparent"
@@ -81,10 +82,10 @@
                                         <DataTemplate>
                                             <StackPanel Orientation="Horizontal" Margin="0,8,0,4">
                                                 <TextBlock Text="{Binding Name}" FontSize="13" FontWeight="SemiBold"
-                                                           Foreground="{StaticResource AccentBrush}"/>
+                                                           Foreground="{DynamicResource AccentBrush}"/>
                                                 <TextBlock Text="{Binding ItemCount, StringFormat=（{0}）}"
                                                            FontSize="11" Margin="4,1,0,0"
-                                                           Foreground="{StaticResource TextMutedBrush}"/>
+                                                           Foreground="{DynamicResource TextMutedBrush}"/>
                                             </StackPanel>
                                         </DataTemplate>
                                     </GroupStyle.HeaderTemplate>
@@ -96,18 +97,18 @@
                                         <StackPanel Orientation="Horizontal">
                                             <TextBlock Text="{Binding Icon}" Width="24"/>
                                             <TextBlock Text="{Binding Name}" FontSize="14"
-                                                       Foreground="{StaticResource TextPrimaryBrush}"/>
+                                                       Foreground="{DynamicResource TextPrimaryBrush}"/>
                                             <TextBlock Text="{Binding TypeLabel}" FontSize="11" Margin="8,2,0,0"
-                                                       Foreground="{StaticResource TextMutedBrush}"/>
+                                                       Foreground="{DynamicResource TextMutedBrush}"/>
                                             <TextBlock Text="{Binding CreatedAtLabel}" FontSize="12" Margin="8,2,0,0"
-                                                       Foreground="{StaticResource TextMutedBrush}"/>
+                                                       Foreground="{DynamicResource TextMutedBrush}"/>
                                         </StackPanel>
                                         <!-- v1.0.3：物品故事卡 —— 描述以 📖 样式强调展示 -->
                                         <TextBlock Margin="26,3,0,0" TextWrapping="Wrap"
                                                    Visibility="{Binding HasStory, Converter={StaticResource BoolToVis}}">
-                                            <Run Text="📖 " Foreground="{StaticResource AccentBrush}"/>
+                                            <Run Text="📖 " Foreground="{DynamicResource AccentBrush}"/>
                                             <Run Text="{Binding Story, Mode=OneWay}"
-                                                 Foreground="{StaticResource TextSecondaryBrush}"
+                                                 Foreground="{DynamicResource TextSecondaryBrush}"
                                                  FontStyle="Italic"/>
                                         </TextBlock>
                                     </StackPanel>
@@ -132,13 +133,14 @@
                             <Button Content="⚙️ 分类" Padding="12,6" Click="ManageCollectionCategories_Click" Cursor="Hand"/>
                             <!-- v1.0.3：分类标签常驻横向滚动，新分类直接出现在按钮右侧 -->
                             <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled"
-                                          Margin="8,0,0,0" MaxWidth="560" VerticalAlignment="Center">
+                                          Margin="8,0,0,0" MaxWidth="560" VerticalAlignment="Center"
+                                          PreviewMouseWheel="ChipScroll_PreviewMouseWheel">
                                 <StackPanel x:Name="CollectionCategoryChips" Orientation="Horizontal"/>
                             </ScrollViewer>
                         </StackPanel>
                         <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" HorizontalAlignment="Right">
                             <Button Content="＋ 新增收藏" Padding="12,6" Click="AddCollection_Click"
-                                    Background="{StaticResource AccentBrush}" Foreground="White"
+                                    Background="{DynamicResource AccentBrush}" Foreground="White"
                                     BorderThickness="0" Cursor="Hand"/>
                         </StackPanel>
                     </DockPanel>
@@ -149,7 +151,7 @@
                              TextChanged="CollectionSearch_TextChanged"/>
                     <TextBlock x:Name="CollectionSearchHint" Grid.Row="1" Text="🔍 搜索收藏（标题 / 备注）" FontSize="12" Margin="12,0,0,10"
                                IsHitTestVisible="False" VerticalAlignment="Center"
-                               Foreground="{StaticResource TextMutedBrush}"/>
+                               Foreground="{DynamicResource TextMutedBrush}"/>
 
                     <Border Grid.Row="2" Style="{StaticResource CardStyle}" Padding="8">
                         <ListBox x:Name="CollectionList" BorderThickness="0" Background="Transparent"
@@ -173,10 +175,10 @@
                                         <DataTemplate>
                                             <StackPanel Orientation="Horizontal" Margin="0,8,0,4">
                                                 <TextBlock Text="{Binding Name}" FontSize="13" FontWeight="SemiBold"
-                                                           Foreground="{StaticResource AccentBrush}"/>
+                                                           Foreground="{DynamicResource AccentBrush}"/>
                                                 <TextBlock Text="{Binding ItemCount, StringFormat=（{0}）}"
                                                            FontSize="11" Margin="4,1,0,0"
-                                                           Foreground="{StaticResource TextMutedBrush}"/>
+                                                           Foreground="{DynamicResource TextMutedBrush}"/>
                                             </StackPanel>
                                         </DataTemplate>
                                     </GroupStyle.HeaderTemplate>
@@ -187,11 +189,11 @@
                                     <StackPanel Orientation="Horizontal" Margin="0,4">
                                         <TextBlock Text="📚" Width="24"/>
                                         <TextBlock Text="{Binding Title}" FontSize="14"
-                                                   Foreground="{StaticResource TextPrimaryBrush}"/>
+                                                   Foreground="{DynamicResource TextPrimaryBrush}"/>
                                         <TextBlock Text="{Binding FileLabel}" FontSize="12" Margin="8,2,0,0"
-                                                   Foreground="{StaticResource TextMutedBrush}"/>
+                                                   Foreground="{DynamicResource TextMutedBrush}"/>
                                         <TextBlock Text="{Binding CreatedAtLabel}" FontSize="12" Margin="8,2,0,0"
-                                                   Foreground="{StaticResource TextMutedBrush}"/>
+                                                   Foreground="{DynamicResource TextMutedBrush}"/>
                                     </StackPanel>
                                 </DataTemplate>
                             </ListBox.ItemTemplate>

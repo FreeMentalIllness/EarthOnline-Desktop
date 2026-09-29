@@ -5,7 +5,7 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
       mc:Ignorable="d"
       Title="主页"
-      Background="{StaticResource AppBgBrush}">
+      Background="{DynamicResource AppBgBrush}">
     <Page.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
     </Page.Resources>
@@ -14,15 +14,15 @@
             <TextBlock Text="主页" Style="{StaticResource PageTitleStyle}"/>
             <!-- v1.0.3：动态问候语 + 当季徽章（Greeting.kt / SeasonTheme.kt 规格） -->
             <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
-                <Border Background="{StaticResource CardBgBrush}"
-                        BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
+                <Border Background="{DynamicResource CardBgBrush}"
+                        BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
                         CornerRadius="8" Padding="8,3" VerticalAlignment="Center">
                     <TextBlock Text="{Binding SeasonBadge}" FontSize="12"
-                               Foreground="{StaticResource TextPrimaryBrush}"/>
+                               Foreground="{DynamicResource TextPrimaryBrush}"/>
                 </Border>
                 <TextBlock Text="{Binding GreetingText}" FontSize="13" Margin="10,0,0,0"
                            VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
-                           Foreground="{StaticResource TextSecondaryBrush}"/>
+                           Foreground="{DynamicResource TextSecondaryBrush}"/>
             </StackPanel>
 
             <!-- ============ 个人资料卡 ============ -->
@@ -36,7 +36,7 @@
 
                     <!-- 头像：自定义图片优先（圆形裁剪），否则 emoji 预设（复用安卓 avatarKey） -->
                     <Border Grid.Column="0" Width="76" Height="76" CornerRadius="38"
-                            Background="{StaticResource AppBgBrush}"
+                            Background="{DynamicResource AppBgBrush}"
                             Margin="0,0,20,0">
                         <Grid>
                             <TextBlock Text="{Binding AvatarEmoji}" FontSize="36"
@@ -63,20 +63,20 @@
                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="{Binding Name}" FontSize="20" FontWeight="SemiBold"
-                                       Foreground="{StaticResource TextPrimaryBrush}"/>
+                                       Foreground="{DynamicResource TextPrimaryBrush}"/>
                             <!-- v1.0.3：称号 · Lv.X（称号存 settings.json，等级=周岁） -->
                             <TextBlock Text="{Binding TitleLine}" FontSize="15" FontWeight="SemiBold"
                                        Margin="10,2,0,0" VerticalAlignment="Center"
                                        Foreground="#B08045"/>
                         </StackPanel>
-                        <TextBlock FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,4,0,0">
+                        <TextBlock FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,4,0,0">
                             <Run Text="{Binding BirthDate}"/>
                             <Run Text=" · "/>
                             <Run Text="{Binding Gender}"/>
                             <Run Text="{Binding DaysLivedText}"/>
                         </TextBlock>
                         <TextBlock Text="{Binding Signature}" FontSize="13"
-                                   Foreground="{StaticResource TextMutedBrush}"
+                                   Foreground="{DynamicResource TextMutedBrush}"
                                    Margin="0,4,0,0" TextWrapping="Wrap"
                                    Visibility="{Binding Signature, Converter={StaticResource EmptyToCollapsed}}"/>
                         <!-- 经验条：距下一个生日的进度（网页口径） -->
@@ -84,10 +84,10 @@
                                     Visibility="{Binding HasLevel, Converter={StaticResource EmptyToCollapsed}}">
                             <ProgressBar Height="8" Minimum="0" Maximum="100"
                                          Value="{Binding LevelProgress, Mode=OneWay}"
-                                         BorderThickness="0" Background="{StaticResource AppBgBrush}"
+                                         BorderThickness="0" Background="{DynamicResource AppBgBrush}"
                                          Foreground="#D4A373"/>
                             <TextBlock Text="{Binding LevelSubText}" FontSize="11" Margin="0,3,0,0"
-                                       Foreground="{StaticResource TextMutedBrush}"/>
+                                       Foreground="{DynamicResource TextMutedBrush}"/>
                         </StackPanel>
                         <!-- 自定义字段 chips -->
                         <ItemsControl ItemsSource="{Binding CustomFields}" Margin="0,8,0,0">
@@ -98,12 +98,12 @@
                             </ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Border Background="{StaticResource AppBgBrush}"
-                                            BorderBrush="{StaticResource BorderBrush}"
+                                    <Border Background="{DynamicResource AppBgBrush}"
+                                            BorderBrush="{DynamicResource BorderBrush}"
                                             BorderThickness="1" CornerRadius="6"
                                             Padding="8,3" Margin="0,4,6,0">
                                         <TextBlock Text="{Binding}" FontSize="12"
-                                                   Foreground="{StaticResource TextSecondaryBrush}"/>
+                                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
                                     </Border>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
@@ -122,10 +122,10 @@
                 <StackPanel>
                     <TextBlock Text="🌱 连续记录" Style="{StaticResource SectionTitleStyle}"/>
                     <TextBlock Text="{Binding StreakText}" FontSize="13"
-                               Foreground="{StaticResource TextPrimaryBrush}"
+                               Foreground="{DynamicResource TextPrimaryBrush}"
                                Visibility="{Binding StreakText, Converter={StaticResource EmptyToCollapsed}}"/>
                     <TextBlock Text="{Binding ComebackText}" FontSize="13" Margin="0,4,0,0"
-                               Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap"
+                               Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"
                                Visibility="{Binding ComebackText, Converter={StaticResource EmptyToCollapsed}}"/>
                 </StackPanel>
             </Border>
@@ -143,9 +143,9 @@
                     <StackPanel>
                         <TextBlock Text="🎴 今日一签" Style="{StaticResource SectionTitleStyle}"/>
                         <TextBlock Text="{Binding DailyPickText}" FontSize="13" LineHeight="21"
-                                   Foreground="{StaticResource TextPrimaryBrush}" TextWrapping="Wrap"/>
+                                   Foreground="{DynamicResource TextPrimaryBrush}" TextWrapping="Wrap"/>
                         <TextBlock Text="{Binding DailyPickSub}" FontSize="11" Margin="0,4,0,0"
-                                   Foreground="{StaticResource TextMutedBrush}"/>
+                                   Foreground="{DynamicResource TextMutedBrush}"/>
                     </StackPanel>
                 </Border>
                 <Border Grid.Column="2" Style="{StaticResource CardStyle}" Margin="0,0,0,12"
@@ -153,7 +153,7 @@
                     <StackPanel>
                         <TextBlock Text="🕰️ 历年今日" Style="{StaticResource SectionTitleStyle}"/>
                         <TextBlock Text="{Binding ThisDayText}" FontSize="13" LineHeight="21"
-                                   Foreground="{StaticResource TextPrimaryBrush}" TextWrapping="Wrap"/>
+                                   Foreground="{DynamicResource TextPrimaryBrush}" TextWrapping="Wrap"/>
                     </StackPanel>
                 </Border>
             </Grid>
@@ -173,8 +173,8 @@
                             </ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Border Background="{StaticResource AppBgBrush}"
-                                            BorderBrush="{StaticResource BorderBrush}"
+                                    <Border Background="{DynamicResource AppBgBrush}"
+                                            BorderBrush="{DynamicResource BorderBrush}"
                                             BorderThickness="1" CornerRadius="8"
                                             Padding="10,5" Margin="0,2,8,4">
                                         <StackPanel Orientation="Horizontal">
@@ -182,9 +182,9 @@
                                             <StackPanel Margin="6,0,0,0">
                                                 <TextBlock Text="{Binding Title}" FontSize="12"
                                                            FontWeight="SemiBold"
-                                                           Foreground="{StaticResource TextPrimaryBrush}"/>
+                                                           Foreground="{DynamicResource TextPrimaryBrush}"/>
                                                 <TextBlock Text="{Binding SubText}" FontSize="10"
-                                                           Foreground="{StaticResource TextMutedBrush}"/>
+                                                           Foreground="{DynamicResource TextMutedBrush}"/>
                                             </StackPanel>
                                         </StackPanel>
                                     </Border>
@@ -193,7 +193,7 @@
                         </ItemsControl>
                     </DockPanel>
                     <TextBlock Text="还没有佩戴徽章：点「佩戴徽章」，把解锁的成就别在胸口 ✨" FontSize="12"
-                               Foreground="{StaticResource TextMutedBrush}" Margin="2,4,0,0"
+                               Foreground="{DynamicResource TextMutedBrush}" Margin="2,4,0,0"
                                Visibility="{Binding NoBadges, Converter={StaticResource BoolToVis}}"/>
                 </StackPanel>
             </Border>
@@ -269,7 +269,7 @@
                 <StackPanel>
                     <TextBlock Text="🌱 人生卡" Style="{StaticResource SectionTitleStyle}"/>
                     <TextBlock Text="{Binding LifeCardText}" FontSize="13" LineHeight="22"
-                               Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+                               Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"/>
                 </StackPanel>
             </Border>
 
@@ -280,7 +280,7 @@
                     <ItemsControl ItemsSource="{Binding RecentActivities}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Border BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1"
+                                <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1"
                                         Padding="2,7">
                                     <Grid>
                                         <Grid.ColumnDefinitions>
@@ -290,18 +290,18 @@
                                         </Grid.ColumnDefinitions>
                                         <TextBlock Grid.Column="0" Text="{Binding Emoji}" FontSize="13" Margin="0,0,8,0"/>
                                         <TextBlock Grid.Column="1" Text="{Binding Text}" FontSize="13"
-                                                   Foreground="{StaticResource TextPrimaryBrush}"
+                                                   Foreground="{DynamicResource TextPrimaryBrush}"
                                                    TextTrimming="CharacterEllipsis"/>
                                         <TextBlock Grid.Column="2" Text="{Binding TimeText}" FontSize="11"
                                                    Margin="8,2,0,0" VerticalAlignment="Top"
-                                                   Foreground="{StaticResource TextMutedBrush}"/>
+                                                   Foreground="{DynamicResource TextMutedBrush}"/>
                                     </Grid>
                                 </Border>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
                     <TextBlock Text="还没有动态：完成任务、写日志、解锁成就都会出现在这里 ✨" FontSize="12"
-                               Foreground="{StaticResource TextMutedBrush}" Margin="2,10,0,0"
+                               Foreground="{DynamicResource TextMutedBrush}" Margin="2,10,0,0"
                                Visibility="{Binding NoActivities, Converter={StaticResource BoolToVis}}"/>
                 </StackPanel>
             </Border>
@@ -313,7 +313,7 @@
                     <DockPanel>
                         <Button DockPanel.Dock="Right" Content="记录" Padding="14,0" Height="34"
                                 Margin="8,0,0,0" Click="MemoSave_Click"
-                                Background="{StaticResource AccentBrush}" Foreground="White"
+                                Background="{DynamicResource AccentBrush}" Foreground="White"
                                 BorderThickness="0" Cursor="Hand"/>
                         <ComboBox x:Name="MemoType" DockPanel.Dock="Right" Width="96" Height="34"
                                   VerticalContentAlignment="Center" SelectedIndex="0">
@@ -326,7 +326,7 @@
                                  KeyDown="MemoBox_KeyDown"/>
                     </DockPanel>
                     <TextBlock Text="记一条今天的世界日志（回车或点「记录」），选心情一键直达 ↓"
-                               FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="2,6,0,0"/>
+                               FontSize="11" Foreground="{DynamicResource TextMutedBrush}" Margin="2,6,0,0"/>
 
                     <!-- 心情 8 连（与安卓/网页 MOOD_CHOICES 一致） -->
                     <WrapPanel Margin="0,8,0,0">
@@ -344,7 +344,7 @@
                     <ItemsControl ItemsSource="{Binding RecentMemos}" Margin="0,12,0,0">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Border BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1"
+                                <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1"
                                         Padding="2,7">
                                     <Grid>
                                         <Grid.ColumnDefinitions>
@@ -355,11 +355,11 @@
                                         </Grid.ColumnDefinitions>
                                         <TextBlock Grid.Column="0" Text="{Binding TypeEmoji}" FontSize="13" Margin="0,0,8,0"/>
                                         <TextBlock Grid.Column="1" Text="{Binding Text}" FontSize="13"
-                                                   Foreground="{StaticResource TextPrimaryBrush}"
+                                                   Foreground="{DynamicResource TextPrimaryBrush}"
                                                    TextTrimming="CharacterEllipsis"/>
                                         <TextBlock Grid.Column="2" Text="{Binding TimeText}" FontSize="11"
                                                    Margin="8,2,0,0" VerticalAlignment="Top"
-                                                   Foreground="{StaticResource TextMutedBrush}"/>
+                                                   Foreground="{DynamicResource TextMutedBrush}"/>
                                         <Button Grid.Column="3" Content="🗑" FontSize="12" Margin="8,0,0,0"
                                                 Background="Transparent" BorderThickness="0"
                                                 Cursor="Hand" Click="MemoDelete_Click" Tag="{Binding Id}"/>
@@ -369,7 +369,7 @@
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
                     <TextBlock Text="还什么都没有，写下第一条日志吧 ✨" FontSize="12"
-                               Foreground="{StaticResource TextMutedBrush}" Margin="2,10,0,0"
+                               Foreground="{DynamicResource TextMutedBrush}" Margin="2,10,0,0"
                                Visibility="{Binding NoMemos, Converter={StaticResource BoolToVis}}"/>
                 </StackPanel>
             </Border>

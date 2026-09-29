@@ -8,8 +8,9 @@ namespace EarthOnline.Desktop.Services;
 
 /// <summary>
 /// 外观服务：深浅主题 / 全局字号 / 壁纸。
-/// 主题实现：直接修改 App.Resources 中各 SolidColorBrush 的 Color —— 画刷未冻结，
-/// 改 Color 后所有引用它的 UI（含已加载页面与侧栏）立即变色，无需 DynamicResource 重构。
+/// 主题实现：整体替换 App.Resources 中的画刷对象。
+/// 注意：资源字典里的 Freezable 会被框架自动冻结，「改 Color」会静默失败（历史 bug 根因），
+/// 故改为替换对象；XAML 侧画刷引用统一用 DynamicResource，替换后已加载界面立即刷新。
 /// 字号实现：主窗口 LayoutTransform 缩放，等效全局字号且零侵入。
 /// 壁纸实现：替换 Resources["AppBgBrush"] 为 ImageBrush（新建/重导航的页面生效）。
 /// </summary>
@@ -38,10 +39,11 @@ public static class ThemeService
         if (res is null) return;
         foreach (var (key, light, darkColor) in Palette)
         {
-            if (res[key] is SolidColorBrush brush && !brush.IsFrozen)
-            {
-                brush.Color = dark ? darkColor : light;
-            }
+            // 说明：Application.Resources 里的 Freezable 会被框架自动冻结（BAML 加载期即冻结，
+            // 运行时塞进去的新画刷同样会被冻结），因此「改 Color」这条路走不通——冻结后赋值静默失败。
+            // 改为整体替换资源对象：XAML 侧统一用 DynamicResource 引用，替换后已加载界面会立即刷新。
+            if (key == "AppBgBrush" && res[key] is ImageBrush) continue; // 有壁纸时不拿纯色盖掉它
+            res[key] = new SolidColorBrush(dark ? darkColor : light);
         }
     }
 
@@ -89,34 +91,16 @@ public static class ThemeService
             }
         }
 
-        // 还原纯色（与 App.xaml 初始值一致；当前主题色由画刷 Color 决定）
-        var solid = new SolidColorBrush(Color.FromRgb(0xF8, 0xF6, 0xF2));
-        if (IsDark(s)) solid.Color = Color.FromRgb(0x1F, 0x1D, 0x1B);
-        res["AppBgBrush"] = solid;
-    }
-
-    /// <summary>启动 / 切换时确保调色板画刷可变。
-    /// App.xaml 编译进 BAML 后，SolidColorBrush 等 Freezable 资源会被自动冻结，
-    /// 导致 ApplyTheme 里 `brush.Color = ...` 静默失效（主题切换“看着没反应”）。
-    /// 这里在首个页面创建前把冻结的画刷换成一份新的可变副本，后续 Color 修改即可即时生效。</summary>
-    private static void EnsureMutableBrushes()
-    {
-        var res = Application.Current?.Resources;
-        if (res is null) return;
-        foreach (var (key, _, _) in Palette)
-        {
-            if (key == "AppBgBrush") continue; // 壁纸步骤会重建此画刷，无需在此处理
-            if (res[key] is SolidColorBrush brush && brush.IsFrozen)
-                res[key] = new SolidColorBrush(brush.Color);
-        }
+        // 还原纯色（对象整体替换，DynamicResource 会刷新；当前主题色由 IsDark 决定）
+        var target = IsDark(s) ? Color.FromRgb(0x1F, 0x1D, 0x1B) : Color.FromRgb(0xF8, 0xF6, 0xF2);
+        res["AppBgBrush"] = new SolidColorBrush(target);
     }
 
     /// <summary>启动时一次性应用全部外观设置。</summary>
     public static void ApplyAll(SettingsStore s)
     {
-        EnsureMutableBrushes(); // 先确保调色板画刷可变（App.xaml 编译期会冻结 Freezable 资源）
-        ApplyWallpaper(s);      // 再放壁纸（替换画刷对象）
-        ApplyTheme(s);          // 最后改 Color（对纯色画刷生效）
+        ApplyTheme(s);          // 先铺好调色板（动态资源即时刷新）
+        ApplyWallpaper(s);      // 再放壁纸（有壁纸则覆盖背景画刷）
         ApplyFontScale(s.FontScale);
     }
 }

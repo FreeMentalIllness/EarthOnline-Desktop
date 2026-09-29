@@ -5,7 +5,7 @@
       xmlns:d="http://schemas.openxmlformats.org/markup-compatibility/2006"
       mc:Ignorable="d"
       Title="设置"
-      Background="{StaticResource AppBgBrush}">
+      Background="{DynamicResource AppBgBrush}">
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="24">
 
@@ -16,14 +16,14 @@
             <Border Style="{StaticResource CardStyle}">
                 <StackPanel>
                     <TextBlock Text="🎨 外观" FontWeight="SemiBold" FontSize="15"
-                               Foreground="{StaticResource TextPrimaryBrush}"/>
+                               Foreground="{DynamicResource TextPrimaryBrush}"/>
                     <TextBlock Text="主题与字号即时生效；壁纸对内容区背景生效。"
                                FontSize="12" Margin="0,6,0,12"
-                               Foreground="{StaticResource TextSecondaryBrush}"/>
+                               Foreground="{DynamicResource TextSecondaryBrush}"/>
 
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="主题" FontSize="13" Width="70" VerticalAlignment="Center"
-                                   Foreground="{StaticResource TextSecondaryBrush}"/>
+                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
                         <RadioButton x:Name="ThemeLight" GroupName="Theme" Content="☀️ 浅色"
                                      Style="{StaticResource SegButtonStyle}" Checked="Appearance_Changed"/>
                         <RadioButton x:Name="ThemeDark" GroupName="Theme" Content="🌙 深色"
@@ -32,7 +32,7 @@
 
                     <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
                         <TextBlock Text="字号" FontSize="13" Width="70" VerticalAlignment="Center"
-                                   Foreground="{StaticResource TextSecondaryBrush}"/>
+                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
                         <RadioButton x:Name="FontSmall" GroupName="FontScale" Content="小"
                                      Style="{StaticResource SegButtonStyle}" Tag="0.9" Checked="Appearance_Changed"/>
                         <RadioButton x:Name="FontStd" GroupName="FontScale" Content="标准"
@@ -43,12 +43,12 @@
 
                     <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
                         <TextBlock Text="壁纸" FontSize="13" Width="70" VerticalAlignment="Center"
-                                   Foreground="{StaticResource TextSecondaryBrush}"/>
+                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
                         <Button Content="选择图片…" Padding="12,6" Click="PickWallpaper_Click" Cursor="Hand"/>
                         <Button Content="清除壁纸" Padding="12,6" Margin="8,0,0,0" Click="ClearWallpaper_Click" Cursor="Hand"/>
                         <TextBlock x:Name="WallpaperText" Margin="10,0,0,0" FontSize="12" VerticalAlignment="Center"
                                    TextTrimming="CharacterEllipsis" MaxWidth="360"
-                                   Foreground="{StaticResource TextMutedBrush}"/>
+                                   Foreground="{DynamicResource TextMutedBrush}"/>
                     </StackPanel>
                 </StackPanel>
             </Border>
@@ -57,19 +57,19 @@
             <Border Style="{StaticResource CardStyle}">
                 <StackPanel>
                     <TextBlock Text="⚙️ 通用" FontWeight="SemiBold" FontSize="15"
-                               Foreground="{StaticResource TextPrimaryBrush}"/>
+                               Foreground="{DynamicResource TextPrimaryBrush}"/>
                     <TextBlock Text="开机自启与版本更新。"
                                FontSize="12" Margin="0,6,0,12"
-                               Foreground="{StaticResource TextSecondaryBrush}"/>
+                               Foreground="{DynamicResource TextSecondaryBrush}"/>
 
                     <CheckBox x:Name="AutoStartBox" Content="开机自动启动（当前用户，无需管理员权限）"
                               FontSize="13" Margin="0,2,0,0"
-                              Foreground="{StaticResource TextPrimaryBrush}"
+                              Foreground="{DynamicResource TextPrimaryBrush}"
                               Checked="AutoStart_Changed" Unchecked="AutoStart_Changed"/>
 
                     <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
                         <TextBlock Text="退出时" FontSize="13" Width="70" VerticalAlignment="Center"
-                                   Foreground="{StaticResource TextSecondaryBrush}"/>
+                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
                         <RadioButton x:Name="ExitMinimize" GroupName="ExitBehavior" Content="最小化到托盘"
                                      Style="{StaticResource SegButtonStyle}" Checked="ExitBehavior_Changed"/>
                         <RadioButton x:Name="ExitDirect" GroupName="ExitBehavior" Content="直接退出"
@@ -83,7 +83,7 @@
                     </StackPanel>
 
                     <TextBlock x:Name="UpdateStatusText" Margin="0,12,0,0" FontSize="12"
-                               Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+                               Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"/>
                 </StackPanel>
             </Border>
 
@@ -91,10 +91,10 @@
             <Border Style="{StaticResource CardStyle}">
                 <StackPanel>
                     <TextBlock Text="⌨️ 快捷键" FontWeight="SemiBold" FontSize="15"
-                               Foreground="{StaticResource TextPrimaryBrush}"/>
+                               Foreground="{DynamicResource TextPrimaryBrush}"/>
                     <TextBlock Text="按住 Ctrl 再按数字键即可在页面间跳转（顺序与左侧导航一致）。"
                                FontSize="12" Margin="0,6,0,10"
-                               Foreground="{StaticResource TextSecondaryBrush}"/>
+                               Foreground="{DynamicResource TextSecondaryBrush}"/>
 
                     <UniformGrid Columns="2">
                         <TextBlock Text="Ctrl + 1　主页" FontSize="12" Margin="0,3"/>
@@ -111,7 +111,7 @@
 
                     <TextBlock Text="对话输入框内 Enter 发送、Shift + Enter 换行。"
                                FontSize="12" Margin="0,10,0,0"
-                               Foreground="{StaticResource TextMutedBrush}"/>
+                               Foreground="{DynamicResource TextMutedBrush}"/>
                 </StackPanel>
             </Border>
 
@@ -119,7 +119,7 @@
             <Border Style="{StaticResource CardStyle}">
                 <StackPanel>
                     <TextBlock Text="👤 个人资料" FontWeight="SemiBold" FontSize="15"
-                               Foreground="{StaticResource TextPrimaryBrush}"/>
+                               Foreground="{DynamicResource TextPrimaryBrush}"/>
                     <Grid Margin="0,12,0,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="90"/>
@@ -132,15 +132,15 @@
                         </Grid.RowDefinitions>
 
                         <TextBlock Grid.Row="0" Grid.Column="0" Text="昵称" FontSize="13" VerticalAlignment="Center"
-                                   Foreground="{StaticResource TextSecondaryBrush}"/>
+                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
                         <TextBlock x:Name="NameText" Grid.Row="0" Grid.Column="1" FontSize="13" VerticalAlignment="Center"
-                                   Foreground="{StaticResource TextPrimaryBrush}"/>
+                                   Foreground="{DynamicResource TextPrimaryBrush}"/>
                         <Button Grid.Row="0" Grid.Column="2" Content="修改" Padding="12,5" Click="EditName_Click" Cursor="Hand"/>
 
                         <TextBlock Grid.Row="1" Grid.Column="0" Text="生日" FontSize="13" VerticalAlignment="Center"
-                                   Margin="0,10,0,0" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                   Margin="0,10,0,0" Foreground="{DynamicResource TextSecondaryBrush}"/>
                         <TextBlock x:Name="BirthText" Grid.Row="1" Grid.Column="1" FontSize="13" VerticalAlignment="Center"
-                                   Margin="0,10,0,0" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                   Margin="0,10,0,0" Foreground="{DynamicResource TextPrimaryBrush}"/>
                         <Button Grid.Row="1" Grid.Column="2" Content="修改" Padding="12,5" Margin="0,10,0,0"
                                 Click="EditBirth_Click" Cursor="Hand"/>
                     </Grid>
@@ -157,16 +157,16 @@
             <Border Style="{StaticResource CardStyle}">
                 <StackPanel>
                     <TextBlock Text="本地数据" FontWeight="SemiBold" FontSize="15"
-                               Foreground="{StaticResource TextPrimaryBrush}"/>
+                               Foreground="{DynamicResource TextPrimaryBrush}"/>
                     <TextBlock x:Name="DbPathText" Margin="0,8,0,0" FontSize="12"
-                               Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+                               Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"/>
                     <TextBlock Text="全部数据只存在你自己的电脑里，不上传任何第三方；唯一的网络出口是你自己配置的 WebDAV。"
                                FontSize="12" Margin="0,6,0,0" TextWrapping="Wrap"
-                               Foreground="{StaticResource TextMutedBrush}"/>
+                               Foreground="{DynamicResource TextMutedBrush}"/>
 
                     <!-- v1.0.3：自定义数据存放目录 -->
                     <TextBlock Text="数据存放位置" FontSize="13" Margin="0,14,0,4"
-                               Foreground="{StaticResource TextSecondaryBrush}"/>
+                               Foreground="{DynamicResource TextSecondaryBrush}"/>
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
@@ -183,7 +183,7 @@
                     <Button Content="保存目录（重启后生效）" Padding="12,6" Margin="0,8,0,0" HorizontalAlignment="Left"
                             Click="ApplyDataDir_Click" Cursor="Hand"/>
                     <TextBlock x:Name="DataDirStatus" Margin="0,6,0,0" FontSize="12" TextWrapping="Wrap"
-                               Foreground="{StaticResource TextSecondaryBrush}"/>
+                               Foreground="{DynamicResource TextSecondaryBrush}"/>
                     <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
                         <Button Content="导出备份到文件…" Padding="12,6" Click="ExportLocal_Click" Cursor="Hand"/>
                         <Button Content="从文件导入…" Padding="12,6" Margin="8,0,0,0" Click="ImportLocal_Click" Cursor="Hand"/>
@@ -195,13 +195,13 @@
             <Border Style="{StaticResource CardStyle}">
                 <StackPanel>
                     <TextBlock Text="🛟 自动备份" FontWeight="SemiBold" FontSize="15"
-                               Foreground="{StaticResource TextPrimaryBrush}"/>
+                               Foreground="{DynamicResource TextPrimaryBrush}"/>
                     <TextBlock Text="数据变更后自动在本机留一份 JSON 快照（防抖 4 秒，两次快照至少间隔 60 秒），只保留最近 3 份。"
                                FontSize="12" Margin="0,6,0,0" TextWrapping="Wrap"
-                               Foreground="{StaticResource TextSecondaryBrush}"/>
+                               Foreground="{DynamicResource TextSecondaryBrush}"/>
 
                     <CheckBox x:Name="AutoBackupBox" Content="开启自动备份" FontSize="13" Margin="0,10,0,0"
-                              Foreground="{StaticResource TextPrimaryBrush}"
+                              Foreground="{DynamicResource TextPrimaryBrush}"
                               Checked="AutoBackup_Changed" Unchecked="AutoBackup_Changed"/>
 
                     <ListBox x:Name="BackupList" Margin="0,10,0,0" MaxHeight="132" BorderThickness="0"
@@ -216,7 +216,7 @@
                     </StackPanel>
 
                     <TextBlock x:Name="BackupStatusText" Margin="0,10,0,0" FontSize="12" TextWrapping="Wrap"
-                               Foreground="{StaticResource TextSecondaryBrush}"/>
+                               Foreground="{DynamicResource TextSecondaryBrush}"/>
                 </StackPanel>
             </Border>
 
@@ -224,10 +224,10 @@
             <Border Style="{StaticResource CardStyle}">
                 <StackPanel>
                     <TextBlock Text="🗺️ 地图（高德）" FontWeight="SemiBold" FontSize="15"
-                               Foreground="{StaticResource TextPrimaryBrush}"/>
+                               Foreground="{DynamicResource TextPrimaryBrush}"/>
                     <TextBlock Text="填入自己的高德 Web 端 JS API Key；留空则使用内置回退 Key，都没有时地图自动降级为列表视图（足迹增删改不受影响）。"
                                FontSize="12" Margin="0,6,0,0" TextWrapping="Wrap"
-                               Foreground="{StaticResource TextSecondaryBrush}"/>
+                               Foreground="{DynamicResource TextSecondaryBrush}"/>
 
                     <Grid Margin="0,12,0,0">
                         <Grid.ColumnDefinitions>
@@ -239,35 +239,35 @@
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
                         <TextBlock Grid.Row="0" Grid.Column="0" Text="API Key" FontSize="13" VerticalAlignment="Center"
-                                   Foreground="{StaticResource TextSecondaryBrush}"/>
+                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
                         <TextBox x:Name="AmapKeyBox" Grid.Row="0" Grid.Column="1" Padding="8,6" Margin="0,3"
                                  ToolTip="在高德开放平台申请「Web端(JS API)」Key；本机用 Windows DPAPI 加密保存"/>
                         <TextBlock Grid.Row="1" Grid.Column="0" Text="安全密钥" FontSize="13" VerticalAlignment="Center"
-                                   Foreground="{StaticResource TextSecondaryBrush}"/>
+                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
                         <TextBox x:Name="AmapSecBox" Grid.Row="1" Grid.Column="1" Padding="8,6" Margin="0,3"
                                  ToolTip="JS API 的安全密钥 securityJsCode；若你的 Key 类型不需要可留空"/>
                     </Grid>
 
                     <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
                         <Button Content="保存 Key" Padding="12,6" Click="SaveAmapKey_Click"
-                                Background="{StaticResource AccentBrush}" Foreground="White"
+                                Background="{DynamicResource AccentBrush}" Foreground="White"
                                 BorderThickness="0" Cursor="Hand"/>
                         <Button Content="清空（回落内置）" Padding="12,6" Margin="8,0,0,0"
                                 Click="ClearAmapKey_Click" Cursor="Hand"/>
                     </StackPanel>
 
                     <TextBlock x:Name="AmapStatusText" Margin="0,10,0,0" FontSize="12" TextWrapping="Wrap"
-                               Foreground="{StaticResource TextSecondaryBrush}"/>
+                               Foreground="{DynamicResource TextSecondaryBrush}"/>
                 </StackPanel>
             </Border>
 
             <Border Style="{StaticResource CardStyle}">
                 <StackPanel>
                     <TextBlock Text="WebDAV 同步" FontWeight="SemiBold" FontSize="15"
-                               Foreground="{StaticResource TextPrimaryBrush}"/>
+                               Foreground="{DynamicResource TextPrimaryBrush}"/>
                     <TextBlock Text="与安卓 / 网页端共用同一个远端文件，按修改时间解决冲突。"
                                FontSize="12" Margin="0,6,0,12"
-                               Foreground="{StaticResource TextSecondaryBrush}"/>
+                               Foreground="{DynamicResource TextSecondaryBrush}"/>
 
                     <Grid>
                         <Grid.ColumnDefinitions>
@@ -283,34 +283,34 @@
                         </Grid.RowDefinitions>
 
                         <TextBlock Grid.Row="0" Grid.Column="0" Text="服务器" FontSize="13" VerticalAlignment="Center"
-                                   Foreground="{StaticResource TextSecondaryBrush}"/>
+                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
                         <TextBox x:Name="UrlBox" Grid.Row="0" Grid.Column="1" Padding="8" Margin="0,3"
                                  ToolTip="例如 https://dav.jianguoyun.com/dav/"/>
 
                         <TextBlock Grid.Row="1" Grid.Column="0" Text="用户名" FontSize="13" VerticalAlignment="Center"
-                                   Foreground="{StaticResource TextSecondaryBrush}"/>
+                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
                         <TextBox x:Name="UserBox" Grid.Row="1" Grid.Column="1" Padding="8" Margin="0,3"/>
 
                         <TextBlock Grid.Row="2" Grid.Column="0" Text="密码" FontSize="13" VerticalAlignment="Center"
-                                   Foreground="{StaticResource TextSecondaryBrush}"/>
+                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
                         <PasswordBox x:Name="PassBox" Grid.Row="2" Grid.Column="1" Padding="8" Margin="0,3"
                                      ToolTip="坚果云等需用「应用密码」而非登录密码"/>
 
                         <TextBlock Grid.Row="3" Grid.Column="0" Text="远端路径" FontSize="13" VerticalAlignment="Center"
-                                   Foreground="{StaticResource TextSecondaryBrush}"/>
+                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
                         <TextBox x:Name="PathBox" Grid.Row="3" Grid.Column="1" Padding="8" Margin="0,3"
                                  ToolTip="留空则使用 /earth_online_backup.json（与安卓 / 网页一致）"/>
 
                         <TextBlock Grid.Row="4" Grid.Column="0" Text="自动同步" FontSize="13" VerticalAlignment="Center"
-                                   Foreground="{StaticResource TextSecondaryBrush}"/>
+                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
                         <CheckBox x:Name="AutoSyncBox" Grid.Row="4" Grid.Column="1" Margin="0,6"
                                   Content="启动时自动拉取云端更新，退出时自动推送" FontSize="12"
-                                  Foreground="{StaticResource TextSecondaryBrush}"/>
+                                  Foreground="{DynamicResource TextSecondaryBrush}"/>
                     </Grid>
 
                     <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
                         <Button Content="保存配置" Padding="12,6" Click="SaveConfig_Click"
-                                Background="{StaticResource AccentBrush}" Foreground="White"
+                                Background="{DynamicResource AccentBrush}" Foreground="White"
                                 BorderThickness="0" Cursor="Hand"/>
                         <Button Content="测试连接" Padding="12,6" Margin="8,0,0,0" Click="TestConn_Click" Cursor="Hand"/>
                         <Button Content="立即推送" Padding="12,6" Margin="8,0,0,0" Click="Push_Click" Cursor="Hand"/>
@@ -318,7 +318,7 @@
                     </StackPanel>
 
                     <TextBlock x:Name="SyncStatusText" Margin="0,12,0,0" FontSize="12"
-                               Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+                               Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"/>
                     <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
                         <Button Content="🎓 重新查看首次引导" Padding="12,6" Click="RestartOnboarding_Click" Cursor="Hand"/>
                     </StackPanel>
@@ -329,7 +329,7 @@
             <Border Style="{StaticResource CardStyle}">
                 <StackPanel>
                     <TextBlock Text="ℹ️ 关于" FontWeight="SemiBold" FontSize="15"
-                               Foreground="{StaticResource TextPrimaryBrush}"/>
+                               Foreground="{DynamicResource TextPrimaryBrush}"/>
 
                     <!-- 品牌区：与移动端同一套 logo -->
                     <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
@@ -338,62 +338,62 @@
                                RenderOptions.BitmapScalingMode="HighQuality"/>
                         <StackPanel VerticalAlignment="Center" Margin="14,0,0,0">
                             <TextBlock Text="地球Online" FontSize="18" FontWeight="SemiBold"
-                                       Foreground="{StaticResource TextPrimaryBrush}"/>
+                                       Foreground="{DynamicResource TextPrimaryBrush}"/>
                             <TextBlock Text="把人生当游戏来玩：任务即主线，习惯即成就。"
                                        FontSize="12" Margin="0,3,0,0"
-                                       Foreground="{StaticResource TextSecondaryBrush}"/>
+                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
                         </StackPanel>
                     </StackPanel>
 
                     <TextBlock x:Name="AboutVersionText" Margin="0,12,0,0" FontSize="12"
-                               Foreground="{StaticResource TextSecondaryBrush}"/>
+                               Foreground="{DynamicResource TextSecondaryBrush}"/>
                     <TextBlock x:Name="AboutTechText" Margin="0,3,0,0" FontSize="12" TextWrapping="Wrap"
-                               Foreground="{StaticResource TextMutedBrush}"/>
+                               Foreground="{DynamicResource TextMutedBrush}"/>
                     <TextBlock x:Name="AboutSponsorsText" Margin="0,6,0,0" FontSize="12" TextWrapping="Wrap"
-                               Foreground="{StaticResource TextSecondaryBrush}"/>
+                               Foreground="{DynamicResource TextSecondaryBrush}"/>
 
                     <!-- 更新日志 -->
                     <TextBlock Text="更新日志" FontSize="13" FontWeight="SemiBold"
-                               Margin="0,14,0,6" Foreground="{StaticResource TextPrimaryBrush}"/>
+                               Margin="0,14,0,6" Foreground="{DynamicResource TextPrimaryBrush}"/>
                     <TextBlock Text="v1.0.2 · 收尾与体验完善" FontSize="12"
-                               Foreground="{StaticResource TextSecondaryBrush}"/>
+                               Foreground="{DynamicResource TextSecondaryBrush}"/>
                     <TextBlock Text="· 新增首次启动引导（建角色 / 功能简介 / WebDAV / 导入导出）" FontSize="12"
-                               Margin="0,3,0,0" TextWrapping="Wrap" Foreground="{StaticResource TextMutedBrush}"/>
+                               Margin="0,3,0,0" TextWrapping="Wrap" Foreground="{DynamicResource TextMutedBrush}"/>
                     <TextBlock Text="· 地图 Key 支持自定义配置，未配置时友好降级为列表视图" FontSize="12"
-                               Margin="0,3,0,0" TextWrapping="Wrap" Foreground="{StaticResource TextMutedBrush}"/>
+                               Margin="0,3,0,0" TextWrapping="Wrap" Foreground="{DynamicResource TextMutedBrush}"/>
                     <TextBlock Text="· 头像文件统一入口管理，杜绝孤儿文件" FontSize="12"
-                               Margin="0,3,0,0" TextWrapping="Wrap" Foreground="{StaticResource TextMutedBrush}"/>
+                               Margin="0,3,0,0" TextWrapping="Wrap" Foreground="{DynamicResource TextMutedBrush}"/>
                     <TextBlock Text="· 设置页新增快捷键说明卡与自动备份管理" FontSize="12"
-                               Margin="0,3,0,0" TextWrapping="Wrap" Foreground="{StaticResource TextMutedBrush}"/>
+                               Margin="0,3,0,0" TextWrapping="Wrap" Foreground="{DynamicResource TextMutedBrush}"/>
 
                     <TextBlock Text="v1.0.1 · 桌面端 UI 与功能补齐" FontSize="12" Margin="0,10,0,0"
-                               Foreground="{StaticResource TextSecondaryBrush}"/>
+                               Foreground="{DynamicResource TextSecondaryBrush}"/>
                     <TextBlock Text="· 应用图标与移动端统一（exe / 窗口 / 托盘 / 标题栏）" FontSize="12"
-                               Margin="0,3,0,0" TextWrapping="Wrap" Foreground="{StaticResource TextMutedBrush}"/>
+                               Margin="0,3,0,0" TextWrapping="Wrap" Foreground="{DynamicResource TextMutedBrush}"/>
                     <TextBlock Text="· 自定义头像图片（原图复制 + 圆形显示）" FontSize="12"
-                               Margin="0,3,0,0" TextWrapping="Wrap" Foreground="{StaticResource TextMutedBrush}"/>
+                               Margin="0,3,0,0" TextWrapping="Wrap" Foreground="{DynamicResource TextMutedBrush}"/>
                     <TextBlock Text="· 任务明细面板：状态 / 进度 / 备注 / 时间 / 子任务" FontSize="12"
-                               Margin="0,3,0,0" TextWrapping="Wrap" Foreground="{StaticResource TextMutedBrush}"/>
+                               Margin="0,3,0,0" TextWrapping="Wrap" Foreground="{DynamicResource TextMutedBrush}"/>
                     <TextBlock Text="· 背包与成就按分类分组（分组头置顶 / 可展开）" FontSize="12"
-                               Margin="0,3,0,0" TextWrapping="Wrap" Foreground="{StaticResource TextMutedBrush}"/>
+                               Margin="0,3,0,0" TextWrapping="Wrap" Foreground="{DynamicResource TextMutedBrush}"/>
                     <TextBlock Text="· 新增足迹地图页（高德地图，与网页端同 Key）" FontSize="12"
-                               Margin="0,3,0,0" TextWrapping="Wrap" Foreground="{StaticResource TextMutedBrush}"/>
+                               Margin="0,3,0,0" TextWrapping="Wrap" Foreground="{DynamicResource TextMutedBrush}"/>
                     <TextBlock Text="· 新增 AI 助手（OpenAI 兼容接口，密钥经 Windows DPAPI 加密后存于本机）" FontSize="12"
-                               Margin="0,3,0,0" TextWrapping="Wrap" Foreground="{StaticResource TextMutedBrush}"/>
+                               Margin="0,3,0,0" TextWrapping="Wrap" Foreground="{DynamicResource TextMutedBrush}"/>
                     <TextBlock Text="· 新增本地自动备份（保留最近 3 份快照，命名与安卓一致）" FontSize="12"
-                               Margin="0,3,0,0" TextWrapping="Wrap" Foreground="{StaticResource TextMutedBrush}"/>
+                               Margin="0,3,0,0" TextWrapping="Wrap" Foreground="{DynamicResource TextMutedBrush}"/>
                     <TextBlock Text="· 快捷键说明与地图离线降级提示" FontSize="12"
-                               Margin="0,3,0,0" TextWrapping="Wrap" Foreground="{StaticResource TextMutedBrush}"/>
+                               Margin="0,3,0,0" TextWrapping="Wrap" Foreground="{DynamicResource TextMutedBrush}"/>
 
                     <TextBlock Text="v1.0.0 · 首个正式版" FontSize="12" Margin="0,10,0,0"
-                               Foreground="{StaticResource TextSecondaryBrush}"/>
+                               Foreground="{DynamicResource TextSecondaryBrush}"/>
                     <TextBlock Text="三端数据互通、任务树、背包收藏、成就彩蛋、数据看板、WebDAV 同步、深色主题。"
                                FontSize="12" Margin="0,3,0,0" TextWrapping="Wrap"
-                               Foreground="{StaticResource TextMutedBrush}"/>
+                               Foreground="{DynamicResource TextMutedBrush}"/>
 
                     <TextBlock Text="全部数据只存在本机，唯一的网络出口是你自己配置的 WebDAV；本客户端开源，可自行审计。"
                                FontSize="12" Margin="0,12,0,0" TextWrapping="Wrap"
-                               Foreground="{StaticResource TextMutedBrush}"/>
+                               Foreground="{DynamicResource TextMutedBrush}"/>
 
                     <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
                         <Button Content="GitHub 仓库" Padding="12,6" Click="OpenRepo_Click" Cursor="Hand"/>

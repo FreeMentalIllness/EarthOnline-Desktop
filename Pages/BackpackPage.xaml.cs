@@ -161,6 +161,14 @@ public partial class BackpackPage : Page
         }
     }
 
+    /// <summary>分类标签横向滚动区：把鼠标滚轮转成横向滚动（否则分类变多时只能拖滚动条）。</summary>
+    private void ChipScroll_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+    {
+        if (sender is not ScrollViewer sv || e.Delta == 0) return;
+        sv.ScrollToHorizontalOffset(sv.HorizontalOffset - (e.Delta / 3.0));
+        e.Handled = true;
+    }
+
     private void ManageItemCategories_Click(object sender, RoutedEventArgs e)
     {
         if (!_loaded) return;

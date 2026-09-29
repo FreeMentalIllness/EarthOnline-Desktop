@@ -5,7 +5,7 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
       mc:Ignorable="d"
       Title="数据"
-      Background="{StaticResource AppBgBrush}">
+      Background="{DynamicResource AppBgBrush}">
     <Grid Margin="24">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -41,7 +41,7 @@
                             HorizontalAlignment="Right" Visibility="Collapsed">
                     <Button Content="◀" Padding="10,4" Click="PrevMonth_Click" Cursor="Hand"/>
                     <TextBlock x:Name="MonthLabel" VerticalAlignment="Center" Margin="14,0" FontSize="14"
-                               FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}"/>
+                               FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
                     <Button Content="▶" Padding="10,4" Click="NextMonth_Click" Cursor="Hand"/>
                     <Button Content="本月" Padding="10,4" Margin="12,0,0,0" Click="ThisMonth_Click" Cursor="Hand"/>
                 </StackPanel>
@@ -86,9 +86,9 @@
                                 <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                                     <TextBlock x:Name="DonutCenterNum" Text="0" FontSize="20" FontWeight="SemiBold"
                                                HorizontalAlignment="Center"
-                                               Foreground="{StaticResource TextPrimaryBrush}"/>
+                                               Foreground="{DynamicResource TextPrimaryBrush}"/>
                                     <TextBlock Text="总任务" FontSize="11" HorizontalAlignment="Center"
-                                               Foreground="{StaticResource TextMutedBrush}"/>
+                                               Foreground="{DynamicResource TextMutedBrush}"/>
                                 </StackPanel>
                             </Grid>
                             <WrapPanel x:Name="DonutLegend" Grid.Column="1" VerticalAlignment="Center"
@@ -96,8 +96,8 @@
                             <TextBlock x:Name="DonutEmpty"
                                        Text="还没有任务，创建第一个试试。"
                                        HorizontalAlignment="Center" VerticalAlignment="Center"
-                                       FontSize="13" Foreground="{StaticResource TextSecondaryBrush}"
-                                       Background="{StaticResource AppBgBrush}" Padding="12,6"
+                                       FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"
+                                       Background="{DynamicResource AppBgBrush}" Padding="12,6"
                                        Visibility="Collapsed"/>
                         </Grid>
                     </StackPanel>
@@ -111,8 +111,8 @@
                             <TextBlock x:Name="TrendEmpty"
                                        Text="这段时间还没有完成的任务，先完成一个小目标试试。"
                                        HorizontalAlignment="Center" VerticalAlignment="Center"
-                                       FontSize="13" Foreground="{StaticResource TextSecondaryBrush}"
-                                       Background="{StaticResource AppBgBrush}" Padding="12,6"
+                                       FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"
+                                       Background="{DynamicResource AppBgBrush}" Padding="12,6"
                                        Visibility="Collapsed"/>
                         </Grid>
                     </StackPanel>
@@ -128,7 +128,7 @@
                     <Grid x:Name="DayGrid"/>
                 </StackPanel>
                 <TextBlock x:Name="DayDetail" DockPanel.Dock="Bottom" Margin="0,14,0,0"
-                           FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap"
+                           FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"
                            Text="点击某一天，查看当天完成的任务。"/>
             </DockPanel>
         </Border>

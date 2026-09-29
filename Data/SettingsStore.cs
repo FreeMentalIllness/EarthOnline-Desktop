@@ -88,7 +88,8 @@ public class SettingsStore
     [JsonPropertyName("pinnedAchievements")]
     public List<string> PinnedAchievements { get; set; } = new();
 
-    private static string FilePath => Path.Combine(AppPaths.RootDir, "settings.json");
+    // 固定放在应用配置目录：设置里保存着「数据目录」，配置不能跟着数据目录走，否则形成循环依赖。
+    private static string FilePath => AppPaths.SettingsFile;
 
     private static readonly JsonSerializerOptions Opts = new()
     {
@@ -115,7 +116,7 @@ public class SettingsStore
 
     public void Save()
     {
-        AppPaths.EnsureDirectories();
+        Directory.CreateDirectory(AppPaths.ConfigDir); // 配置目录独立于数据目录
         File.WriteAllText(FilePath, JsonSerializer.Serialize(this, Opts));
     }
 

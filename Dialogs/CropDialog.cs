@@ -90,18 +90,23 @@ public static class CropDialog
         canvas.Children.Add(frameBorder);
 
         // 初始：缩放至刚好放下（留点边距），居中
-        double z = Math.Min(Viewport / iw, Viewport / ih) * 0.92;
+        // 滑块范围随原图尺寸动态计算：固定 0.1~3 会让超大图/极小图的初始缩放落在范围外，
+        // 表现为「刚打开是对的，一动滑块就跳变」。
+        double fit = Math.Min(Viewport / iw, Viewport / ih);
+        double minZ = Math.Max(0.01, fit * 0.4);
+        double maxZ = Math.Min(40, Math.Max(fit * 8, 4));
+        double z = Math.Clamp(fit * 0.92, minZ, maxZ);
         double tx = (Viewport - iw * z) / 2;
         double ty = (Viewport - ih * z) / 2;
         ApplyTransform(scale, translate, z, tx, ty);
 
         var zoom = new Slider
         {
-            Minimum = 0.1,
-            Maximum = 3,
+            Minimum = minZ,
+            Maximum = maxZ,
             Value = z,
             Width = 220,
-            TickFrequency = 0.1,
+            TickFrequency = (maxZ - minZ) / 20,
             IsSnapToTickEnabled = false,
             VerticalAlignment = VerticalAlignment.Center
         };
@@ -129,7 +134,17 @@ public static class CropDialog
             last = p;
             ApplyTransform(scale, translate, zoom.Value, tx, ty);
         };
-        zoom.ValueChanged += (_, _) => ApplyTransform(scale, translate, zoom.Value, tx, ty);
+        // 缩放以取景框中心为锚点：否则会以左上角为锚点，越缩越往一边漂
+        zoom.ValueChanged += (_, _) =>
+        {
+            double nz = zoom.Value;
+            if (nz <= 0 || z <= 0) return;
+            double cx = Viewport / 2.0, cy = Viewport / 2.0;
+            tx = cx - (cx - tx) * (nz / z);
+            ty = cy - (cy - ty) * (nz / z);
+            z = nz;
+            ApplyTransform(scale, translate, z, tx, ty);
+        };
 
         // ---- 按钮 ----
         var ok = new Button
