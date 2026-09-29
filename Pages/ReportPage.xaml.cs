@@ -96,7 +96,9 @@ public partial class ReportPage : Page
 
         if (d.IsBar)
         {
-            ChartRenderer.DrawBar(ReportChart, d.ChartLabels, d.ChartValues, d.Kind == ReportKind.Day ? 3 : 1);
+            // v1.0.3：柱子可点按 → 弹出该时段的记录明细（点按洞察）
+            ChartRenderer.DrawBar(ReportChart, d.ChartLabels, d.ChartValues,
+                d.Kind == ReportKind.Day ? 3 : 1, OnBarClick);
         }
         else
         {
@@ -109,6 +111,106 @@ public partial class ReportPage : Page
     }
 
     private void ReportChart_SizeChanged(object sender, SizeChangedEventArgs e) => DrawChart();
+
+    // ==================== 点按洞察（v1.0.3） ====================
+
+    /// <summary>点按柱状图某柱 → 弹出该时段（日报=某小时 / 年报=某月）的记录明细窗口。</summary>
+    private void OnBarClick(int bucketIndex)
+    {
+        var kind = CurrentKind();
+        string header;
+        try
+        {
+            header = kind switch
+            {
+                ReportKind.Year => $"{DateTime.Today.Year} 年 {bucketIndex + 1} 月的记录",
+                ReportKind.Week => "这一格没有柱子",
+                _ => $"今天 {bucketIndex:00}:00 – {(bucketIndex + 1) % 24:00}:00 的记录"
+            };
+            var rows = ReportService.BucketDetail(kind, bucketIndex);
+
+            var win = new Window
+            {
+                Title = "记录明细",
+                Width = 440,
+                SizeToContent = SizeToContent.Height,
+                MaxHeight = 520,
+                ResizeMode = ResizeMode.NoResize,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                Background = Brush("#F8F6F2"),
+                Owner = Application.Current?.MainWindow
+            };
+
+            var root = new StackPanel { Margin = new Thickness(20) };
+            root.Children.Add(new TextBlock
+            {
+                Text = header,
+                FontSize = 14,
+                FontWeight = FontWeights.SemiBold,
+                Foreground = Brush("#1E1A16"),
+                Margin = new Thickness(0, 0, 0, 10)
+            });
+
+            if (rows.Count == 0)
+            {
+                root.Children.Add(new TextBlock
+                {
+                    Text = "这一格还没有记录。留下一条，柱子就会长出来 🌱",
+                    FontSize = 13,
+                    TextWrapping = TextWrapping.Wrap,
+                    Foreground = Brush("#7A7268")
+                });
+            }
+            else
+            {
+                var list = new ScrollViewer
+                {
+                    MaxHeight = 340,
+                    VerticalScrollBarVisibility = ScrollBarVisibility.Auto
+                };
+                var panel = new StackPanel();
+                foreach (var r in rows)
+                {
+                    var row = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 4, 0, 4) };
+                    row.Children.Add(new TextBlock
+                    {
+                        Text = r.Emoji, FontSize = 13, Margin = new Thickness(0, 0, 8, 0),
+                        VerticalAlignment = VerticalAlignment.Top
+                    });
+                    row.Children.Add(new TextBlock
+                    {
+                        Text = string.IsNullOrWhiteSpace(r.Text) ? "（无内容）" : r.Text,
+                        FontSize = 13, MaxWidth = 260,
+                        TextWrapping = TextWrapping.Wrap,
+                        Foreground = Brush("#1E1A16")
+                    });
+                    row.Children.Add(new TextBlock
+                    {
+                        Text = r.TimeText, FontSize = 11, Margin = new Thickness(10, 2, 0, 0),
+                        VerticalAlignment = VerticalAlignment.Top,
+                        Foreground = Brush("#B0A89C")
+                    });
+                    panel.Children.Add(row);
+                }
+                list.Content = panel;
+                root.Children.Add(list);
+            }
+
+            var closeBtn = new Button
+            {
+                Content = "关闭", MinWidth = 84, Height = 32, Margin = new Thickness(0, 14, 0, 0),
+                HorizontalAlignment = HorizontalAlignment.Right,
+                Background = Brush("#D4A373"), Foreground = System.Windows.Media.Brushes.White,
+                BorderThickness = new Thickness(0), Cursor = System.Windows.Input.Cursors.Hand
+            };
+            closeBtn.Click += (_, _) => win.Close();
+            root.Children.Add(closeBtn);
+
+            win.Content = new ScrollViewer { Content = root, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
+            win.ShowDialog();
+        }
+        catch { /* 洞察属锦上添花，失败不打断报告页 */ }
+    }
 
     // ==================== 交互 ====================
 

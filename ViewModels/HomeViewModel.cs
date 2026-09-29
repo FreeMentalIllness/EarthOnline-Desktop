@@ -32,6 +32,13 @@ public class ActivityRow
     public string TimeText { get; init; } = "";
 }
 
+/// <summary>主页徽章墙上的一枚已佩戴徽章（成就）。</summary>
+public class BadgeRow
+{
+    public string Title { get; init; } = "";
+    public string SubText { get; init; } = "";
+}
+
 /// <summary>
 /// 主页视图模型（MVVM，CommunityToolkit.Mvvm）。
 /// 负责读取资料与各项统计、世界日志读写，供 HomePage 绑定。
@@ -72,6 +79,29 @@ public partial class HomeViewModel : ObservableObject
     [ObservableProperty] private ObservableCollection<ActivityRow> _recentActivities = new();
     [ObservableProperty] private bool _noActivities = true;
 
+    // ---- v1.0.3：问候语 / 季节徽章 / 连续记录 / 今日一签 / 历年今日 / 速览 / 称号 / 徽章墙 ----
+    [ObservableProperty] private string _greetingText = "";
+    [ObservableProperty] private string _seasonBadge = "";
+
+    [ObservableProperty] private string _streakText = "";
+    [ObservableProperty] private string _comebackText = "";
+    [ObservableProperty] private bool _hasStreakCard;
+
+    [ObservableProperty] private string _dailyPickText = "";
+    [ObservableProperty] private string _dailyPickSub = "";
+    [ObservableProperty] private bool _hasDailyPick;
+
+    [ObservableProperty] private string _thisDayText = "";
+    [ObservableProperty] private bool _hasThisDay;
+
+    [ObservableProperty] private string _titleLine = "";
+    [ObservableProperty] private string _levelStatText = "—";
+    [ObservableProperty] private int _footprintCount;
+    [ObservableProperty] private string _doneRateText = "—";
+
+    [ObservableProperty] private ObservableCollection<BadgeRow> _badges = new();
+    [ObservableProperty] private bool _noBadges = true;
+
     /// <summary>从 SQLite 读取概览（兼容三端数据）。</summary>
     public void Load()
     {
@@ -96,6 +126,12 @@ public partial class HomeViewModel : ObservableObject
             var lived = LifeStats.DaysLived(p?.BirthDate);
             DaysLivedText = hasBirth && lived > 0 ? $"🌍 已存活 {lived} 天" : "";
 
+            // v1.0.3：称号（settings.json）+ 等级 → 「称号 · Lv.X」（称号留空时为「旅行者」）
+            var settings = SettingsStore.Load();
+            var title = XpRules.TitleFor(settings.CustomTitle);
+            TitleLine = hasBirth ? $"{title} · Lv.{age}" : title;
+            LevelStatText = hasBirth ? $"Lv.{age}" : "未设置";
+
             CustomFields.Clear();
             foreach (var cf in ProfileService.ReadCustomFields(p))
                 CustomFields.Add(string.IsNullOrWhiteSpace(cf.Value) ? cf.Label : $"{cf.Label}：{cf.Value}");
@@ -104,6 +140,10 @@ public partial class HomeViewModel : ObservableObject
             ItemCount = db.Items.Count();
             AchievementCount = db.Achievements.Count(a => a.Unlocked);
             InspirationCount = db.Memos.Count();
+            FootprintCount = db.Locations.Count();
+            int totalTasks = TaskCount;
+            int doneTasks = db.Tasks.Count(t => t.Status == "done");
+            DoneRateText = totalTasks <= 0 ? "—" : $"{(int)Math.Round(doneTasks * 100.0 / totalTasks)}%";
 
             // 人生卡：存活天数（整百纪念）+ 生日倒计时 + 累计概览
             if (hasBirth && lived > 0)
@@ -121,8 +161,151 @@ public partial class HomeViewModel : ObservableObject
         {
             Name = "数据加载失败：" + ex.Message;
         }
+        ReloadHomeCards();
+        LoadPinnedBadges();
         ReloadMemos();
         ReloadActivities();
+    }
+
+    // ==================== v1.0.3：主页卡片（问候 / 连续记录 / 今日一签 / 历年今日） ====================
+
+    /// <summary>
+    /// 记录日 = 日志日 ∪ 完成任务日 ∪ 足迹日（GrowthStreak.kt 口径）。
+    /// 顺带收集今日一签 / 历年今日的素材池，一次查询全搞定。
+    /// </summary>
+    private void ReloadHomeCards()
+    {
+        GreetingText = "";
+        SeasonBadge = "";
+        StreakText = "";
+        ComebackText = "";
+        HasStreakCard = false;
+        HasDailyPick = false;
+        HasThisDay = false;
+
+        try
+        {
+            var today = DateTime.Today;
+            var todayStr = today.ToString("yyyy-MM-dd");
+            var season = SeasonTheme.Current();
+            SeasonBadge = $"{season.Emoji} {season.Label}";
+
+            var dayKeys = new HashSet<string>();
+            var pickPool = new List<(string Emoji, string Text, string Day)>();   // 今日一签素材
+            var thisDayPool = new List<(int Year, string Emoji, string Text)>();  // 历年今日素材
+            string? latestMood = null;
+
+            using (var db = new AppDbContext(AppPaths.DbFile))
+            {
+                var mmdd = today.ToString("MM-dd");
+                foreach (var m in db.Memos.AsNoTracking().OrderBy(m => m.CreatedAt).ToList())
+                {
+                    var k = StatsService.DayKeyOf(m.CreatedAt);
+                    if (k.Length == 10)
+                    {
+                        dayKeys.Add(k);
+                        // 今日一签：只抽「过去」的日志（今天的不算惊喜）
+                        if (string.CompareOrdinal(k, todayStr) < 0)
+                            pickPool.Add((TypeEmojiOf(m.Type), (m.Text ?? "").Trim(), k));
+                        // 历年今日
+                        if (k.EndsWith(mmdd, StringComparison.Ordinal) &&
+                            int.TryParse(k.AsSpan(0, 4), out var y) && y < today.Year)
+                            thisDayPool.Add((y, TypeEmojiOf(m.Type), (m.Text ?? "").Trim()));
+                    }
+                    if (latestMood is null && m.Type == "mood" && !string.IsNullOrWhiteSpace(m.Text))
+                        latestMood = m.Text;
+                }
+                foreach (var t in db.Tasks.AsNoTracking().ToList())
+                {
+                    if (string.IsNullOrEmpty(t.DoneAt)) continue;
+                    var k = StatsService.DayKeyOf(t.DoneAt);
+                    if (k.Length != 10) continue;
+                    dayKeys.Add(k);
+                    if (string.CompareOrdinal(k, todayStr) < 0)
+                        pickPool.Add(("✅", string.IsNullOrWhiteSpace(t.Title) ? "未命名任务" : t.Title, k));
+                    if (k.EndsWith(mmdd, StringComparison.Ordinal) &&
+                        int.TryParse(k.AsSpan(0, 4), out var y2) && y2 < today.Year)
+                        thisDayPool.Add((y2, "✅", string.IsNullOrWhiteSpace(t.Title) ? "未命名任务" : t.Title));
+                }
+                foreach (var l in db.Locations.AsNoTracking().ToList())
+                {
+                    if (string.IsNullOrEmpty(l.Date) || l.Date.Length != 10) continue;
+                    dayKeys.Add(l.Date);
+                    if (string.CompareOrdinal(l.Date, todayStr) < 0)
+                        pickPool.Add(("📍", string.IsNullOrWhiteSpace(l.Name) ? "一处足迹" : l.Name, l.Date));
+                    if (l.Date.EndsWith(mmdd, StringComparison.Ordinal) &&
+                        int.TryParse(l.Date.AsSpan(0, 4), out var y3) && y3 < today.Year)
+                        thisDayPool.Add((y3, "📍", string.IsNullOrWhiteSpace(l.Name) ? "一处足迹" : l.Name));
+                }
+            }
+
+            // ---- 动态问候语（Greeting.kt 规格）----
+            int streak = GrowthStreak.CurrentStreak(dayKeys);
+            GreetingText = Greeting.Build(DateTime.Now.Hour, latestMood, streak);
+
+            // ---- 连续记录成长阶段（GrowthStreak.kt 规格）----
+            var comeback = GrowthStreak.ComebackMessage(dayKeys, today);
+            if (streak > 0)
+            {
+                int stage = GrowthStreak.Stage(streak);
+                StreakText = stage > 0
+                    ? $"已连续记录 {streak} 天 · {GrowthStreak.StageLabel(stage)}"
+                    : $"已连续记录 {streak} 天 · 再坚持到 3 天就会萌芽 🌱";
+            }
+            else if (dayKeys.Count == 0)
+            {
+                StreakText = "写下今天的第一条记录，让星球开始生长 🌱";
+            }
+            ComebackText = comeback ?? "";
+            HasStreakCard = StreakText.Length > 0 || ComebackText.Length > 0;
+
+            // ---- 今日一签：日期做种子的确定性抽取 ----
+            if (pickPool.Count > 0)
+            {
+                int seed = today.Year * 10000 + today.Month * 100 + today.Day;
+                var pick = pickPool[new Random(seed).Next(pickPool.Count)];
+                DailyPickText = pick.Text.Length > 60 ? pick.Text[..60] + "…" : pick.Text;
+                DailyPickSub = $"{pick.Emoji} 来自 {pick.Day}";
+                HasDailyPick = true;
+            }
+
+            // ---- 历年今日：取最近一个有记录的年份 ----
+            if (thisDayPool.Count > 0)
+            {
+                var best = thisDayPool.OrderBy(x => x.Year).Last();
+                var text = best.Text.Length > 50 ? best.Text[..50] + "…" : best.Text;
+                ThisDayText = $"{best.Year} 年的今天：{best.Emoji} {text}";
+                HasThisDay = true;
+            }
+        }
+        catch { /* 主页卡片属锦上添花，读失败静默降级 */ }
+    }
+
+    /// <summary>重新加载徽章墙（佩戴的成就）。佩戴选择保存在 settings.json。</summary>
+    public void LoadPinnedBadges()
+    {
+        Badges.Clear();
+        try
+        {
+            var pinned = SettingsStore.Load().PinnedAchievements;
+            if (pinned.Count > 0)
+            {
+                using var db = new AppDbContext(AppPaths.DbFile);
+                var unlocked = db.Achievements.AsNoTracking().Where(a => a.Unlocked).ToList();
+                foreach (var id in pinned)
+                {
+                    var a = unlocked.FirstOrDefault(x => x.Id == id);
+                    if (a is null) continue;
+                    Badges.Add(new BadgeRow
+                    {
+                        Title = string.IsNullOrWhiteSpace(a.Title) ? "成就" : a.Title,
+                        SubText = StatsService.DayKeyOf(a.UnlockedAt ?? "")
+                    });
+                }
+            }
+        }
+        catch { /* 读失败静默降级 */ }
+        NoBadges = Badges.Count == 0;
     }
 
     /// <summary>

@@ -66,20 +66,20 @@ public partial class HomePage : Page
     private void MemoSave_Click(object sender, RoutedEventArgs e)
     {
         var type = (MemoType.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "note";
-        _vm.AddMemo(type, _vm.MemoInput);
+        if (_vm.AddMemo(type, _vm.MemoInput)) _vm.Load();   // 问候语/连续记录随新记录刷新
     }
 
     private void MemoBox_KeyDown(object sender, KeyEventArgs e)
     {
         if (e.Key != Key.Enter) return;
         var type = (MemoType.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "note";
-        _vm.AddMemo(type, _vm.MemoInput);
+        if (_vm.AddMemo(type, _vm.MemoInput)) _vm.Load();
     }
 
     /// <summary>心情一键记录（type=mood，text=「emoji 标签」，与两端一致）。</summary>
     private void Mood_Click(object sender, RoutedEventArgs e)
     {
-        if ((sender as Button)?.Tag is string mood) _vm.AddMemo("mood", mood);
+        if ((sender as Button)?.Tag is string mood && _vm.AddMemo("mood", mood)) _vm.Load();
     }
 
     private void MemoDelete_Click(object sender, RoutedEventArgs e)
@@ -87,5 +87,41 @@ public partial class HomePage : Page
         if ((sender as Button)?.Tag is not string id || string.IsNullOrEmpty(id)) return;
         if (!SimpleDialogs.Confirm("确定删除这条日志？")) return;
         _vm.DeleteMemo(id);
+    }
+
+    // ==================== 徽章墙（v1.0.3） ====================
+
+    /// <summary>佩戴徽章：从已解锁成就里挑最多 3 枚，存 settings.json（零 DB 变更）。</summary>
+    private void PickBadges_Click(object sender, RoutedEventArgs e)
+    {
+        List<AchievementEntity> unlocked;
+        try
+        {
+            using var db = new AppDbContext(AppPaths.DbFile);
+            unlocked = db.Achievements.AsNoTracking().Where(a => a.Unlocked).ToList();
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show("读取成就失败：" + ex.Message, "地球Online",
+                MessageBoxButton.OK, MessageBoxImage.Error);
+            return;
+        }
+
+        var pinned = SettingsStore.Load().PinnedAchievements;
+        if (!BadgePickerDialog.Show(unlocked, pinned)) return;
+
+        try
+        {
+            var s = SettingsStore.Load();
+            s.PinnedAchievements = pinned;
+            s.Save();
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show("保存徽章佩戴失败：" + ex.Message, "地球Online",
+                MessageBoxButton.OK, MessageBoxImage.Error);
+            return;
+        }
+        _vm.LoadPinnedBadges();
     }
 }

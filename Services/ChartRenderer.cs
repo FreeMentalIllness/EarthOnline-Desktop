@@ -239,8 +239,12 @@ public static class ChartRenderer
         return true;
     }
 
-    /// <summary>柱状图（labelStep 控制隔几个显示一次 X 轴标签）。</summary>
-    public static void DrawBar(Canvas canvas, IReadOnlyList<string> labels, IReadOnlyList<int> values, int labelStep = 1)
+    /// <summary>
+    /// 柱状图（labelStep 控制隔几个显示一次 X 轴标签）。
+    /// v1.0.3：onBarClick 非空时柱子可点按，回调参数为柱下标（点按洞察用）。
+    /// </summary>
+    public static void DrawBar(Canvas canvas, IReadOnlyList<string> labels, IReadOnlyList<int> values,
+        int labelStep = 1, Action<int>? onBarClick = null)
     {
         canvas.Children.Clear();
         if (canvas.ActualWidth <= 0 || canvas.ActualHeight <= 0) return;
@@ -288,8 +292,17 @@ public static class ChartRenderer
                 Width = barW,
                 Height = Math.Max(vh, values[i] > 0 ? 2 : 0),
                 Fill = new SolidColorBrush(Line),
-                RadiusX = 3, RadiusY = 3
+                RadiusX = 3, RadiusY = 3,
+                Tag = i
             };
+            if (onBarClick != null)
+            {
+                rect.Cursor = System.Windows.Input.Cursors.Hand;
+                rect.MouseLeftButtonUp += (_, _) =>
+                {
+                    if (rect.Tag is int idx) onBarClick(idx);
+                };
+            }
             Canvas.SetLeft(rect, cx - barW / 2);
             Canvas.SetTop(rect, top);
             canvas.Children.Add(rect);

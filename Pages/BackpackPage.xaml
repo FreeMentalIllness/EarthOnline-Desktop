@@ -89,14 +89,24 @@
                             </ListBox.GroupStyle>
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
-                                    <StackPanel Orientation="Horizontal" Margin="0,4">
-                                        <TextBlock Text="{Binding Icon}" Width="24"/>
-                                        <TextBlock Text="{Binding Name}" FontSize="14"
-                                                   Foreground="{StaticResource TextPrimaryBrush}"/>
-                                        <TextBlock Text="{Binding TypeLabel}" FontSize="11" Margin="8,2,0,0"
-                                                   Foreground="{StaticResource TextMutedBrush}"/>
-                                        <TextBlock Text="{Binding CreatedAtLabel}" FontSize="12" Margin="8,2,0,0"
-                                                   Foreground="{StaticResource TextMutedBrush}"/>
+                                    <StackPanel Margin="0,4">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="{Binding Icon}" Width="24"/>
+                                            <TextBlock Text="{Binding Name}" FontSize="14"
+                                                       Foreground="{StaticResource TextPrimaryBrush}"/>
+                                            <TextBlock Text="{Binding TypeLabel}" FontSize="11" Margin="8,2,0,0"
+                                                       Foreground="{StaticResource TextMutedBrush}"/>
+                                            <TextBlock Text="{Binding CreatedAtLabel}" FontSize="12" Margin="8,2,0,0"
+                                                       Foreground="{StaticResource TextMutedBrush}"/>
+                                        </StackPanel>
+                                        <!-- v1.0.3：物品故事卡 —— 描述以 📖 样式强调展示 -->
+                                        <TextBlock Margin="26,3,0,0" TextWrapping="Wrap"
+                                                   Visibility="{Binding HasStory, Converter={StaticResource BoolToVis}}">
+                                            <Run Text="📖 " Foreground="{StaticResource AccentBrush}"/>
+                                            <Run Text="{Binding Story, Mode=OneWay}"
+                                                 Foreground="{StaticResource TextSecondaryBrush}"
+                                                 FontStyle="Italic"/>
+                                        </TextBlock>
                                     </StackPanel>
                                 </DataTemplate>
                             </ListBox.ItemTemplate>

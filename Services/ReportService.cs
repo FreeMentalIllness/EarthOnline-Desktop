@@ -123,7 +123,12 @@ public static class ReportService
         int memos = memoList.Count;
         int achievements = achList.Count;
 
-        int xp = XpRules.Of(tasksDone, achievements, memos, locations);
+        // v1.0.3：经验来源多元化 —— 区间内拾取的物品也计入（日键闭区间，与安卓 itemRepo 同口径）
+        int items = db.Items.AsNoTracking().ToList()
+            .Count(i => !string.IsNullOrEmpty(i.CreatedAt)
+                        && StatsService.InDayRange(i.CreatedAt, r.FromDay, r.ToDay));
+
+        int xp = XpRules.TotalXp(tasksDone, achievements, memos, locations, items);
 
         return kind switch
         {
@@ -179,9 +184,17 @@ public static class ReportService
         }
         var peakText = peakHour >= 0 ? $"{peakHour}:00 前后最活跃" : "分布比较均匀";
 
+        // v1.0.3：智能总结更「有人味」—— 根据产出结构给一句针对性的话
+        var nudge = (tasksDone > 0, memos > 0) switch
+        {
+            (true, false) => "任务推进了不少，也给今天的自己留一句话吧。",
+            (false, true) => "今天更多是在记录与思考，也很好。",
+            _ => ""
+        };
+
         return $"今天共 {total} 次记录，{peakText}。" +
                $"完成 {tasksDone} 个任务、记下 {memos} 条灵感，" +
-               $"解锁 {achievements} 个成就，获得 {xp} 点经验。";
+               $"解锁 {achievements} 个成就，获得 {xp} 点经验。{nudge}";
     }
 
     // ==================== 周报 ====================
@@ -208,7 +221,9 @@ public static class ReportService
             ? "这一周还是空的。明天先完成一个小任务试试。"
             : $"近 7 天有 {active} 天留下记录，合计 {total} 次。" +
               $"完成任务 {tasksDone} 个，新增灵感 {memos} 条，" +
-              $"解锁成就 {achievements} 个，标记足迹 {locations} 处。";
+              $"解锁成就 {achievements} 个，标记足迹 {locations} 处。" +
+              // v1.0.3：不打击人的温和提示
+              (active < 4 ? "空着的几天也没关系，回来继续就好。" : "");
 
         return new ReportData
         {
@@ -305,4 +320,83 @@ public static class ReportService
     }
 
     private static string Fallback(string s, string def) => string.IsNullOrWhiteSpace(s) ? def : s;
+
+    // ==================== 图表点按洞察（v1.0.3） ====================
+
+    /// <summary>明细窗口里的一行。</summary>
+    public sealed class BucketDetailRow
+    {
+        public string Emoji { get; set; } = "";
+        public string Text { get; set; } = "";
+        public string TimeText { get; set; } = "";
+    }
+
+    /// <summary>
+    /// 柱状图点按洞察：日报的某小时 / 年报的某月里，具体做了什么。
+    /// 周报是折线图（无柱可点），返回空列表。
+    /// </summary>
+    public static List<BucketDetailRow> BucketDetail(ReportKind kind, int bucketIndex)
+    {
+        var today = DateTime.Today;
+        DateTime from, to;
+        switch (kind)
+        {
+            case ReportKind.Day:
+                from = today.AddHours(bucketIndex);
+                to = today.AddHours(bucketIndex + 1);
+                break;
+            case ReportKind.Year:
+                from = new DateTime(today.Year, bucketIndex + 1, 1);
+                to = from.AddMonths(1);
+                break;
+            default:
+                return new List<BucketDetailRow>();
+        }
+
+        var rows = new List<BucketDetailRow>();
+        using var db = new AppDbContext(AppPaths.DbFile);
+
+        foreach (var m in db.Memos.AsNoTracking().ToList()
+                     .Where(m => StatsService.TryParseTs(m.CreatedAt, out var d) && d >= from && d < to)
+                     .OrderBy(m => m.CreatedAt))
+        {
+            rows.Add(new BucketDetailRow
+            {
+                Emoji = "💭",
+                Text = (m.Text ?? "").Trim().Replace('\n', ' '),
+                TimeText = TimeText(kind, m.CreatedAt)
+            });
+        }
+        foreach (var t in db.Tasks.AsNoTracking().ToList()
+                     .Where(t => t.Status == "done" && t.DoneAt != null &&
+                                 StatsService.TryParseTs(t.DoneAt, out var d) && d >= from && d < to)
+                     .OrderBy(t => t.DoneAt))
+        {
+            rows.Add(new BucketDetailRow
+            {
+                Emoji = "✅",
+                Text = string.IsNullOrWhiteSpace(t.Title) ? "未命名任务" : t.Title,
+                TimeText = TimeText(kind, t.DoneAt)
+            });
+        }
+        foreach (var a in db.Achievements.AsNoTracking().ToList()
+                     .Where(a => a.Unlocked && a.UnlockedAt != null &&
+                                 StatsService.TryParseTs(a.UnlockedAt, out var d) && d >= from && d < to)
+                     .OrderBy(a => a.UnlockedAt))
+        {
+            rows.Add(new BucketDetailRow
+            {
+                Emoji = "🏆",
+                Text = string.IsNullOrWhiteSpace(a.Title) ? "成就" : a.Title,
+                TimeText = TimeText(kind, a.UnlockedAt)
+            });
+        }
+        return rows;
+    }
+
+    private static string TimeText(ReportKind kind, string? ts)
+    {
+        if (!StatsService.TryParseTs(ts, out var d)) return "";
+        return kind == ReportKind.Day ? d.ToString("HH:mm") : d.ToString("MM-dd HH:mm");
+    }
 }

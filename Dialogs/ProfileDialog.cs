@@ -170,6 +170,9 @@ public static class ProfileDialog
 
         // ===== 基础字段 =====
         var nameBox = Field(root, "昵称", profile.Name);
+        // v1.0.3：称号 —— 不动 profile 表，存 settings.json 的 customTitle 键（零 DB 变更）
+        var titleBox = Field(root, "称号（留空显示默认「旅行者」，最长 12 字）",
+            SettingsStore.Load().CustomTitle);
         var birthBox = Field(root, "生日（YYYY-MM-DD，留空=未设置）", profile.BirthDate);
         var countryBox = Field(root, "国家 / 区服", profile.Country);
         var provinceBox = Field(root, "省份 / 地区", profile.Province);
@@ -307,6 +310,15 @@ public static class ProfileDialog
         profile.AvatarKey = chosenAvatar;
         AvatarService.Apply(profile, pendingAvatarPath);
         profile.CustomFieldsJson = ProfileService.WriteCustomFields(fields);
+
+        // v1.0.3：称号落 settings.json（写失败不拦住资料保存）
+        try
+        {
+            var s = SettingsStore.Load();
+            s.CustomTitle = titleBox.Text.Trim();
+            s.Save();
+        }
+        catch { /* 忽略 */ }
         return true;
     }
 

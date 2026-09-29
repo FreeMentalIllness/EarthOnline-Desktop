@@ -25,6 +25,10 @@ public class ItemRow
     public string CategoryName { get; init; } = "";
     public string CreatedAtLabel => string.IsNullOrEmpty(Item.CreatedAt) ? "" : Item.CreatedAt;
 
+    // v1.0.3：物品故事卡 —— 描述以「📖」样式强调展示（有描述才显示）
+    public bool HasStory => !string.IsNullOrWhiteSpace(Item.Description);
+    public string Story => Item.Description ?? "";
+
     /// <summary>搜索文本（名称/描述/分类名，小写）。</summary>
     public string SearchText { get; init; } = "";
 }

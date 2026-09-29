@@ -12,7 +12,18 @@
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="28,24,28,24" MaxWidth="1040">
             <TextBlock Text="主页" Style="{StaticResource PageTitleStyle}"/>
-            <TextBlock Text="欢迎回来，今天也要好好生活 🌿" Style="{StaticResource PageSubTitleStyle}"/>
+            <!-- v1.0.3：动态问候语 + 当季徽章（Greeting.kt / SeasonTheme.kt 规格） -->
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                <Border Background="{StaticResource CardBgBrush}"
+                        BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
+                        CornerRadius="8" Padding="8,3" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding SeasonBadge}" FontSize="12"
+                               Foreground="{StaticResource TextPrimaryBrush}"/>
+                </Border>
+                <TextBlock Text="{Binding GreetingText}" FontSize="13" Margin="10,0,0,0"
+                           VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                           Foreground="{StaticResource TextSecondaryBrush}"/>
+            </StackPanel>
 
             <!-- ============ 个人资料卡 ============ -->
             <Border Style="{StaticResource CardStyle}">
@@ -53,19 +64,16 @@
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="{Binding Name}" FontSize="20" FontWeight="SemiBold"
                                        Foreground="{StaticResource TextPrimaryBrush}"/>
-                            <TextBlock Text="{Binding LevelText}" FontSize="15" FontWeight="SemiBold"
+                            <!-- v1.0.3：称号 · Lv.X（称号存 settings.json，等级=周岁） -->
+                            <TextBlock Text="{Binding TitleLine}" FontSize="15" FontWeight="SemiBold"
                                        Margin="10,2,0,0" VerticalAlignment="Center"
-                                       Foreground="#B08045"
-                                       Visibility="{Binding HasLevel, Converter={StaticResource EmptyToCollapsed}}"/>
-                            <TextBlock Text="{Binding DaysLivedText}" FontSize="12" Margin="10,3,0,0"
-                                       VerticalAlignment="Center"
-                                       Foreground="{StaticResource TextMutedBrush}"
-                                       Visibility="{Binding DaysLivedText, Converter={StaticResource EmptyToCollapsed}}"/>
+                                       Foreground="#B08045"/>
                         </StackPanel>
                         <TextBlock FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,4,0,0">
                             <Run Text="{Binding BirthDate}"/>
                             <Run Text=" · "/>
                             <Run Text="{Binding Gender}"/>
+                            <Run Text="{Binding DaysLivedText}"/>
                         </TextBlock>
                         <TextBlock Text="{Binding Signature}" FontSize="13"
                                    Foreground="{StaticResource TextMutedBrush}"
@@ -108,8 +116,90 @@
                 </Grid>
             </Border>
 
+            <!-- ============ 连续记录成长阶段（GrowthStreak.kt 规格） ============ -->
+            <Border Style="{StaticResource CardStyle}"
+                    Visibility="{Binding HasStreakCard, Converter={StaticResource BoolToVis}}">
+                <StackPanel>
+                    <TextBlock Text="🌱 连续记录" Style="{StaticResource SectionTitleStyle}"/>
+                    <TextBlock Text="{Binding StreakText}" FontSize="13"
+                               Foreground="{StaticResource TextPrimaryBrush}"
+                               Visibility="{Binding StreakText, Converter={StaticResource EmptyToCollapsed}}"/>
+                    <TextBlock Text="{Binding ComebackText}" FontSize="13" Margin="0,4,0,0"
+                               Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap"
+                               Visibility="{Binding ComebackText, Converter={StaticResource EmptyToCollapsed}}"/>
+                </StackPanel>
+            </Border>
+
+            <!-- ============ 今日一签 / 历年今日 ============ -->
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="12"/>
+                    <ColumnDefinition Width="*"
+                                      MinWidth="0"/>
+                </Grid.ColumnDefinitions>
+                <Border Grid.Column="0" Style="{StaticResource CardStyle}"
+                        Visibility="{Binding HasDailyPick, Converter={StaticResource BoolToVis}}">
+                    <StackPanel>
+                        <TextBlock Text="🎴 今日一签" Style="{StaticResource SectionTitleStyle}"/>
+                        <TextBlock Text="{Binding DailyPickText}" FontSize="13" LineHeight="21"
+                                   Foreground="{StaticResource TextPrimaryBrush}" TextWrapping="Wrap"/>
+                        <TextBlock Text="{Binding DailyPickSub}" FontSize="11" Margin="0,4,0,0"
+                                   Foreground="{StaticResource TextMutedBrush}"/>
+                    </StackPanel>
+                </Border>
+                <Border Grid.Column="2" Style="{StaticResource CardStyle}" Margin="0,0,0,12"
+                        Visibility="{Binding HasThisDay, Converter={StaticResource BoolToVis}}">
+                    <StackPanel>
+                        <TextBlock Text="🕰️ 历年今日" Style="{StaticResource SectionTitleStyle}"/>
+                        <TextBlock Text="{Binding ThisDayText}" FontSize="13" LineHeight="21"
+                                   Foreground="{StaticResource TextPrimaryBrush}" TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <!-- ============ 徽章墙（佩戴最多 3 枚已解锁成就，存 settings.json） ============ -->
+            <TextBlock Text="🎖 徽章墙" Style="{StaticResource SectionTitleStyle}" Margin="0,10,0,8"/>
+            <Border Style="{StaticResource CardStyle}">
+                <StackPanel>
+                    <DockPanel>
+                        <Button DockPanel.Dock="Right" Content="佩戴徽章" Padding="12,6"
+                                VerticalAlignment="Top" Click="PickBadges_Click" Cursor="Hand"/>
+                        <ItemsControl ItemsSource="{Binding Badges}" VerticalAlignment="Center">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel Orientation="Horizontal"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="{StaticResource AppBgBrush}"
+                                            BorderBrush="{StaticResource BorderBrush}"
+                                            BorderThickness="1" CornerRadius="8"
+                                            Padding="10,5" Margin="0,2,8,4">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="🏆" FontSize="14" VerticalAlignment="Center"/>
+                                            <StackPanel Margin="6,0,0,0">
+                                                <TextBlock Text="{Binding Title}" FontSize="12"
+                                                           FontWeight="SemiBold"
+                                                           Foreground="{StaticResource TextPrimaryBrush}"/>
+                                                <TextBlock Text="{Binding SubText}" FontSize="10"
+                                                           Foreground="{StaticResource TextMutedBrush}"/>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </DockPanel>
+                    <TextBlock Text="还没有佩戴徽章：点「佩戴徽章」，把解锁的成就别在胸口 ✨" FontSize="12"
+                               Foreground="{StaticResource TextMutedBrush}" Margin="2,4,0,0"
+                               Visibility="{Binding NoBadges, Converter={StaticResource BoolToVis}}"/>
+                </StackPanel>
+            </Border>
+
             <!-- ============ 四个统计卡 ============ -->
-            <TextBlock Text="概览" Style="{StaticResource SectionTitleStyle}" Margin="0,18,0,8"/>
+            <TextBlock Text="概览" Style="{StaticResource SectionTitleStyle}" Margin="0,8,0,8"/>
             <UniformGrid Columns="4" Margin="0,0,0,4">
                 <Border Style="{StaticResource StatCardStyle}" Margin="0,0,8,0">
                     <StackPanel>
@@ -133,6 +223,34 @@
                     <StackPanel>
                         <TextBlock Text="{Binding InspirationCount}" Style="{StaticResource StatNumStyle}"/>
                         <TextBlock Text="灵感" Style="{StaticResource StatLabelStyle}"/>
+                    </StackPanel>
+                </Border>
+            </UniformGrid>
+
+            <!-- v1.0.3：四个速览数据（等级 / 成就 / 足迹 / 完成率） -->
+            <UniformGrid Columns="4" Margin="0,0,0,4">
+                <Border Style="{StaticResource StatCardStyle}" Margin="0,0,8,0">
+                    <StackPanel>
+                        <TextBlock Text="{Binding LevelStatText}" Style="{StaticResource StatNumStyle}"/>
+                        <TextBlock Text="等级" Style="{StaticResource StatLabelStyle}"/>
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource StatCardStyle}" Margin="4,0,4,0">
+                    <StackPanel>
+                        <TextBlock Text="{Binding AchievementCount}" Style="{StaticResource StatNumStyle}"/>
+                        <TextBlock Text="成就" Style="{StaticResource StatLabelStyle}"/>
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource StatCardStyle}" Margin="4,0,4,0">
+                    <StackPanel>
+                        <TextBlock Text="{Binding FootprintCount}" Style="{StaticResource StatNumStyle}"/>
+                        <TextBlock Text="足迹" Style="{StaticResource StatLabelStyle}"/>
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource StatCardStyle}" Margin="8,0,0,0">
+                    <StackPanel>
+                        <TextBlock Text="{Binding DoneRateText}" Style="{StaticResource StatNumStyle}"/>
+                        <TextBlock Text="完成率" Style="{StaticResource StatLabelStyle}"/>
                     </StackPanel>
                 </Border>
             </UniformGrid>

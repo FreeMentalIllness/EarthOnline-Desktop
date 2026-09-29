@@ -66,6 +66,19 @@ public class SettingsStore
     /// <summary>高德 JS API 安全密钥（DPAPI 加密；可留空 —— 部分 Key 类型不需要）。</summary>
     public string AmapSecEnc { get; set; } = "";
 
+    /// <summary>
+    /// 自定义称号（v1.0.3，对齐安卓 XpRules.titleFor）。留空显示默认「旅行者」。
+    /// 存 settings.json 而非 profile 表 —— 零 DB 变更。
+    /// </summary>
+    [JsonPropertyName("customTitle")]
+    public string CustomTitle { get; set; } = "";
+
+    /// <summary>
+    /// 徽章墙：主页佩戴的成就 id（最多 3 枚，按佩戴顺序展示）。同样走 settings.json。
+    /// </summary>
+    [JsonPropertyName("pinnedAchievements")]
+    public List<string> PinnedAchievements { get; set; } = new();
+
     private static string FilePath => Path.Combine(AppPaths.RootDir, "settings.json");
 
     private static readonly JsonSerializerOptions Opts = new()
