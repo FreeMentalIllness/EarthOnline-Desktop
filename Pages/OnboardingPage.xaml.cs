@@ -178,6 +178,8 @@ public partial class OnboardingPage : Page
             int n = BackupService.ImportJson(File.ReadAllText(dlg.FileName));
             AchievementNotifier.Check();
             DataTipText.Text = $"已导入 {n} 条数据（按主键合并，未清空原有内容）。";
+            // 跨端灵感接力：导入落库后检测来自手机的新灵感并温和提示
+            IdeaRelayService.CheckAfterImport();
         }
         catch (Exception ex)
         {

@@ -373,6 +373,8 @@ public partial class SettingsPage : Page
             LoadProfile();
             MessageBox.Show($"已导入 {n} 条数据（按主键合并，未清空原有内容）。",
                 "地球Online", MessageBoxButton.OK, MessageBoxImage.Information);
+            // 跨端灵感接力：导入落库后检测来自手机的新灵感并温和提示
+            IdeaRelayService.CheckAfterImport();
         }
         catch (Exception ex)
         {
@@ -521,6 +523,8 @@ public partial class SettingsPage : Page
             LoadBackups();
             MessageBox.Show($"已从 {snap.Label} 恢复 {n} 条数据。",
                 "地球Online", MessageBoxButton.OK, MessageBoxImage.Information);
+            // 跨端灵感接力：快照恢复落库后同样检测来自手机的新灵感
+            IdeaRelayService.CheckAfterImport();
         }
         catch (Exception ex)
         {

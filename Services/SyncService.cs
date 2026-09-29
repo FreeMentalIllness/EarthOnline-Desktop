@@ -42,6 +42,8 @@ public static class SyncService
             int n = BackupService.ImportJson(text);
             s.LastSyncAt = RemoteExportedAtString(text);
             s.Save();
+            // 跨端灵感接力：落库后检测来自手机的新灵感并温和提示（内部自行调度到 UI 线程）
+            IdeaRelayService.CheckAfterImport();
             return new SyncResult(true, $"已拉取云端最新数据（{n} 条）", true);
         }
         catch (Exception ex)
