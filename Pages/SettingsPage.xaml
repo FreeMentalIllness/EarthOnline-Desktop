@@ -319,6 +319,8 @@
                                Foreground="{StaticResource TextSecondaryBrush}"/>
                     <TextBlock x:Name="AboutTechText" Margin="0,3,0,0" FontSize="12" TextWrapping="Wrap"
                                Foreground="{StaticResource TextMutedBrush}"/>
+                    <TextBlock x:Name="AboutSponsorsText" Margin="0,6,0,0" FontSize="12" TextWrapping="Wrap"
+                               Foreground="{StaticResource TextSecondaryBrush}"/>
 
                     <!-- 更新日志 -->
                     <TextBlock Text="更新日志" FontSize="13" FontWeight="SemiBold"
