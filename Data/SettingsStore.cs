@@ -67,6 +67,15 @@ public class SettingsStore
     public string AmapSecEnc { get; set; } = "";
 
     /// <summary>
+    /// 自定义数据目录（v1.0.3）。留空 = 使用默认目录（应用根 EarthOnlineData，不可写时回落 %LOCALAPPDATA%\EarthOnline）。
+    /// 设置后下一次启动生效；App 启动时会把旧目录的数据一次性迁移过来。
+    /// </summary>
+    public string DataDirectory { get; set; } = "";
+
+    /// <summary>退出行为：minimize=最小化到托盘常驻后台；exit=直接退出程序。</summary>
+    public string ExitBehavior { get; set; } = "minimize";
+
+    /// <summary>
     /// 自定义称号（v1.0.3，对齐安卓 XpRules.titleFor）。留空显示默认「旅行者」。
     /// 存 settings.json 而非 profile 表 —— 零 DB 变更。
     /// </summary>

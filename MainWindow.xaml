@@ -13,7 +13,7 @@
         Background="{StaticResource AppBgBrush}"
         SizeChanged="Window_SizeChanged">
 
-    <Grid>
+    <Grid x:Name="RootGrid">
         <Grid.ColumnDefinitions>
             <!-- 侧栏宽度由代码按窗口尺寸自适应（200 / 64 图标模式） -->
             <ColumnDefinition x:Name="NavColumn" Width="200"/>
@@ -39,6 +39,17 @@
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <StackPanel.Style>
+                            <Style TargetType="StackPanel">
+                                <Setter Property="Visibility" Value="Visible"/>
+                                <Style.Triggers>
+                                    <!-- 侧栏收起为图标模式时隐藏文字+logo，避免与收起/展开按钮争夺 64px 宽度导致图标被裁切 -->
+                                    <DataTrigger Binding="{Binding IsCompact, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </StackPanel.Style>
                         <!-- 应用 logo：与移动端/任务栏图标同一套资源 -->
                         <Image Source="pack://application:,,,/Assets/app_logo.png"
                                Width="22" Height="22" VerticalAlignment="Center"
@@ -110,23 +121,24 @@
                             <TextBlock Text="报告" Style="{StaticResource NavTextStyle}" Margin="10,0,0,0"/>
                         </StackPanel>
                     </ListBoxItem>
-                    <ListBoxItem Tag="settings">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="⚙️" Style="{StaticResource NavIconStyle}"/>
-                            <TextBlock Text="设置" Style="{StaticResource NavTextStyle}" Margin="10,0,0,0"/>
-                        </StackPanel>
-                    </ListBoxItem>
                     <ListBoxItem Tag="ai">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="🤖" Style="{StaticResource NavIconStyle}"/>
                             <TextBlock Text="AI 助手" Style="{StaticResource NavTextStyle}" Margin="10,0,0,0"/>
                         </StackPanel>
                     </ListBoxItem>
+                    <!-- 设置统一置于侧栏最底部 -->
+                    <ListBoxItem Tag="settings">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="⚙️" Style="{StaticResource NavIconStyle}"/>
+                            <TextBlock Text="设置" Style="{StaticResource NavTextStyle}" Margin="10,0,0,0"/>
+                        </StackPanel>
+                    </ListBoxItem>
                 </ListBox>
 
                 <!-- 底部版本 -->
                 <TextBlock Grid.Row="2"
-                           Text="v1.0.1"
+                           Text="v1.0.3"
                            Style="{StaticResource NavTextStyle}"
                            FontSize="11"
                            Foreground="{StaticResource TextMutedBrush}"

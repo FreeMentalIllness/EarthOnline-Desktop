@@ -151,9 +151,22 @@ public static class ProfileDialog
             // 选图 + 原图完整复制进私有目录（保留扩展名、不重编码）
             var dest = AvatarService.PickAndCopy();
             if (dest is null) return;
-            pendingAvatarPath = dest;
-            LoadPreview(dest);
-            imgNameText.Text = Path.GetFileName(dest);
+
+            // v1.0.3：原画质自定义裁剪（圆形取景，输出 PNG 无损落 avatar 目录）。
+            // 用户取消裁剪则回退为使用未裁剪的原图。
+            if (CropDialog.Show(dest, out var cropped, circular: true, AppPaths.AvatarDir) && cropped is not null)
+            {
+                AvatarService.Discard(dest, originalAvatarPath); // 删掉未裁剪的原图副本，避免孤儿文件
+                pendingAvatarPath = cropped;
+                LoadPreview(cropped);
+                imgNameText.Text = Path.GetFileName(cropped);
+            }
+            else
+            {
+                pendingAvatarPath = dest;
+                LoadPreview(dest);
+                imgNameText.Text = Path.GetFileName(dest);
+            }
         };
         var clearImgBtn = MkBtn("移除图片");
         clearImgBtn.Click += (_, _) =>

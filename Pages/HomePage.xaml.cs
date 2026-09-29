@@ -22,10 +22,10 @@ public partial class HomePage : Page
         Loaded += (_, _) => _vm.Load();
     }
 
-    /// <summary>快速入口按钮：根据 Tag 跳转到对应模块。</summary>
-    private void Quick_Click(object sender, RoutedEventArgs e)
+    /// <summary>概览统计卡点击：根据 Tag 跳转到对应模块（v1.0.3 主页交互重构）。</summary>
+    private void StatCard_Click(object sender, MouseButtonEventArgs e)
     {
-        if ((sender as Button)?.Tag is string key)
+        if ((sender as FrameworkElement)?.Tag is string key)
             (Application.Current.MainWindow as MainWindow)?.NavigateTo(key);
     }
 

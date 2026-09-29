@@ -250,10 +250,19 @@ public partial class MainWindow : Window
         }
     }
 
-    /// <summary>关闭窗口不直接退出，而是最小化到系统托盘常驻后台（除非点了托盘「退出」）。</summary>
+    /// <summary>关闭窗口行为由设置决定：直接退出放行；否则最小化到系统托盘常驻后台（除非点了托盘「退出」）。</summary>
     private void MainWindow_Closing(object? sender, CancelEventArgs e)
     {
-        if (!App.ForceClose)
+        bool exit = App.ForceClose;
+        if (!exit)
+        {
+            try
+            {
+                exit = string.Equals(SettingsStore.Load().ExitBehavior, "exit", StringComparison.OrdinalIgnoreCase);
+            }
+            catch { /* 读取失败回落最小化到托盘 */ }
+        }
+        if (!exit)
         {
             e.Cancel = true;
             Hide();

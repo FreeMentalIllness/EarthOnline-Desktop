@@ -39,8 +39,11 @@
                     <DockPanel Grid.Row="0" Margin="0,0,0,10">
                         <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
                             <Button Content="⚙️ 分类" Padding="12,6" Click="ManageItemCategories_Click" Cursor="Hand"/>
-                            <ComboBox x:Name="ItemCategoryFilter" Width="140" Padding="8" Margin="8,0,0,0"
-                                      SelectedIndex="0" SelectionChanged="ItemFilter_Changed"/>
+                            <!-- v1.0.3：分类标签常驻横向滚动，新分类直接出现在按钮右侧 -->
+                            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled"
+                                          Margin="8,0,0,0" MaxWidth="560" VerticalAlignment="Center">
+                                <StackPanel x:Name="ItemCategoryChips" Orientation="Horizontal"/>
+                            </ScrollViewer>
                         </StackPanel>
                         <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" HorizontalAlignment="Right">
                             <Button Content="＋ 新增物品" Padding="12,6" Click="AddItem_Click"
@@ -127,8 +130,11 @@
                     <DockPanel Grid.Row="0" Margin="0,0,0,10">
                         <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
                             <Button Content="⚙️ 分类" Padding="12,6" Click="ManageCollectionCategories_Click" Cursor="Hand"/>
-                            <ComboBox x:Name="CollectionCategoryFilter" Width="140" Padding="8" Margin="8,0,0,0"
-                                      SelectedIndex="0" SelectionChanged="CollectionFilter_Changed"/>
+                            <!-- v1.0.3：分类标签常驻横向滚动，新分类直接出现在按钮右侧 -->
+                            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled"
+                                          Margin="8,0,0,0" MaxWidth="560" VerticalAlignment="Center">
+                                <StackPanel x:Name="CollectionCategoryChips" Orientation="Horizontal"/>
+                            </ScrollViewer>
                         </StackPanel>
                         <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" HorizontalAlignment="Right">
                             <Button Content="＋ 新增收藏" Padding="12,6" Click="AddCollection_Click"

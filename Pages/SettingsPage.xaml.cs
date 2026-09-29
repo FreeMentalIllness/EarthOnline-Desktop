@@ -17,7 +17,7 @@ public partial class SettingsPage : Page
         DbPathText.Text = AppPaths.DbFile;
         Loaded += (_, _) =>
         {
-            LoadProfile(); LoadConfig(); LoadGeneral(); LoadAppearance(); LoadBackups(); LoadAmap();
+            LoadProfile(); LoadConfig(); LoadGeneral(); LoadAppearance(); LoadBackups(); LoadAmap(); LoadDataDir();
         };
     }
 
@@ -84,11 +84,15 @@ public partial class SettingsPage : Page
 
         try
         {
+            // v1.0.3：原画质自定义裁剪（方形取景），输出 PNG 无损落数据根目录
+            if (!CropDialog.Show(dlg.FileName, out var cropped, circular: false, AppPaths.RootDir) || cropped is null)
+                return;
+
             var s = SettingsStore.Load();
-            s.WallpaperPath = dlg.FileName;
+            s.WallpaperPath = cropped;
             s.Save();
             ThemeService.ApplyWallpaper(s);
-            WallpaperText.Text = Path.GetFileName(dlg.FileName);
+            WallpaperText.Text = Path.GetFileName(cropped);
             (Application.Current.MainWindow as MainWindow)?.RefreshCurrentPage();
         }
         catch (Exception ex)
@@ -103,6 +107,12 @@ public partial class SettingsPage : Page
         try
         {
             var s = SettingsStore.Load();
+            // 删除旧的裁剪壁纸文件（仅限数据根目录内的 crop_ 文件，避免误删用户原图）
+            if (!string.IsNullOrEmpty(s.WallpaperPath) &&
+                s.WallpaperPath.StartsWith(AppPaths.RootDir, StringComparison.OrdinalIgnoreCase))
+            {
+                try { if (File.Exists(s.WallpaperPath)) File.Delete(s.WallpaperPath); } catch { /* 忽略 */ }
+            }
             s.WallpaperPath = "";
             s.Save();
             ThemeService.ApplyWallpaper(s);
@@ -172,7 +182,7 @@ public partial class SettingsPage : Page
     private void LoadGeneral()
     {
         UpdateStatusText.Text = $"当前版本 v{UpdateService.CurrentVersion}";
-        AboutVersionText.Text = $"版本 v{UpdateService.CurrentVersion} · 数据库与设置存于 %LOCALAPPDATA%\\EarthOnline";
+        AboutVersionText.Text = $"版本 v{UpdateService.CurrentVersion} · 数据目录：{AppPaths.RootDir}";
         AboutTechText.Text = $"技术栈：C# / .NET {Environment.Version} · WPF · SQLite（本地）　数据目录：{AppPaths.RootDir}";
         // 赞助者：与 Web / Android 三端同一名单、同一顺序（勿加「首席 / 不分先后」等修饰词）
         AboutSponsorsText.Text = "❤️ 赞助者：海神唐三 · Seastar · 清浅";
@@ -197,6 +207,101 @@ public partial class SettingsPage : Page
         catch (Exception ex)
         {
             MessageBox.Show("设置开机自启失败：" + ex.Message, "地球Online",
+                MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    // ==================== 退出行为（v1.0.3） ====================
+
+    private void ExitBehavior_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_suppressGeneral) return;
+        try
+        {
+            var s = SettingsStore.Load();
+            s.ExitBehavior = ExitDirect.IsChecked == true ? "exit" : "minimize";
+            s.Save();
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show("保存退出行为失败：" + ex.Message, "地球Online",
+                MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    // ==================== 数据存放位置（v1.0.3） ====================
+
+    private void LoadDataDir()
+    {
+        try
+        {
+            var s = SettingsStore.Load();
+            DataDirBox.Text = AppPaths.RootDir;
+            DataDirStatus.Text = string.IsNullOrWhiteSpace(s.DataDirectory)
+                ? "当前为默认目录（应用根 EarthOnlineData，不可写时回落 %LOCALAPPDATA%\\EarthOnline）。修改后需重启生效。"
+                : "已指定自定义目录：" + s.DataDirectory + "（重启后生效）。";
+            _suppressGeneral = true;
+            try
+            {
+                bool exit = string.Equals(s.ExitBehavior, "exit", StringComparison.OrdinalIgnoreCase);
+                ExitDirect.IsChecked = exit;
+                ExitMinimize.IsChecked = !exit;
+            }
+            finally { _suppressGeneral = false; }
+        }
+        catch (Exception ex)
+        {
+            DataDirStatus.Text = "读取数据目录失败：" + ex.Message;
+        }
+    }
+
+    private void BrowseDataDir_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            // WPF 无原生文件夹选择器：用 OpenFileDialog 选文件夹的通用技巧（ValidateNames=false）
+            var dlg = new OpenFileDialog
+            {
+                Title = "选择数据存放目录",
+                ValidateNames = false,
+                CheckFileExists = false,
+                CheckPathExists = true,
+                FileName = "选择此文件夹即代表该目录",
+                Filter = "文件夹|*.folder"
+            };
+            if (dlg.ShowDialog() == true)
+            {
+                var dir = Path.GetDirectoryName(dlg.FileName);
+                if (!string.IsNullOrEmpty(dir)) DataDirBox.Text = dir;
+            }
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show("选择目录失败：" + ex.Message, "地球Online",
+                MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    private void ResetDataDir_Click(object sender, RoutedEventArgs e)
+    {
+        DataDirBox.Text = "";
+        DataDirStatus.Text = "已重置为默认目录；点「保存目录」后重启生效。";
+    }
+
+    private void ApplyDataDir_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var s = SettingsStore.Load();
+            s.DataDirectory = (DataDirBox.Text ?? "").Trim();
+            s.Save();
+            DataDirStatus.Text = string.IsNullOrWhiteSpace(s.DataDirectory)
+                ? "已保存：使用默认目录。" + "重启应用后生效。"
+                : "已保存自定义目录：" + s.DataDirectory + "。重启应用后生效（旧目录数据会在下次启动时自动迁移）。";
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show("保存数据目录失败：" + ex.Message, "地球Online",
                 MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }

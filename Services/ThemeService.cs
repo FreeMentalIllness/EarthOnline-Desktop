@@ -45,15 +45,21 @@ public static class ThemeService
         }
     }
 
-    /// <summary>应用全局字号缩放（0.9 / 1.0 / 1.15）。</summary>
+    /// <summary>应用全局字号缩放（0.9 / 1.0 / 1.15）。
+    /// 作用于主窗口根 Grid 的 LayoutTransform：缩放整棵视觉树（侧栏 + 内容区同步放大），
+    /// 并触发窗口重新测量自动调整尺寸，比直接缩放 Window 更可靠、无裁剪。</summary>
     public static void ApplyFontScale(double scale)
     {
         var win = Application.Current?.MainWindow;
         if (win is null) return;
         scale = Math.Clamp(scale, 0.8, 1.4);
-        win.LayoutTransform = Math.Abs(scale - 1.0) < 0.01
-            ? System.Windows.Media.Transform.Identity
+        var transform = Math.Abs(scale - 1.0) < 0.01
+            ? (Transform)Transform.Identity
             : new ScaleTransform(scale, scale);
+        if (win is MainWindow mw && mw.RootGrid != null)
+            mw.RootGrid.LayoutTransform = transform;
+        else
+            win.LayoutTransform = transform;
     }
 
     /// <summary>应用壁纸（AppBgBrush 换成图片；路径为空还原纯色）。</summary>
@@ -89,11 +95,28 @@ public static class ThemeService
         res["AppBgBrush"] = solid;
     }
 
+    /// <summary>启动 / 切换时确保调色板画刷可变。
+    /// App.xaml 编译进 BAML 后，SolidColorBrush 等 Freezable 资源会被自动冻结，
+    /// 导致 ApplyTheme 里 `brush.Color = ...` 静默失效（主题切换“看着没反应”）。
+    /// 这里在首个页面创建前把冻结的画刷换成一份新的可变副本，后续 Color 修改即可即时生效。</summary>
+    private static void EnsureMutableBrushes()
+    {
+        var res = Application.Current?.Resources;
+        if (res is null) return;
+        foreach (var (key, _, _) in Palette)
+        {
+            if (key == "AppBgBrush") continue; // 壁纸步骤会重建此画刷，无需在此处理
+            if (res[key] is SolidColorBrush brush && brush.IsFrozen)
+                res[key] = new SolidColorBrush(brush.Color);
+        }
+    }
+
     /// <summary>启动时一次性应用全部外观设置。</summary>
     public static void ApplyAll(SettingsStore s)
     {
-        ApplyWallpaper(s);   // 先放壁纸（替换画刷对象）
-        ApplyTheme(s);       // 再改 Color（对纯色画刷生效）
+        EnsureMutableBrushes(); // 先确保调色板画刷可变（App.xaml 编译期会冻结 Freezable 资源）
+        ApplyWallpaper(s);      // 再放壁纸（替换画刷对象）
+        ApplyTheme(s);          // 最后改 Color（对纯色画刷生效）
         ApplyFontScale(s.FontScale);
     }
 }

@@ -201,25 +201,29 @@
             <!-- ============ 四个统计卡 ============ -->
             <TextBlock Text="概览" Style="{StaticResource SectionTitleStyle}" Margin="0,8,0,8"/>
             <UniformGrid Columns="4" Margin="0,0,0,4">
-                <Border Style="{StaticResource StatCardStyle}" Margin="0,0,8,0">
+                <Border Style="{StaticResource StatCardStyle}" Margin="0,0,8,0"
+                        Tag="tasks" Cursor="Hand" MouseLeftButtonUp="StatCard_Click" ToolTip="点击进入任务">
                     <StackPanel>
                         <TextBlock Text="{Binding TaskCount}" Style="{StaticResource StatNumStyle}"/>
                         <TextBlock Text="任务" Style="{StaticResource StatLabelStyle}"/>
                     </StackPanel>
                 </Border>
-                <Border Style="{StaticResource StatCardStyle}" Margin="4,0,4,0">
+                <Border Style="{StaticResource StatCardStyle}" Margin="4,0,4,0"
+                        Tag="backpack" Cursor="Hand" MouseLeftButtonUp="StatCard_Click" ToolTip="点击进入背包">
                     <StackPanel>
                         <TextBlock Text="{Binding ItemCount}" Style="{StaticResource StatNumStyle}"/>
                         <TextBlock Text="背包" Style="{StaticResource StatLabelStyle}"/>
                     </StackPanel>
                 </Border>
-                <Border Style="{StaticResource StatCardStyle}" Margin="4,0,4,0">
+                <Border Style="{StaticResource StatCardStyle}" Margin="4,0,4,0"
+                        Tag="achievements" Cursor="Hand" MouseLeftButtonUp="StatCard_Click" ToolTip="点击进入成就">
                     <StackPanel>
                         <TextBlock Text="{Binding AchievementCount}" Style="{StaticResource StatNumStyle}"/>
                         <TextBlock Text="成就" Style="{StaticResource StatLabelStyle}"/>
                     </StackPanel>
                 </Border>
-                <Border Style="{StaticResource StatCardStyle}" Margin="8,0,0,0">
+                <Border Style="{StaticResource StatCardStyle}" Margin="8,0,0,0"
+                        Tag="ai" Cursor="Hand" MouseLeftButtonUp="StatCard_Click" ToolTip="点击进入 AI 助手">
                     <StackPanel>
                         <TextBlock Text="{Binding InspirationCount}" Style="{StaticResource StatNumStyle}"/>
                         <TextBlock Text="灵感" Style="{StaticResource StatLabelStyle}"/>
@@ -229,25 +233,29 @@
 
             <!-- v1.0.3：四个速览数据（等级 / 成就 / 足迹 / 完成率） -->
             <UniformGrid Columns="4" Margin="0,0,0,4">
-                <Border Style="{StaticResource StatCardStyle}" Margin="0,0,8,0">
+                <Border Style="{StaticResource StatCardStyle}" Margin="0,0,8,0"
+                        Tag="data" Cursor="Hand" MouseLeftButtonUp="StatCard_Click" ToolTip="点击进入数据">
                     <StackPanel>
                         <TextBlock Text="{Binding LevelStatText}" Style="{StaticResource StatNumStyle}"/>
                         <TextBlock Text="等级" Style="{StaticResource StatLabelStyle}"/>
                     </StackPanel>
                 </Border>
-                <Border Style="{StaticResource StatCardStyle}" Margin="4,0,4,0">
+                <Border Style="{StaticResource StatCardStyle}" Margin="4,0,4,0"
+                        Tag="achievements" Cursor="Hand" MouseLeftButtonUp="StatCard_Click" ToolTip="点击进入成就">
                     <StackPanel>
                         <TextBlock Text="{Binding AchievementCount}" Style="{StaticResource StatNumStyle}"/>
                         <TextBlock Text="成就" Style="{StaticResource StatLabelStyle}"/>
                     </StackPanel>
                 </Border>
-                <Border Style="{StaticResource StatCardStyle}" Margin="4,0,4,0">
+                <Border Style="{StaticResource StatCardStyle}" Margin="4,0,4,0"
+                        Tag="map" Cursor="Hand" MouseLeftButtonUp="StatCard_Click" ToolTip="点击进入地图">
                     <StackPanel>
                         <TextBlock Text="{Binding FootprintCount}" Style="{StaticResource StatNumStyle}"/>
                         <TextBlock Text="足迹" Style="{StaticResource StatLabelStyle}"/>
                     </StackPanel>
                 </Border>
-                <Border Style="{StaticResource StatCardStyle}" Margin="8,0,0,0">
+                <Border Style="{StaticResource StatCardStyle}" Margin="8,0,0,0"
+                        Tag="data" Cursor="Hand" MouseLeftButtonUp="StatCard_Click" ToolTip="点击进入数据">
                     <StackPanel>
                         <TextBlock Text="{Binding DoneRateText}" Style="{StaticResource StatNumStyle}"/>
                         <TextBlock Text="完成率" Style="{StaticResource StatLabelStyle}"/>
@@ -366,52 +374,9 @@
                 </StackPanel>
             </Border>
 
-            <!-- ============ 快速入口 ============ -->
-            <TextBlock Text="快速入口" Style="{StaticResource SectionTitleStyle}" Margin="0,18,0,8"/>
-            <WrapPanel x:Name="QuickGrid">
-                <Button Style="{StaticResource QuickButtonStyle}" Tag="tasks" Click="Quick_Click">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="✅" FontSize="16" VerticalAlignment="Center"/>
-                        <TextBlock Text="任务" Margin="8,0,0,0" VerticalAlignment="Center"/>
-                    </StackPanel>
-                </Button>
-                <Button Style="{StaticResource QuickButtonStyle}" Tag="backpack" Click="Quick_Click">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="🎒" FontSize="16" VerticalAlignment="Center"/>
-                        <TextBlock Text="背包" Margin="8,0,0,0" VerticalAlignment="Center"/>
-                    </StackPanel>
-                </Button>
-                <Button Style="{StaticResource QuickButtonStyle}" Tag="achievements" Click="Quick_Click">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="🏆" FontSize="16" VerticalAlignment="Center"/>
-                        <TextBlock Text="成就" Margin="8,0,0,0" VerticalAlignment="Center"/>
-                    </StackPanel>
-                </Button>
-                <Button Style="{StaticResource QuickButtonStyle}" Tag="map" Click="Quick_Click">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="🗺️" FontSize="16" VerticalAlignment="Center"/>
-                        <TextBlock Text="地图" Margin="8,0,0,0" VerticalAlignment="Center"/>
-                    </StackPanel>
-                </Button>
-                <Button Style="{StaticResource QuickButtonStyle}" Tag="data" Click="Quick_Click">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="📊" FontSize="16" VerticalAlignment="Center"/>
-                        <TextBlock Text="数据" Margin="8,0,0,0" VerticalAlignment="Center"/>
-                    </StackPanel>
-                </Button>
-                <Button Style="{StaticResource QuickButtonStyle}" Tag="report" Click="Quick_Click">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="🗒️" FontSize="16" VerticalAlignment="Center"/>
-                        <TextBlock Text="报告" Margin="8,0,0,0" VerticalAlignment="Center"/>
-                    </StackPanel>
-                </Button>
-                <Button Style="{StaticResource QuickButtonStyle}" Tag="settings" Click="Quick_Click">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="⚙️" FontSize="16" VerticalAlignment="Center"/>
-                        <TextBlock Text="设置" Margin="8,0,0,0" VerticalAlignment="Center"/>
-                    </StackPanel>
-                </Button>
-            </WrapPanel>
+            <!-- ============ 提示：概览卡片均可点击进入对应模块 ============ -->
+            <TextBlock Text="💡 上方概览卡片均可点击，直接进入对应模块"
+                       Style="{StaticResource SectionTitleStyle}" Margin="0,18,0,8"/>
         </StackPanel>
     </ScrollViewer>
 </Page>

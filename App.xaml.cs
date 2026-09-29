@@ -19,6 +19,7 @@ public partial class App : Application
 
     protected override void OnStartup(StartupEventArgs e)
     {
+        InitDataRoot();
         AppPaths.EnsureDirectories();
 
         // 外观设置（主题/壁纸/字号）在主窗口创建前应用，启动即所见
@@ -58,6 +59,70 @@ public partial class App : Application
                 catch { /* 同步失败绝不影响启动 */ }
             });
         }
+    }
+
+    /// <summary>解析并设置数据目录（v1.0.3）：显式设置 &gt; 应用根 EarthOnlineData（可写）&gt; %LOCALAPPDATA%\EarthOnline；并从旧目录一次性迁移数据。</summary>
+    private static void InitDataRoot()
+    {
+        try
+        {
+            var s = SettingsStore.Load();
+            var chosen = ResolveDataRoot(s.DataDirectory);
+            AppPaths.DataRoot = chosen;
+            MigrateFromLegacy(chosen);
+        }
+        catch
+        {
+            // 解析失败：AppPaths 已有 %LOCALAPPDATA%\EarthOnline 的保守默认，不阻塞启动
+        }
+    }
+
+    private static string ResolveDataRoot(string dataDirectory)
+    {
+        // 1) 用户显式指定且可写
+        if (!string.IsNullOrWhiteSpace(dataDirectory))
+        {
+            try
+            {
+                System.IO.Directory.CreateDirectory(dataDirectory);
+                return dataDirectory;
+            }
+            catch { /* 不可写回落默认 */ }
+        }
+        // 2) 默认：应用根目录下的 EarthOnlineData（便于随程序携带），可写时优先
+        try
+        {
+            var candidate = System.IO.Path.Combine(System.AppContext.BaseDirectory, "EarthOnlineData");
+            System.IO.Directory.CreateDirectory(candidate);
+            return candidate;
+        }
+        catch { }
+        // 3) 回落：%LOCALAPPDATA%\EarthOnline
+        return System.IO.Path.Combine(
+            System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData),
+            "EarthOnline");
+    }
+
+    /// <summary>首次切换到新目录时，把旧 LOCALAPPDATA 里的数据库/头像/备份等一次性复制到新目录（不删旧文件）。</summary>
+    private static void MigrateFromLegacy(string chosen)
+    {
+        var legacy = System.IO.Path.Combine(
+            System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData),
+            "EarthOnline");
+        if (string.Equals(legacy, chosen, System.StringComparison.OrdinalIgnoreCase)) return;
+        if (!System.IO.Directory.Exists(legacy)) return;
+        if (!System.IO.File.Exists(System.IO.Path.Combine(legacy, "earth_online.db"))) return; // 旧目录无数据不搬
+        if (System.IO.File.Exists(System.IO.Path.Combine(chosen, "earth_online.db"))) return;   // 新目录已有数据不覆盖
+        try
+        {
+            System.IO.Directory.CreateDirectory(chosen);
+            foreach (var file in System.IO.Directory.EnumerateFiles(legacy))
+            {
+                var name = System.IO.Path.GetFileName(file);
+                System.IO.File.Copy(file, System.IO.Path.Combine(chosen, name), overwrite: false);
+            }
+        }
+        catch { /* 迁移失败不阻塞启动 */ }
     }
 
     /// <summary>构建系统托盘图标 + 右键菜单（Windows 专属常驻后台）。</summary>

@@ -55,15 +55,17 @@ public partial class BackpackPage : Page
     //   ComboBox 触发的 SelectionChanged 会一路冒泡到 TabControl 的 Tabs_SelectionChanged；
     //   若 ReloadAll 没有锁，重建下拉 → 冒泡 → ReloadAll → 再重建 → … 同步无限递归 → 栈溢出。
     // _isLoadingItems / _isLoadingCollections：Load 方法自身的重入锁（try-finally 复位）。
-    // _suppressFilterEvents：重建下拉项期间，抑制 SelectionChanged 透传到 Load 方法。
     // _loaded：标记页面已 Loaded。XAML 中 TabControl 默认选中首项、ComboBox 的 SelectedIndex="0"
     //   会在 InitializeComponent 期间触发 SelectionChanged / Tabs_SelectionChanged，此时
     //   文档顺序靠后的 ListBox（如 CollectionList）尚未实例化。在 Loaded 之前一律忽略这些事件。
     private bool _isReloading;
     private bool _isLoadingItems;
     private bool _isLoadingCollections;
-    private bool _suppressFilterEvents;
     private bool _loaded;
+
+    // 当前选中的分类筛选（""=全部，__none__=未分类，其余为分类 id）；以字段存储，替换原 ComboBox.SelectedValue
+    private string _itemFilter = "";
+    private string _collectionFilter = "";
 
     public BackpackPage()
     {
@@ -112,34 +114,52 @@ public partial class BackpackPage : Page
 
     private void LoadCategories()
     {
-        // 重建下拉项会改 SelectedIndex，进而触发 SelectionChanged。
-        _suppressFilterEvents = true;
-        try
-        {
-            FillFilter(ItemCategoryFilter, CategoriesOf(BagScope.Item));
-            FillFilter(CollectionCategoryFilter, CategoriesOf(BagScope.Collection));
-        }
-        finally
-        {
-            _suppressFilterEvents = false;
-        }
+        // 重建分类标签（芯片）：保留当前选中值，新分类按 DB 顺序追加到「⚙️分类」按钮右侧
+        BuildChips(ItemCategoryChips, CategoriesOf(BagScope.Item), _itemFilter, ItemChipPicked);
+        BuildChips(CollectionCategoryChips, CategoriesOf(BagScope.Collection), _collectionFilter, CollectionChipPicked);
     }
 
-    private static void FillFilter(ComboBox box, List<BagCategoryEntity> list)
+    private static readonly System.Windows.Media.SolidColorBrush ChipBg =
+        new(System.Windows.Media.Color.FromRgb(0xFF, 0xFF, 0xFF));
+    private static readonly System.Windows.Media.SolidColorBrush ChipBorder =
+        new(System.Windows.Media.Color.FromRgb(0xE8, 0xE2, 0xDA));
+    private static readonly System.Windows.Media.SolidColorBrush ChipText =
+        new(System.Windows.Media.Color.FromRgb(0x1E, 0x1A, 0x16));
+    private static readonly System.Windows.Media.SolidColorBrush ChipAccent =
+        new(System.Windows.Media.Color.FromRgb(0xD4, 0xA3, 0x73));
+
+    /// <summary>重建横向分类芯片；selected 项高亮，点击触发 onPick 重新筛选。</summary>
+    private void BuildChips(System.Windows.Controls.StackPanel host, List<BagCategoryEntity> list,
+        string selected, Action<string> onPick)
     {
-        var keep = box.SelectedIndex;
-        box.Items.Clear();
-        box.Items.Add(new ComboBoxItem { Content = "全部分类", Tag = "" });
-        box.Items.Add(new ComboBoxItem { Content = "未分类", Tag = "__none__" });
-        foreach (var c in list)
+        if (host is null) return;
+        host.Children.Clear();
+        var defs = new List<(string Tag, string Label)>
         {
-            box.Items.Add(new ComboBoxItem { Content = c.Name, Tag = c.Id });
+            ("", "全部分类"),
+            ("__none__", "未分类"),
+        };
+        foreach (var c in list) defs.Add((c.Id, c.Name));
+        foreach (var (tag, label) in defs)
+        {
+            bool sel = tag == selected;
+            var btn = new Button
+            {
+                Content = label,
+                Padding = new Thickness(12, 6, 12, 6),
+                Margin = new Thickness(0, 0, 6, 0),
+                Cursor = System.Windows.Input.Cursors.Hand,
+                Tag = tag,
+                FontSize = 13,
+                BorderThickness = new Thickness(1),
+                Background = sel ? ChipAccent : ChipBg,
+                Foreground = sel ? System.Windows.Media.Brushes.White : ChipText,
+                BorderBrush = sel ? ChipAccent : ChipBorder
+            };
+            btn.Click += (_, _) => onPick(tag);
+            host.Children.Add(btn);
         }
-        box.SelectedIndex = keep >= 0 && keep < box.Items.Count ? keep : 0;
     }
-
-    private static string? FilterValue(ComboBox box) =>
-        (box.SelectedItem as ComboBoxItem)?.Tag?.ToString();
 
     private void ManageItemCategories_Click(object sender, RoutedEventArgs e)
     {
@@ -163,10 +183,11 @@ public partial class BackpackPage : Page
 
     // ==================== 物品 ====================
 
-    private void ItemFilter_Changed(object sender, SelectionChangedEventArgs e)
+    private void ItemChipPicked(string tag)
     {
-        if (_suppressFilterEvents) return; // 重建下拉期间忽略，不参与递归
         if (!_loaded) return;              // 初始化期间忽略，避免控件未就绪
+        _itemFilter = tag;
+        BuildChips(ItemCategoryChips, CategoriesOf(BagScope.Item), _itemFilter, ItemChipPicked);
         LoadItems();
     }
 
@@ -187,7 +208,7 @@ public partial class BackpackPage : Page
         {
             using var db = new AppDbContext(AppPaths.DbFile);
             var q = db.Items.AsNoTracking().AsQueryable();
-            var f = FilterValue(ItemCategoryFilter);
+            var f = _itemFilter;
             if (f == "__none__") q = q.Where(i => i.Category == null || i.Category == "");
             else if (!string.IsNullOrEmpty(f)) q = q.Where(i => i.Category == f);
 
@@ -286,10 +307,11 @@ public partial class BackpackPage : Page
 
     // ==================== 收藏 ====================
 
-    private void CollectionFilter_Changed(object sender, SelectionChangedEventArgs e)
+    private void CollectionChipPicked(string tag)
     {
-        if (_suppressFilterEvents) return; // 重建下拉期间忽略，不参与递归
         if (!_loaded) return;              // 初始化期间忽略，避免控件未就绪
+        _collectionFilter = tag;
+        BuildChips(CollectionCategoryChips, CategoriesOf(BagScope.Collection), _collectionFilter, CollectionChipPicked);
         LoadCollections();
     }
 
@@ -310,7 +332,7 @@ public partial class BackpackPage : Page
         {
             using var db = new AppDbContext(AppPaths.DbFile);
             var q = db.Collections.AsNoTracking().AsQueryable();
-            var f = FilterValue(CollectionCategoryFilter);
+            var f = _collectionFilter;
             if (f == "__none__") q = q.Where(c => c.Category == null || c.Category == "");
             else if (!string.IsNullOrEmpty(f)) q = q.Where(c => c.Category == f);
 
