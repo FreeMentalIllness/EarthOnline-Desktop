@@ -1,9 +1,10 @@
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Media;
+using EarthOnline.Desktop.Services;
 
 namespace EarthOnline.Desktop.Dialogs;
 
@@ -55,7 +56,7 @@ public static class UnlockToast
         {
             Text = "成就已解锁",
             FontSize = 11,
-            Foreground = new SolidColorBrush(Color.FromRgb(0xB0, 0xA8, 0x9C)),
+            Foreground = ThemeService.FromHex("#B0A89C"),
             Margin = new Thickness(0, 0, 0, 3)
         });
         stack.Children.Add(new TextBlock
@@ -63,7 +64,7 @@ public static class UnlockToast
             Text = title,
             FontSize = 15,
             FontWeight = FontWeights.SemiBold,
-            Foreground = new SolidColorBrush(Color.FromRgb(0x1E, 0x1A, 0x16)),
+            Foreground = ThemeService.FromHex("#1E1A16"),
             TextTrimming = TextTrimming.CharacterEllipsis,
             MaxWidth = 260
         });
@@ -73,7 +74,7 @@ public static class UnlockToast
             {
                 Text = subtitle,
                 FontSize = 12,
-                Foreground = new SolidColorBrush(Color.FromRgb(0x7A, 0x72, 0x68)),
+                Foreground = ThemeService.FromHex("#7A7268"),
                 Margin = new Thickness(0, 2, 0, 0),
                 TextTrimming = TextTrimming.CharacterEllipsis,
                 MaxWidth = 260
@@ -82,8 +83,8 @@ public static class UnlockToast
 
         var card = new Border
         {
-            Background = new SolidColorBrush(Color.FromRgb(0xFF, 0xFF, 0xFF)),
-            BorderBrush = new SolidColorBrush(Color.FromRgb(0xD4, 0xA3, 0x73)),
+            Background = ThemeService.FromHex("#FFFFFF"),
+            BorderBrush = ThemeService.FromHex("#D4A373"),
             BorderThickness = new Thickness(0, 0, 3, 0),
             CornerRadius = new CornerRadius(10),
             Padding = new Thickness(14, 12, 16, 12),
@@ -94,7 +95,7 @@ public static class UnlockToast
                 BlurRadius = 18,
                 ShadowDepth = 3,
                 Opacity = 0.25,
-                Color = Color.FromRgb(0x1E, 0x1A, 0x16)
+                Color = ThemeService.ColorOf("TextPrimaryBrush")
             }
         };
 

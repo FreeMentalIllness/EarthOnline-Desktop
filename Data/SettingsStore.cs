@@ -88,13 +88,39 @@ public class SettingsStore
     [JsonPropertyName("pinnedAchievements")]
     public List<string> PinnedAchievements { get; set; } = new();
 
+    // ---------- 窗口几何（v1.0.4，-1 = 未记录，首次启动用 XAML 里的默认尺寸）----------
+
+    /// <summary>窗口左边缘（像素；-1 = 未记录）。</summary>
+    public double WindowLeft { get; set; } = -1;
+
+    /// <summary>窗口上边缘（像素；-1 = 未记录）。</summary>
+    public double WindowTop { get; set; } = -1;
+
+    /// <summary>窗口宽度（像素；-1 = 未记录）。</summary>
+    public double WindowWidth { get; set; } = -1;
+
+    /// <summary>窗口高度（像素；-1 = 未记录）。</summary>
+    public double WindowHeight { get; set; } = -1;
+
+    /// <summary>上次退出时是否最大化。</summary>
+    public bool WindowMaximized { get; set; }
+
+    /// <summary>侧栏是否被用户手动收起（true = 图标模式）。</summary>
+    public bool NavCollapsed { get; set; }
+
     // 固定放在应用配置目录：设置里保存着「数据目录」，配置不能跟着数据目录走，否则形成循环依赖。
     private static string FilePath => AppPaths.SettingsFile;
 
+    /// <summary>
+    /// JSON 契约：camelCase 写入（与安卓 / 网页一致），读侧大小写不敏感 ——
+    /// 这样历史写入的 PascalCase 文件照样能读回来，切换不会丢设置。
+    /// </summary>
     private static readonly JsonSerializerOptions Opts = new()
     {
         WriteIndented = true,
-        DefaultIgnoreCondition = JsonIgnoreCondition.Never
+        DefaultIgnoreCondition = JsonIgnoreCondition.Never,
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        PropertyNameCaseInsensitive = true
     };
 
     public static SettingsStore Load()

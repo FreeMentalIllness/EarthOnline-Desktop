@@ -26,15 +26,88 @@ public static class ThemeService
         ("TextMutedBrush",    Color.FromRgb(0xB0, 0xA8, 0x9C), Color.FromRgb(0x8F, 0x8F, 0x99)),
         // 强调色两套主题共用
         ("AccentBrush",       Color.FromRgb(0xD4, 0xA3, 0x73), Color.FromRgb(0xD4, 0xA3, 0x73)),
+        // ---- 代码生成界面专用（指标卡 / 日历热图 / 图表 / 气泡 / 芯片）----
+        ("SoftBgBrush",       Color.FromRgb(0xF8, 0xF6, 0xF2), Color.FromRgb(0x2E, 0x2B, 0x27)),
+        ("ChipFillBrush",     Color.FromRgb(0xEF, 0xE9, 0xE0), Color.FromRgb(0x3A, 0x36, 0x30)),
+        ("Heat0Brush",        Color.FromRgb(0xFA, 0xF8, 0xF5), Color.FromRgb(0x26, 0x23, 0x20)),
+        ("Heat1Brush",        Color.FromRgb(0xF5, 0xE9, 0xDC), Color.FromRgb(0x3A, 0x32, 0x2A)),
+        ("Heat2Brush",        Color.FromRgb(0xEB, 0xD3, 0xB3), Color.FromRgb(0x56, 0x45, 0x2F)),
+        ("Heat3Brush",        Color.FromRgb(0xD9, 0xB4, 0x8A), Color.FromRgb(0x7A, 0x5F, 0x3C)),
+        ("DueDotBrush",       Color.FromRgb(0xE7, 0x6F, 0x51), Color.FromRgb(0xE8, 0x8B, 0x72)),
+        ("StatusDoneBrush",   Color.FromRgb(0xD4, 0xA3, 0x73), Color.FromRgb(0xD4, 0xA3, 0x73)),
+        ("StatusActiveBrush", Color.FromRgb(0x8A, 0xA7, 0x9B), Color.FromRgb(0x7E, 0x9E, 0x90)),
+        ("StatusPausedBrush", Color.FromRgb(0xE3, 0xC1, 0xA2), Color.FromRgb(0xC9, 0xA4, 0x87)),
+        ("StatusPlanningBrush",Color.FromRgb(0xC9, 0xC2, 0xB8), Color.FromRgb(0x6E, 0x68, 0x62)),
+        ("AiBubbleUserBrush", Color.FromRgb(0xF3, 0xE4, 0xD2), Color.FromRgb(0x4A, 0x3B, 0x2C)),
+        ("AiBubbleAiBrush",   Color.FromRgb(0xF6, 0xF4, 0xF0), Color.FromRgb(0x33, 0x30, 0x2C)),
+        ("ChartGridBrush",    Color.FromRgb(0xE8, 0xE2, 0xDA), Color.FromRgb(0x3F, 0x3B, 0x36)),
+        ("ChartTextBrush",    Color.FromRgb(0xB0, 0xA8, 0x9C), Color.FromRgb(0x8F, 0x8F, 0x99)),
     };
 
+    /// <summary>当前是否为深色主题（ApplyTheme 后有效；无 Application 时按最近一次设置判定）。</summary>
+    public static bool Dark { get; private set; }
+
     public static bool IsDark(SettingsStore s) => string.Equals(s.Theme, "dark", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// 取当前主题下的画刷（供代码生成的控件使用）。
+    /// 优先取 Application.Resources（与 XAML DynamicResource 同源），取不到时按 Palette 当前主题回落，
+    /// 保证单测 / 无 Application 的场景也不会空引用或黑块。
+    /// </summary>
+    public static SolidColorBrush Brush(string key)
+    {
+        if (Application.Current?.Resources is { } res && res[key] is SolidColorBrush b) return b;
+        return new SolidColorBrush(ColorOf(key));
+    }
+
+    /// <summary>取当前主题下的颜色（Palette 权威表；未登记时回落中性灰）。</summary>
+    public static Color ColorOf(string key)
+    {
+        foreach (var (k, light, darkColor) in Palette)
+            if (k == key) return Dark ? darkColor : light;
+        return Dark ? Color.FromRgb(0x8F, 0x8F, 0x99) : Color.FromRgb(0xB0, 0xA8, 0x9C);
+    }
+
+    /// <summary>
+    /// 历史硬编码十六进制色 → 当前主题画笔（代码生成 UI 的统一收敛口）。
+    /// 早年为省事直接在 C# 里写死色值，深色模式下会出现白块 / 黑字看不清；
+    /// 这里按色值语义映射到调色板键，未登记的色原样返回（如纯白前景、品牌橙）。
+    /// </summary>
+    private static readonly (string Hex, string Key)[] HexMap =
+    {
+        ("#FFFFFF", "CardBgBrush"),
+        ("#FAF8F5", "Heat0Brush"),
+        ("#F5E9DC", "Heat1Brush"),
+        ("#EBD3B3", "Heat2Brush"),
+        ("#D9B48A", "Heat3Brush"),
+        ("#F8F6F2", "SoftBgBrush"),
+        ("#EFE9E0", "ChipFillBrush"),
+        ("#F6F4F0", "AiBubbleAiBrush"),
+        ("#F3E4D2", "AiBubbleUserBrush"),
+        ("#E8E2DA", "BorderBrush"),
+        ("#D4A373", "AccentBrush"),
+        ("#B07B3F", "AccentBrush"),
+        ("#1E1A16", "TextPrimaryBrush"),
+        ("#4A443C", "TextPrimaryBrush"),
+        ("#7A7268", "TextSecondaryBrush"),
+        ("#B0A89C", "TextMutedBrush"),
+        ("#E76F51", "DueDotBrush"),
+    };
+
+    public static SolidColorBrush FromHex(string hex)
+    {
+        foreach (var (h, key) in HexMap)
+            if (string.Equals(h, hex, StringComparison.OrdinalIgnoreCase)) return Brush(key);
+        try { return new SolidColorBrush((Color)ColorConverter.ConvertFromString(hex)); }
+        catch { return new SolidColorBrush(Colors.Gray); }
+    }
 
     /// <summary>按设置应用主题（App 启动 / 切换时调用）。</summary>
     public static void ApplyTheme(SettingsStore s) => ApplyTheme(IsDark(s));
 
     public static void ApplyTheme(bool dark)
     {
+        Dark = dark;   // 先记状态：无 Application 时 ColorOf 也能给出正确主题色
         var res = Application.Current?.Resources;
         if (res is null) return;
         foreach (var (key, light, darkColor) in Palette)

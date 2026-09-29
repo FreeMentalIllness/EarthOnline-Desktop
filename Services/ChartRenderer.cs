@@ -13,11 +13,13 @@ namespace EarthOnline.Desktop.Services;
 /// </summary>
 public static class ChartRenderer
 {
-    private static readonly Color Line = Color.FromRgb(0xD4, 0xA3, 0x73);
-    private static readonly Color Area = Color.FromArgb(0x1F, 0xD4, 0xA3, 0x73);
-    private static readonly Color Grid = Color.FromRgb(0xE8, 0xE2, 0xDA);
-    private static readonly Color Text = Color.FromRgb(0x7A, 0x72, 0x68);
-    private static readonly Color Point = Color.FromRgb(0xC4, 0x9A, 0x6C);
+    // 配色改为按主题实时取（static readonly 会把浅色值固化，深色模式下网格/文字看不清）。
+    // 取值走 ThemeService：无 Application 时（单测 / 设计时）按当前主题标记回落，不会空引用。
+    private static Color Line => ThemeService.ColorOf("AccentBrush");
+    private static Color Area => ThemeService.ColorOf("AccentBrush") with { A = 0x1F };
+    private static Color Grid => ThemeService.ColorOf("ChartGridBrush");
+    private static Color Text => ThemeService.ColorOf("TextSecondaryBrush");
+    private static Color Point => ThemeService.ColorOf("StatusDoneBrush");
 
     private const double PaddingLeft = 28;
     private const double PaddingRight = 12;

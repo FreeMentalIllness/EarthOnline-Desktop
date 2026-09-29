@@ -159,15 +159,51 @@ public class AppDbContext : DbContext
 
     /// <summary>
     /// 首次使用时建库，并写入 Profile 行（不存在时），保证「缺失即未初始化」语义与安卓一致。
+    /// 名称里的 Ready = 建库 + 补齐种子数据；实现必须是 Database.Migrate()（红线），
+    /// 绝不能是 EF 的 Database.EnsureCreated() —— 后者不写 __EFMigrationsHistory，后续升级无迁移可依。
     /// </summary>
-    public void EnsureCreated()
+    public void EnsureReady()
     {
-        // 走迁移（而非 EnsureCreated），否则不会写入 __EFMigrationsHistory，后续升级会失败
+        StampBaselineIfNeeded();   // 老格式库（有表无迁移历史）补基线，避免升级时迁移重放
         Database.Migrate();
         if (!Profile.Any())
         {
             Profile.Add(new ProfileEntity { Id = 1 });
             SaveChanges();
+        }
+    }
+
+    /// <summary>
+    /// 兼容保护：若库里已经有以下任意一张业务表，却没有 __EFMigrationsHistory（历史版本或外部工具建库），
+    /// 直接跑 Migrate 会因「表已存在」失败。这里把 InitialCreate 标记为已应用，让迁移链从当前版本继续。
+    /// </summary>
+    private void StampBaselineIfNeeded()
+    {
+        try
+        {
+            using var conn = Database.GetDbConnection();
+            if (conn.State != System.Data.ConnectionState.Open) conn.Open();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = "SELECT name FROM sqlite_master WHERE type='table'";
+            var tables = new List<string>();
+            using (var reader = cmd.ExecuteReader())
+            {
+                while (reader.Read()) tables.Add(reader.GetString(0));
+            }
+            if (tables.Contains("__EFMigrationsHistory")) return;
+            if (!tables.Contains("profile") && !tables.Contains("tasks")) return;   // 空库：正常走迁移
+
+            using var ins = conn.CreateCommand();
+            ins.CommandText =
+                "CREATE TABLE IF NOT EXISTS __EFMigrationsHistory (" +
+                "MigrationId TEXT NOT NULL PRIMARY KEY, ProductVersion TEXT NOT NULL);" +
+                "INSERT OR IGNORE INTO __EFMigrationsHistory (MigrationId, ProductVersion) VALUES " +
+                "('20260927161513_InitialCreate', '8.0.11');";
+            ins.ExecuteNonQuery();
+        }
+        catch
+        {
+            // 打基线失败不拦启动：正常库根本走不到这里，异常时交给 Migrate 自己报错
         }
     }
 }

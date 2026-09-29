@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
@@ -8,6 +8,7 @@ using EarthOnline.Desktop.Data.Entities;
 using EarthOnline.Desktop.Data.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Win32;
+using EarthOnline.Desktop.Services;
 
 namespace EarthOnline.Desktop.Dialogs;
 
@@ -18,12 +19,12 @@ namespace EarthOnline.Desktop.Dialogs;
 /// </summary>
 public static class CollectionDialog
 {
-    private static readonly SolidColorBrush Bg = new(Color.FromRgb(0xF8, 0xF6, 0xF2));
-    private static readonly SolidColorBrush Border = new(Color.FromRgb(0xE8, 0xE2, 0xDA));
-    private static readonly SolidColorBrush Accent = new(Color.FromRgb(0xD4, 0xA3, 0x73));
-    private static readonly SolidColorBrush TextMain = new(Color.FromRgb(0x1E, 0x1A, 0x16));
-    private static readonly SolidColorBrush TextSub = new(Color.FromRgb(0x7A, 0x72, 0x68));
-    private static readonly SolidColorBrush Chip = new(Color.FromRgb(0xEF, 0xE9, 0xE0));
+    private static System.Windows.Media.Brush Bg => ThemeService.Brush("AppBgBrush");
+    private static System.Windows.Media.Brush Border => ThemeService.Brush("BorderBrush");
+    private static System.Windows.Media.Brush Accent => ThemeService.Brush("AccentBrush");
+    private static System.Windows.Media.Brush TextMain => ThemeService.Brush("TextPrimaryBrush");
+    private static System.Windows.Media.Brush TextSub => ThemeService.Brush("TextSecondaryBrush");
+    private static System.Windows.Media.Brush Chip => ThemeService.Brush("ChipFillBrush");
 
     /// <summary>对话框内暂存的附件（源路径 → 复制；IsPicked 区分「新增了附件」与「沿用旧附件」）。</summary>
     private sealed class PendingFile

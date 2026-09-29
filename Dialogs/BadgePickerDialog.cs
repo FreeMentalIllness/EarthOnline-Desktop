@@ -1,6 +1,7 @@
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 using EarthOnline.Desktop.Data.Entities;
+using EarthOnline.Desktop.Services;
 
 namespace EarthOnline.Desktop.Dialogs;
 
@@ -12,10 +13,10 @@ public static class BadgePickerDialog
 {
     public const int MaxPinned = 3;
 
-    private static readonly System.Windows.Media.SolidColorBrush Bg = new(System.Windows.Media.Color.FromRgb(0xF8, 0xF6, 0xF2));
-    private static readonly System.Windows.Media.SolidColorBrush Card = new(System.Windows.Media.Colors.White);
-    private static readonly System.Windows.Media.SolidColorBrush Border = new(System.Windows.Media.Color.FromRgb(0xE8, 0xE2, 0xDA));
-    private static readonly System.Windows.Media.SolidColorBrush Accent = new(System.Windows.Media.Color.FromRgb(0xD4, 0xA3, 0x73));
+    private static System.Windows.Media.Brush Bg => ThemeService.Brush("AppBgBrush");
+    private static System.Windows.Media.Brush Card => ThemeService.Brush("CardBgBrush");
+    private static System.Windows.Media.Brush Border => ThemeService.Brush("BorderBrush");
+    private static System.Windows.Media.Brush Accent => ThemeService.Brush("AccentBrush");
 
     /// <summary>确定返回 true，pinned 被更新为勾选结果（按成就列表顺序）。</summary>
     public static bool Show(List<AchievementEntity> unlocked, List<string> pinned)
@@ -46,8 +47,7 @@ public static class BadgePickerDialog
         {
             Text = $"已解锁 {unlocked.Count} 枚成就，勾选要佩戴的（最多 {MaxPinned} 枚）",
             FontSize = 12,
-            Foreground = new System.Windows.Media.SolidColorBrush(
-                System.Windows.Media.Color.FromRgb(0x7A, 0x72, 0x68)),
+            Foreground = ThemeService.Brush("TextSecondaryBrush"),
             Margin = new Thickness(0, 0, 0, 8)
         });
 
@@ -90,8 +90,7 @@ public static class BadgePickerDialog
         var cancelButton = new Button
         {
             Content = "取消", MinWidth = 84, Height = 34,
-            Foreground = new System.Windows.Media.SolidColorBrush(
-                System.Windows.Media.Color.FromRgb(0x1E, 0x1A, 0x16)),
+            Foreground = ThemeService.Brush("TextPrimaryBrush"),
             Background = Card, BorderBrush = Border, BorderThickness = new Thickness(1),
             Cursor = System.Windows.Input.Cursors.Hand
         };

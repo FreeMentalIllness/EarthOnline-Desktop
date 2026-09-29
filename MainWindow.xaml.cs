@@ -62,6 +62,7 @@ public partial class MainWindow : Window
         PreviewKeyDown += MainWindow_PreviewKeyDown;
         Loaded += (_, _) =>
         {
+            RestoreWindowGeometry();
             ApplyLayoutMode();
             // 启动后应用持久化的字号缩放（窗口就绪才可设 LayoutTransform）
             try { ThemeService.ApplyFontScale(SettingsStore.Load().FontScale); }
@@ -94,13 +95,80 @@ public partial class MainWindow : Window
         // 丢弃引导页缓存：设置页「重新查看引导」时才是全新第 1 步，而不是停在结束态
         _pages.Remove("onboarding");
 
+        // 必须显式导航回主页，不能只设 NavList.SelectedIndex = 0：
+        // 首次启动引导时侧栏本来就选中第 0 项，索引没变不会触发 SelectionChanged，
+        // 结果内容区仍停留在引导页（引导「完成」了却回不去）。
         if (NavList.Items.Count > 0) NavList.SelectedIndex = 0;
-        else Navigate("home");
+        Navigate("home");
     }
 
     /// <summary>当前侧栏选中项对应的页面 key（无选中时回落主页）。</summary>
     private string CurrentNavKey()
         => (NavList.SelectedItem as ListBoxItem)?.Tag?.ToString() ?? "home";
+
+    // ==================== 窗口几何记忆（v1.0.4） ====================
+
+    /// <summary>启动时恢复上次的位置 / 尺寸 / 最大化状态；越界（换显示器、分辨率变小）时自动回正。</summary>
+    private void RestoreWindowGeometry()
+    {
+        try
+        {
+            var s = SettingsStore.Load();
+            _manualCollapsed = s.NavCollapsed ? true : null;   // false 不记忆：留 null 让宽度自动判定
+
+            if (s.WindowWidth > 0 && s.WindowHeight > 0)
+            {
+                Width = Math.Clamp(s.WindowWidth, MinWidth, SystemParameters.VirtualScreenWidth);
+                Height = Math.Clamp(s.WindowHeight, MinHeight, SystemParameters.VirtualScreenHeight);
+            }
+            if (s.WindowLeft >= 0 && s.WindowTop >= 0 && FitsOnScreen(s.WindowLeft, s.WindowTop, Width, Height))
+            {
+                Left = s.WindowLeft;
+                Top = s.WindowTop;
+                WindowStartupLocation = WindowStartupLocation.Manual;
+            }
+            if (s.WindowMaximized) WindowState = WindowState.Maximized;
+        }
+        catch
+        {
+            // 几何恢复失败就用 XAML 默认尺寸，绝不影响启动
+        }
+    }
+
+    /// <summary>窗口是否整体落在虚拟屏幕内（避免恢复后跑到屏幕外看不见）。</summary>
+    private static bool FitsOnScreen(double left, double top, double w, double h)
+    {
+        double vx = SystemParameters.VirtualScreenLeft;
+        double vy = SystemParameters.VirtualScreenTop;
+        double vw = SystemParameters.VirtualScreenWidth;
+        double vh = SystemParameters.VirtualScreenHeight;
+        if (vw <= 0 || vh <= 0) return true;
+        return left >= vx - 1 && top >= vy - 1 && left + w <= vx + vw + 1 && top + h <= vy + vh + 1;
+    }
+
+    /// <summary>把当前位置 / 尺寸 / 最大化状态写入设置（关闭窗口时落盘，不做实时写入）。</summary>
+    private void SaveWindowGeometry()
+    {
+        try
+        {
+            var s = SettingsStore.Load();
+            var b = WindowState == WindowState.Minimized ? RestoreBounds : new Rect(Left, Top, Width, Height);
+            if (b.Width > 0 && b.Height > 0)
+            {
+                s.WindowLeft = b.Left;
+                s.WindowTop = b.Top;
+                s.WindowWidth = b.Width;
+                s.WindowHeight = b.Height;
+            }
+            s.WindowMaximized = WindowState == WindowState.Maximized;
+            s.NavCollapsed = _manualCollapsed == true;
+            s.Save();
+        }
+        catch
+        {
+            // 保存失败不影响退出
+        }
+    }
 
     private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
     {
@@ -133,6 +201,14 @@ public partial class MainWindow : Window
         ApplyLayoutMode();
         if (ToggleIcon != null)
             ToggleIcon.Text = _manualCollapsed == true ? "⟩" : "⟨";
+        // 折叠状态即时落盘（与窗口几何同一份设置，关窗口那次保存会一并带上）
+        try
+        {
+            var s = SettingsStore.Load();
+            s.NavCollapsed = _manualCollapsed == true;
+            s.Save();
+        }
+        catch { /* 记忆失败不影响使用 */ }
     }
 
     private void NavList_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -253,6 +329,9 @@ public partial class MainWindow : Window
     /// <summary>关闭窗口行为由设置决定：直接退出放行；否则最小化到系统托盘常驻后台（除非点了托盘「退出」）。</summary>
     private void MainWindow_Closing(object? sender, CancelEventArgs e)
     {
+        // 无论这次关闭是「真退出」还是「最小化到托盘」，当前几何都值得记住
+        SaveWindowGeometry();
+
         bool exit = App.ForceClose;
         if (!exit)
         {

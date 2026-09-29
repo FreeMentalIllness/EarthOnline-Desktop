@@ -30,7 +30,7 @@ public partial class App : Application
         {
             // 首次启动建库并补齐 Profile 行；已存在则应用待执行的迁移
             using var db = new AppDbContext(AppPaths.DbFile);
-            db.EnsureCreated();
+            db.EnsureReady();
         }
         catch (Exception ex)
         {

@@ -259,6 +259,6 @@ public partial class ReportPage : Page
         return border;
     }
 
-    private static SolidColorBrush Brush(string hex)
-        => new((Color)ColorConverter.ConvertFromString(hex));
+    /// <summary>色值统一经主题服务收敛：深色模式下自动换到对应的深色画笔。</summary>
+    private static SolidColorBrush Brush(string hex) => ThemeService.FromHex(hex);
 }

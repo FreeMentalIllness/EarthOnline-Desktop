@@ -419,8 +419,7 @@ public partial class MapPage : Page
             SizeToContent = SizeToContent.Height,
             ResizeMode = ResizeMode.NoResize,
             WindowStartupLocation = WindowStartupLocation.CenterOwner,
-            Background = new SolidColorBrush(
-                Color.FromRgb(0xF8, 0xF6, 0xF2)),
+            Background = ThemeService.Brush("AppBgBrush"),
             Owner = Application.Current?.MainWindow
         };
 
@@ -431,8 +430,7 @@ public partial class MapPage : Page
             root.Children.Add(new TextBlock
             {
                 Text = label, FontSize = 13, Margin = new Thickness(0, 10, 0, 4),
-                Foreground = new SolidColorBrush(
-                    Color.FromRgb(0x7A, 0x72, 0x68))
+                Foreground = ThemeService.Brush("TextSecondaryBrush")
             });
             var box = new TextBox { Text = initial, Padding = new Thickness(8, 6, 8, 6), FontSize = 13 };
             root.Children.Add(box);
@@ -456,9 +454,9 @@ public partial class MapPage : Page
         var cancel = new Button
         {
             Content = "取消", MinWidth = 84, Height = 34, Padding = new Thickness(14, 0, 14, 0),
-            Background = Brushes.White,
-            BorderBrush = new SolidColorBrush(
-                Color.FromRgb(0xE8, 0xE2, 0xDA)),
+            Background = ThemeService.Brush("CardBgBrush"),
+            Foreground = ThemeService.Brush("TextPrimaryBrush"),
+            BorderBrush = ThemeService.Brush("BorderBrush"),
             Cursor = Cursors.Hand
         };
         var ok = new Button
@@ -466,8 +464,7 @@ public partial class MapPage : Page
             Content = "保存", MinWidth = 84, Height = 34, Padding = new Thickness(14, 0, 14, 0),
             Margin = new Thickness(8, 0, 0, 0),
             Foreground = Brushes.White,
-            Background = new SolidColorBrush(
-                Color.FromRgb(0xD4, 0xA3, 0x73)),
+            Background = ThemeService.Brush("AccentBrush"),
             BorderThickness = new Thickness(0), Cursor = Cursors.Hand
         };
         cancel.Click += (_, _) => win.DialogResult = false;

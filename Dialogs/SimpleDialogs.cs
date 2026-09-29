@@ -1,7 +1,8 @@
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using EarthOnline.Desktop.Data.Entities;
+using EarthOnline.Desktop.Services;
 
 namespace EarthOnline.Desktop.Dialogs;
 
@@ -11,12 +12,12 @@ namespace EarthOnline.Desktop.Dialogs;
 /// </summary>
 public static class SimpleDialogs
 {
-    private static readonly SolidColorBrush Bg = new(Color.FromRgb(0xF8, 0xF6, 0xF2));
-    private static readonly SolidColorBrush Card = new(Colors.White);
-    private static readonly SolidColorBrush Border = new(Color.FromRgb(0xE8, 0xE2, 0xDA));
-    private static readonly SolidColorBrush Accent = new(Color.FromRgb(0xD4, 0xA3, 0x73));
-    private static readonly SolidColorBrush TextMain = new(Color.FromRgb(0x1E, 0x1A, 0x16));
-    private static readonly SolidColorBrush TextSub = new(Color.FromRgb(0x7A, 0x72, 0x68));
+    private static System.Windows.Media.Brush Bg => ThemeService.Brush("AppBgBrush");
+    private static System.Windows.Media.Brush Card => ThemeService.Brush("CardBgBrush");
+    private static System.Windows.Media.Brush Border => ThemeService.Brush("BorderBrush");
+    private static System.Windows.Media.Brush Accent => ThemeService.Brush("AccentBrush");
+    private static System.Windows.Media.Brush TextMain => ThemeService.Brush("TextPrimaryBrush");
+    private static System.Windows.Media.Brush TextSub => ThemeService.Brush("TextSecondaryBrush");
 
     private static Button MakeButton(string text, bool primary)
     {

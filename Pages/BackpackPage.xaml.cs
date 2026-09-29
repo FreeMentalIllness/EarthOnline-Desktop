@@ -119,14 +119,11 @@ public partial class BackpackPage : Page
         BuildChips(CollectionCategoryChips, CategoriesOf(BagScope.Collection), _collectionFilter, CollectionChipPicked);
     }
 
-    private static readonly System.Windows.Media.SolidColorBrush ChipBg =
-        new(System.Windows.Media.Color.FromRgb(0xFF, 0xFF, 0xFF));
-    private static readonly System.Windows.Media.SolidColorBrush ChipBorder =
-        new(System.Windows.Media.Color.FromRgb(0xE8, 0xE2, 0xDA));
-    private static readonly System.Windows.Media.SolidColorBrush ChipText =
-        new(System.Windows.Media.Color.FromRgb(0x1E, 0x1A, 0x16));
-    private static readonly System.Windows.Media.SolidColorBrush ChipAccent =
-        new(System.Windows.Media.Color.FromRgb(0xD4, 0xA3, 0x73));
+    // 芯片配色改为按当前主题实时取（static readonly 会把浅色值固化，深色模式下不跟随）
+    private static System.Windows.Media.Brush ChipBg => ThemeService.Brush("CardBgBrush");
+    private static System.Windows.Media.Brush ChipBorder => ThemeService.Brush("BorderBrush");
+    private static System.Windows.Media.Brush ChipText => ThemeService.Brush("TextPrimaryBrush");
+    private static System.Windows.Media.Brush ChipAccent => ThemeService.Brush("AccentBrush");
 
     /// <summary>重建横向分类芯片；selected 项高亮，点击触发 onPick 重新筛选。</summary>
     private void BuildChips(System.Windows.Controls.StackPanel host, List<BagCategoryEntity> list,

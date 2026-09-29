@@ -65,6 +65,11 @@ public partial class SettingsPage : Page
 
             ThemeService.ApplyTheme(s);
             ThemeService.ApplyFontScale(s.FontScale);
+
+            // 主题换了要重建内容区：指标卡 / 日历热图 / 图表等是代码生成的，
+            // 颜色只在生成时取一次，不重建就会留着上一套主题的配色。
+            if (e.Source is RadioButton rb && (rb == ThemeLight || rb == ThemeDark))
+                (Application.Current.MainWindow as MainWindow)?.RefreshCurrentPage();
         }
         catch (Exception ex)
         {
@@ -200,9 +205,10 @@ public partial class SettingsPage : Page
         try
         {
             AutoStartService.SetEnabled(AutoStartBox.IsChecked == true);
+            // 状态文案整体重写（此前是在旧文本前拼接，来回切换会把句子越叠越长）
             UpdateStatusText.Text = AutoStartBox.IsChecked == true
-                ? "已开启开机自启。" + UpdateStatusText.Text
-                : "已关闭开机自启。" + UpdateStatusText.Text;
+                ? $"已开启开机自启（当前版本 v{UpdateService.CurrentVersion}）。"
+                : $"已关闭开机自启（当前版本 v{UpdateService.CurrentVersion}）。";
         }
         catch (Exception ex)
         {
@@ -236,10 +242,13 @@ public partial class SettingsPage : Page
         try
         {
             var s = SettingsStore.Load();
-            DataDirBox.Text = AppPaths.RootDir;
+            // 输入框只存「用户显式指定的目录」，留空 = 用默认目录。
+            // 此前这里填的是当前生效目录，用户没改目录只是点了一下保存，
+            // 就会把默认路径固化成自定义目录（重启后含义完全不同）。
+            DataDirBox.Text = s.DataDirectory ?? "";
             DataDirStatus.Text = string.IsNullOrWhiteSpace(s.DataDirectory)
-                ? "当前为默认目录（应用根 EarthOnlineData，不可写时回落 %LOCALAPPDATA%\\EarthOnline）。修改后需重启生效。"
-                : "已指定自定义目录：" + s.DataDirectory + "（重启后生效）。";
+                ? $"当前默认目录：{AppPaths.RootDir}。填入自定义目录并保存后重启生效。"
+                : $"已指定自定义目录：{s.DataDirectory}（重启后生效）。当前生效：{AppPaths.RootDir}";
             _suppressGeneral = true;
             try
             {
@@ -285,7 +294,7 @@ public partial class SettingsPage : Page
     private void ResetDataDir_Click(object sender, RoutedEventArgs e)
     {
         DataDirBox.Text = "";
-        DataDirStatus.Text = "已重置为默认目录；点「保存目录」后重启生效。";
+        DataDirStatus.Text = $"已清空：将回到默认目录 {Path.Combine(AppContext.BaseDirectory, "EarthOnlineData")}；点「保存目录」后重启生效。";
     }
 
     private void ApplyDataDir_Click(object sender, RoutedEventArgs e)

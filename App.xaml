@@ -15,6 +15,25 @@
         <Color x:Key="TextSecondaryColor">#7A7268</Color>
         <Color x:Key="TextMutedColor">#B0A89C</Color>
 
+        <!-- 代码生成界面（指标卡 / 日历 / 图表 / 气泡 / 芯片）复用的扩展色。
+             这些位置无法写 DynamicResource，改由 ThemeService.Brush(key) 在生成时取值，
+             主题切换后由设置页触发重绘，效果与 XAML 里的 DynamicResource 一致。 -->
+        <Color x:Key="SoftBgColor">#F8F6F2</Color>
+        <Color x:Key="ChipFillColor">#EFE9E0</Color>
+        <Color x:Key="Heat0Color">#FAF8F5</Color>
+        <Color x:Key="Heat1Color">#F5E9DC</Color>
+        <Color x:Key="Heat2Color">#EBD3B3</Color>
+        <Color x:Key="Heat3Color">#D9B48A</Color>
+        <Color x:Key="DueDotColor">#E76F51</Color>
+        <Color x:Key="StatusDoneColor">#D4A373</Color>
+        <Color x:Key="StatusActiveColor">#8AA79B</Color>
+        <Color x:Key="StatusPausedColor">#E3C1A2</Color>
+        <Color x:Key="StatusPlanningColor">#C9C2B8</Color>
+        <Color x:Key="AiBubbleUserColor">#F3E4D2</Color>
+        <Color x:Key="AiBubbleAiColor">#F6F4F0</Color>
+        <Color x:Key="ChartGridColor">#E8E2DA</Color>
+        <Color x:Key="ChartTextColor">#B0A89C</Color>
+
         <!-- 主题切换机制（重要，改动前先看）：
              Application.Resources 里的 Freezable 会被框架自动冻结（BAML 加载期就冻结），
              冻结后运行时改 Color 会静默失败 —— 这就是「主题切换看着没反应」的根因。
@@ -28,6 +47,22 @@
         <SolidColorBrush x:Key="TextPrimaryBrush" Color="{StaticResource TextPrimaryColor}" po:Freeze="False"/>
         <SolidColorBrush x:Key="TextSecondaryBrush" Color="{StaticResource TextSecondaryColor}" po:Freeze="False"/>
         <SolidColorBrush x:Key="TextMutedBrush" Color="{StaticResource TextMutedColor}" po:Freeze="False"/>
+
+        <SolidColorBrush x:Key="SoftBgBrush" Color="{StaticResource SoftBgColor}" po:Freeze="False"/>
+        <SolidColorBrush x:Key="ChipFillBrush" Color="{StaticResource ChipFillColor}" po:Freeze="False"/>
+        <SolidColorBrush x:Key="Heat0Brush" Color="{StaticResource Heat0Color}" po:Freeze="False"/>
+        <SolidColorBrush x:Key="Heat1Brush" Color="{StaticResource Heat1Color}" po:Freeze="False"/>
+        <SolidColorBrush x:Key="Heat2Brush" Color="{StaticResource Heat2Color}" po:Freeze="False"/>
+        <SolidColorBrush x:Key="Heat3Brush" Color="{StaticResource Heat3Color}" po:Freeze="False"/>
+        <SolidColorBrush x:Key="DueDotBrush" Color="{StaticResource DueDotColor}" po:Freeze="False"/>
+        <SolidColorBrush x:Key="StatusDoneBrush" Color="{StaticResource StatusDoneColor}" po:Freeze="False"/>
+        <SolidColorBrush x:Key="StatusActiveBrush" Color="{StaticResource StatusActiveColor}" po:Freeze="False"/>
+        <SolidColorBrush x:Key="StatusPausedBrush" Color="{StaticResource StatusPausedColor}" po:Freeze="False"/>
+        <SolidColorBrush x:Key="StatusPlanningBrush" Color="{StaticResource StatusPlanningColor}" po:Freeze="False"/>
+        <SolidColorBrush x:Key="AiBubbleUserBrush" Color="{StaticResource AiBubbleUserColor}" po:Freeze="False"/>
+        <SolidColorBrush x:Key="AiBubbleAiBrush" Color="{StaticResource AiBubbleAiColor}" po:Freeze="False"/>
+        <SolidColorBrush x:Key="ChartGridBrush" Color="{StaticResource ChartGridColor}" po:Freeze="False"/>
+        <SolidColorBrush x:Key="ChartTextBrush" Color="{StaticResource ChartTextColor}" po:Freeze="False"/>
 
         <!-- 空字符串转 Collapsed（可选文本） -->
         <local:EmptyToCollapsedConverter x:Key="EmptyToCollapsed"/>

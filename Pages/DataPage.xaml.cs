@@ -90,8 +90,9 @@ public partial class DataPage : Page
         // 直接写属性而非 FindResource：不依赖 Application.Current，单测/隔离场景也不会空引用
         var border = new Border
         {
-            Background = Brush("#FFFFFF"),
-            BorderBrush = Brush("#E8E2DA"),
+            // 随主题取值：深色模式下卡片/描边跟着变，不再出现白块（不依赖 FindResource，隔离场景也安全）
+            Background = ThemeService.Brush("CardBgBrush"),
+            BorderBrush = ThemeService.Brush("BorderBrush"),
             BorderThickness = new Thickness(1),
             CornerRadius = new CornerRadius(12),
             Padding = new Thickness(14, 12, 14, 12),
@@ -104,14 +105,14 @@ public partial class DataPage : Page
             Text = value.ToString(CultureInfo.InvariantCulture),
             FontSize = 24,
             FontWeight = FontWeights.SemiBold,
-            Foreground = Brush("#1E1A16"),
+            Foreground = ThemeService.Brush("TextPrimaryBrush"),
             HorizontalAlignment = HorizontalAlignment.Center
         });
         stack.Children.Add(new TextBlock
         {
             Text = label,
             FontSize = 12,
-            Foreground = Brush("#7A7268"),
+            Foreground = ThemeService.Brush("TextSecondaryBrush"),
             HorizontalAlignment = HorizontalAlignment.Center,
             Margin = new Thickness(0, 2, 0, 0)
         });
@@ -121,13 +122,13 @@ public partial class DataPage : Page
 
     // ==================== 任务完成度环形图 ====================
 
-    /// <summary>状态配色（琥珀主题系，与 ChartRenderer 一致）。</summary>
-    private static readonly (string Status, string Label, Color Color)[] StatusSlices =
+    /// <summary>状态配色（存画笔键而非硬编码色值，深色模式下由 ThemeService 给出另一套）。</summary>
+    private static readonly (string Status, string Label, string BrushKey)[] StatusSlices =
     {
-        ("done", "已完成", Color.FromRgb(0xD4, 0xA3, 0x73)),
-        ("active", "进行中", Color.FromRgb(0x8A, 0xA7, 0x9B)),
-        ("paused", "已暂停", Color.FromRgb(0xE3, 0xC1, 0xA2)),
-        ("planning", "规划中", Color.FromRgb(0xC9, 0xC2, 0xB8))
+        ("done", "已完成", "StatusDoneBrush"),
+        ("active", "进行中", "StatusActiveBrush"),
+        ("paused", "已暂停", "StatusPausedBrush"),
+        ("planning", "规划中", "StatusPlanningBrush")
     };
 
     private void DrawStatusDonut()
@@ -136,11 +137,11 @@ public partial class DataPage : Page
 
         var slices = new List<(string, int, Color)>();
         int total = 0;
-        foreach (var (status, label, color) in StatusSlices)
+        foreach (var (status, label, brushKey) in StatusSlices)
         {
             int n = _tasks.Count(t => t.Status == status);
             total += n;
-            if (n > 0) slices.Add((label, n, color));
+            if (n > 0) slices.Add((label, n, ThemeService.ColorOf(brushKey)));
         }
 
         bool drew = ChartRenderer.DrawDonut(StatusDonut, slices);
@@ -150,7 +151,7 @@ public partial class DataPage : Page
         DonutLegend.Children.Clear();
         if (!drew) return;
 
-        foreach (var (status, label, color) in StatusSlices)
+        foreach (var (status, label, brushKey) in StatusSlices)
         {
             int n = _tasks.Count(t => t.Status == status);
             if (n <= 0) continue;
@@ -159,7 +160,7 @@ public partial class DataPage : Page
             item.Children.Add(new Border
             {
                 Width = 12, Height = 12, CornerRadius = new CornerRadius(3),
-                Background = new SolidColorBrush(color),
+                Background = ThemeService.Brush(brushKey),
                 VerticalAlignment = VerticalAlignment.Center
             });
             item.Children.Add(new TextBlock
@@ -167,7 +168,7 @@ public partial class DataPage : Page
                 Text = $" {label} {n}",
                 FontSize = 13,
                 VerticalAlignment = VerticalAlignment.Center,
-                Foreground = Brush("#4A443C")
+                Foreground = ThemeService.Brush("TextPrimaryBrush")
             });
             DonutLegend.Children.Add(item);
         }
@@ -206,7 +207,7 @@ public partial class DataPage : Page
                 Text = WeekdayNames[i],
                 HorizontalAlignment = HorizontalAlignment.Center,
                 FontSize = 12,
-                Foreground = Brush("#7A7268")
+                Foreground = ThemeService.Brush("TextSecondaryBrush")
             };
             Grid.SetColumn(tb, i);
             WeekdayHeader.Children.Add(tb);
@@ -249,13 +250,13 @@ public partial class DataPage : Page
             string key = day.ToString("yyyy-MM-dd");
             int count = _doneByDay.TryGetValue(key, out var c) ? c : 0;
 
-            // 热图 3 档：1 → 浅琥珀，2-3 → 中琥珀，4+ → 深琥珀（0 = 灰白）
-            string heat = count switch
+            // 热图 3 档：1 → 浅琥珀，2-3 → 中琥珀，4+ → 深琥珀（0 = 空格）
+            string heatKey = count switch
             {
-                >= 4 => "#D9B48A",
-                >= 2 => "#EBD3B3",
-                >= 1 => "#F5E9DC",
-                _ => "#FAF8F5"
+                >= 4 => "Heat3Brush",
+                >= 2 => "Heat2Brush",
+                >= 1 => "Heat1Brush",
+                _ => "Heat0Brush"
             };
             int due = dueByDay.TryGetValue(key, out var dd) ? dd : 0;
 
@@ -263,8 +264,8 @@ public partial class DataPage : Page
             {
                 Margin = new Thickness(2),
                 CornerRadius = new CornerRadius(8),
-                Background = Brush(heat),
-                BorderBrush = key == todayKey ? Brush("#D4A373") : Brush("#E8E2DA"),
+                Background = ThemeService.Brush(heatKey),
+                BorderBrush = key == todayKey ? ThemeService.Brush("AccentBrush") : ThemeService.Brush("BorderBrush"),
                 BorderThickness = key == todayKey ? new Thickness(2) : new Thickness(1),
                 Cursor = System.Windows.Input.Cursors.Hand,
                 Tag = key
@@ -277,7 +278,7 @@ public partial class DataPage : Page
                 Text = d.ToString(CultureInfo.InvariantCulture),
                 HorizontalAlignment = HorizontalAlignment.Center,
                 FontSize = 14,
-                Foreground = Brush("#1E1A16")
+                Foreground = ThemeService.Brush("TextPrimaryBrush")
             });
             stack.Children.Add(new TextBlock
             {
@@ -285,7 +286,7 @@ public partial class DataPage : Page
                 HorizontalAlignment = HorizontalAlignment.Center,
                 FontSize = 11,
                 Margin = new Thickness(0, 2, 0, 0),
-                Foreground = Brush("#B07B3F")
+                Foreground = ThemeService.Brush("AccentBrush")
             });
             // 截止日红点（当天有未完成任务到期）
             if (due > 0)
@@ -293,7 +294,7 @@ public partial class DataPage : Page
                 stack.Children.Add(new Ellipse
                 {
                     Width = 6, Height = 6,
-                    Fill = new SolidColorBrush(Color.FromRgb(0xE7, 0x6F, 0x51)),
+                    Fill = ThemeService.Brush("DueDotBrush"),
                     HorizontalAlignment = HorizontalAlignment.Center,
                     Margin = new Thickness(0, 2, 0, 0)
                 });
@@ -377,6 +378,4 @@ public partial class DataPage : Page
         BuildCalendar();
     }
 
-    private static SolidColorBrush Brush(string hex)
-        => new((Color)ColorConverter.ConvertFromString(hex));
 }

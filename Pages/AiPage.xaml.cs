@@ -16,9 +16,10 @@ public class ChatBubble
     public HorizontalAlignment Align => Role == "user"
         ? HorizontalAlignment.Right : HorizontalAlignment.Left;
 
+    /// <summary>气泡底色按角色取主题画笔：深色模式下换成对应的深色调，保证文字对比度。</summary>
     public Brush BubbleBg => Role == "user"
-        ? new SolidColorBrush(Color.FromRgb(0xF3, 0xE4, 0xD2))   // 琥珀浅色（用户）
-        : new SolidColorBrush(Color.FromRgb(0xF6, 0xF4, 0xF0));  // 中性浅色（AI）
+        ? ThemeService.Brush("AiBubbleUserBrush")   // 琥珀系（用户）
+        : ThemeService.Brush("AiBubbleAiBrush");    // 中性（AI）
 }
 
 /// <summary>

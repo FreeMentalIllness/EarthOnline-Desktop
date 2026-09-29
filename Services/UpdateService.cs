@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
 using System.Text;
@@ -270,7 +270,7 @@ public sealed class UpdateProgressWindow : Window
     {
         Text = "正在连接 GitHub…",
         FontSize = 13,
-        Foreground = new SolidColorBrush(Color.FromRgb(0x1E, 0x1A, 0x16))
+        Foreground = ThemeService.Brush("TextPrimaryBrush")
     };
     private readonly long _total;
 

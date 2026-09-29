@@ -1,10 +1,11 @@
-using System.IO;
+﻿using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using EarthOnline.Desktop.Data;
+using EarthOnline.Desktop.Services;
 
 namespace EarthOnline.Desktop.Dialogs;
 
@@ -56,7 +57,7 @@ public static class CropDialog
         {
             Width = Viewport,
             Height = Viewport,
-            Background = new SolidColorBrush(Color.FromRgb(0xEF, 0xE9, 0xE0)),
+            Background = ThemeService.FromHex("#EFE9E0"),
             ClipToBounds = true,
             Cursor = Cursors.Hand
         };
@@ -79,7 +80,7 @@ public static class CropDialog
         {
             Width = frame,
             Height = frame,
-            BorderBrush = new SolidColorBrush(Color.FromRgb(0xD4, 0xA3, 0x73)),
+            BorderBrush = ThemeService.FromHex("#D4A373"),
             BorderThickness = new Thickness(2),
             Background = Brushes.Transparent,
             CornerRadius = circular ? new CornerRadius(frame / 2) : new CornerRadius(8),
@@ -154,7 +155,7 @@ public static class CropDialog
             Height = 34,
             Padding = new Thickness(14, 0, 14, 0),
             Foreground = Brushes.White,
-            Background = new SolidColorBrush(Color.FromRgb(0xD4, 0xA3, 0x73)),
+            Background = ThemeService.FromHex("#D4A373"),
             BorderThickness = new Thickness(0),
             Cursor = Cursors.Hand
         };
@@ -176,7 +177,7 @@ public static class CropDialog
             MaxHeight = 680,
             ResizeMode = ResizeMode.NoResize,
             WindowStartupLocation = WindowStartupLocation.CenterOwner,
-            Background = new SolidColorBrush(Color.FromRgb(0xF8, 0xF6, 0xF2)),
+            Background = ThemeService.FromHex("#F8F6F2"),
             Owner = Application.Current?.MainWindow
         };
 
@@ -203,7 +204,7 @@ public static class CropDialog
         {
             Text = "拖拽移动图片 · 拖动滑块缩放，框内即最终效果",
             FontSize = 12,
-            Foreground = new SolidColorBrush(Color.FromRgb(0x7A, 0x72, 0x68)),
+            Foreground = ThemeService.FromHex("#7A7268"),
             Margin = new Thickness(0, 0, 0, 10)
         });
         root.Children.Add(canvas);
@@ -214,7 +215,7 @@ public static class CropDialog
             FontSize = 13,
             VerticalAlignment = VerticalAlignment.Center,
             Margin = new Thickness(0, 0, 10, 0),
-            Foreground = new SolidColorBrush(Color.FromRgb(0x1E, 0x1A, 0x16))
+            Foreground = ThemeService.FromHex("#1E1A16")
         });
         ctrlRow.Children.Add(zoom);
         root.Children.Add(ctrlRow);
