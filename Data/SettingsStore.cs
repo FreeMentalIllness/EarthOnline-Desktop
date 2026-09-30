@@ -25,6 +25,12 @@ public class SettingsStore
     public string LastSyncAt { get; set; } = "";
 
     /// <summary>
+    /// 清空数据后：暂停下一次自动拉取一次，避免旧云端备份被拉回覆盖已清空的数据。
+    /// 消费一次后即复位（见 SyncService.PullIfRemoteNewerAsync）。
+    /// </summary>
+    public bool SkipNextAutoPull { get; set; }
+
+    /// <summary>
     /// 空白标题保存被拒次数 —— 彩蛋成就 egg_blank_title 用。
     /// 这是唯一无法从数据推导的计数（安卓 AchStats.blankTitleTries 同源），必须持久化。
     /// </summary>

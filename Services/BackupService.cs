@@ -154,6 +154,47 @@ public static class BackupService
         return n;
     }
 
+    // ==================== 清空数据 ====================
+
+    /// <summary>
+    /// 清空全部用户数据并恢复为全新种子状态（对齐安卓 BackupRepository.clearAllData / 网页 resetAllData）。
+    /// 只清用户数据，**保留应用设置**（设置走 settings.json，本方法不触碰）。
+    /// 头像原图文件一并清空（归属用户资料），并重建 Profile 种子行（id=1），
+    /// 保证「缺失即未初始化」语义与安卓一致。
+    /// </summary>
+    /// <param name="dbPath">数据库路径，默认 AppPaths.DbFile（测试可注入临时库）。</param>
+    public static void ClearAllData(string? dbPath = null)
+    {
+        using var db = new AppDbContext(dbPath ?? AppPaths.DbFile);
+        db.Tasks.ExecuteDelete();
+        db.Memos.ExecuteDelete();
+        db.Items.ExecuteDelete();
+        db.Achievements.ExecuteDelete();
+        db.Collections.ExecuteDelete();
+        db.Locations.ExecuteDelete();
+        db.Activities.ExecuteDelete();
+        db.BagCategories.ExecuteDelete();
+        ClearAvatarFiles();
+        db.Profile.ExecuteDelete();
+        db.Profile.Add(new ProfileEntity { Id = 1 });
+        db.SaveChanges();
+    }
+
+    /// <summary>清空头像原图目录（归属用户资料，清空数据时应一并移除）。</summary>
+    private static void ClearAvatarFiles()
+    {
+        try
+        {
+            var dir = AppPaths.AvatarDir;
+            if (string.IsNullOrWhiteSpace(dir) || !Directory.Exists(dir)) return;
+            foreach (var f in Directory.GetFiles(dir))
+            {
+                try { File.Delete(f); } catch { /* 单个失败忽略 */ }
+            }
+        }
+        catch { /* 目录异常忽略 */ }
+    }
+
     /// <summary>导入：把内联的头像字节落成文件，路径写回资料行（对应安卓 materializeAvatar）。</summary>
     private static ProfileEntity MaterializeAvatar(ProfileEntity p)
     {

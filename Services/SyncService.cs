@@ -29,6 +29,13 @@ public static class SyncService
         try
         {
             var s = SettingsStore.Load();
+            // 清空数据后保护：暂停一次自动拉取，避免旧云端备份覆盖已清空的数据
+            if (s.SkipNextAutoPull)
+            {
+                s.SkipNextAutoPull = false;
+                try { s.Save(); } catch { }
+                return new SyncResult(true, "已跳过本次自动拉取（清空数据后保护）", false);
+            }
             if (!s.HasConfig) return new SyncResult(false, "未配置 WebDAV");
             if (!force && !s.AutoSync) return new SyncResult(false, "自动同步已关闭");
 
@@ -97,6 +104,27 @@ public static class SyncService
         catch (Exception ex)
         {
             return new SyncResult(false, "连接失败：" + ex.Message);
+        }
+    }
+
+    /// <summary>删除远端备份文件（清空数据时可选「同时删除云端备份」用）。</summary>
+    public static async Task<SyncResult> DeleteRemoteAsync()
+    {
+        await Mutex.WaitAsync();
+        try
+        {
+            var s = SettingsStore.Load();
+            if (!s.HasConfig) return new SyncResult(false, "未配置 WebDAV");
+            await WebDavService.DeleteAsync(DavOf(s), s.EffectiveRemotePath());
+            return new SyncResult(true, "已删除云端备份");
+        }
+        catch (Exception ex)
+        {
+            return new SyncResult(false, "删除云端失败：" + ex.Message);
+        }
+        finally
+        {
+            Mutex.Release();
         }
     }
 

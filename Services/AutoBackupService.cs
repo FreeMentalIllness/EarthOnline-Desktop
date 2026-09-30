@@ -168,4 +168,18 @@ public static class AutoBackupService
         var text = File.ReadAllText(path);
         return BackupService.ImportJson(text);
     }
+
+    /// <summary>清空全部本地自动备份快照（清空数据时调用，避免旧快照残留已清数据）。</summary>
+    public static void ClearSnapshots()
+    {
+        try
+        {
+            if (!Directory.Exists(AppPaths.BackupDir)) return;
+            foreach (var f in Directory.GetFiles(AppPaths.BackupDir, "auto-*.json"))
+            {
+                try { File.Delete(f); } catch { /* 占用中则忽略 */ }
+            }
+        }
+        catch { /* 清理失败无害 */ }
+    }
 }

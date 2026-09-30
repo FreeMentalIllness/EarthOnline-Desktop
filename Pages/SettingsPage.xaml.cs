@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -603,6 +604,52 @@ public partial class SettingsPage : Page
         {
             SimpleDialogs.Alert("导入失败：" + ex.Message, "地球Online", MessageBoxButton.OK, MessageBoxImage.Error);
         }
+    }
+
+    // ==================== 清空数据（v1.0.5） ====================
+
+    private void ClearData_Click(object sender, RoutedEventArgs e)
+    {
+        var confirmed = SimpleDialogs.ConfirmClearData(out bool deleteCloud);
+        if (!confirmed) return;
+
+        // 1. 先于本地清空置防拉回标记：确保下次自动拉取被拦截，旧云端备份不会被拉回覆盖
+        var s = SettingsStore.Load();
+        s.SkipNextAutoPull = true;
+        s.Save();
+
+        // 2. 清空本地全部用户数据 + 本地自动备份快照
+        BackupService.ClearAllData();
+        AutoBackupService.ClearSnapshots();
+
+        // 3. 可选：删除云端备份（仅勾选时执行；失败不阻断本地清空，仅提示）
+        if (deleteCloud && s.HasConfig)
+        {
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    var r = await SyncService.DeleteRemoteAsync();
+                    if (!r.Ok)
+                        Dispatcher.Invoke(() => SimpleDialogs.Alert(
+                            "云端备份删除失败：" + r.Message + "\n本地数据已清空。",
+                            "地球Online", MessageBoxButton.OK, MessageBoxImage.Warning));
+                }
+                catch (Exception ex)
+                {
+                    Dispatcher.Invoke(() => SimpleDialogs.Alert(
+                        "云端备份删除失败：" + ex.Message + "\n本地数据已清空。",
+                        "地球Online", MessageBoxButton.OK, MessageBoxImage.Warning));
+                }
+            });
+        }
+
+        SimpleDialogs.Alert("已清空全部用户数据，应用设置（主题 / WebDAV / AI 配置）保留。",
+            "清空完成", MessageBoxButton.OK, MessageBoxImage.Information);
+
+        // 4. 回主页并刷新：各页面数据全部归零、空态引导正常
+        (Application.Current.MainWindow as MainWindow)?.NavigateTo("home");
+        (Application.Current.MainWindow as MainWindow)?.RefreshCurrentPage();
     }
 
     // ==================== 地图 Key（高德） ====================

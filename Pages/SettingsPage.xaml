@@ -215,6 +215,15 @@
                         <Button Style="{StaticResource SoftButtonStyle}" Content="导出备份到文件…" Padding="12,6" Click="ExportLocal_Click" Cursor="Hand"/>
                         <Button Style="{StaticResource SoftButtonStyle}" Content="从文件导入…" Padding="12,6" Margin="8,0,0,0" Click="ImportLocal_Click" Cursor="Hand"/>
                     </StackPanel>
+
+                    <!-- v1.0.5：清空数据（危险操作，红色警示 + 醒目二次确认） -->
+                    <Border Height="1" Background="{DynamicResource BorderBrush}" Margin="0,16,0,0"/>
+                    <TextBlock Text="⚠️ 危险操作" FontWeight="SemiBold" FontSize="13" Margin="0,14,0,4"
+                               Foreground="#C0392B"/>
+                    <TextBlock Text="清空数据会删除本机全部用户数据（任务、日志、物品、成就、收藏、足迹、资料、日历随手记等），并恢复为全新种子状态。主题、WebDAV 与 AI 配置等应用设置会保留。"
+                               FontSize="12" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                    <Button x:Name="ClearDataBtn" Style="{StaticResource DangerButtonStyle}" Content="清空数据…" Padding="12,6" Margin="0,10,0,0"
+                            HorizontalAlignment="Left" Click="ClearData_Click" Cursor="Hand"/>
                 </StackPanel>
             </Border>
 

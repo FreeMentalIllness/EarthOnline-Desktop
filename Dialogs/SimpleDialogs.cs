@@ -1,6 +1,7 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using EarthOnline.Desktop.Data;
 using EarthOnline.Desktop.Data.Entities;
 using EarthOnline.Desktop.Services;
 
@@ -122,6 +123,63 @@ public static class SimpleDialogs
 
         win.SetBody(root);
         return win.ShowDialog() == true;
+    }
+
+    /// <summary>
+    /// 「清空数据」醒目二次确认：红字警示 + 可选勾选「同时删除云端备份」（默认不勾）。
+    /// 返回 true 表示确认；deleteCloud 输出是否勾选了删云端。
+    /// </summary>
+    public static bool ConfirmClearData(out bool deleteCloud)
+    {
+        deleteCloud = false;
+        var st = SettingsStore.Load();
+        var win = MakeWindow("⚠️ 确认清空数据", 460);
+        var root = new StackPanel { Margin = new Thickness(18) };
+
+        root.Children.Add(new TextBlock
+        {
+            Text = "此操作将清空本机全部用户数据（任务、日志、物品、成就、收藏、足迹、个人资料、日历随手记等），并恢复为全新种子数据。",
+            FontSize = 13, LineHeight = 20, TextWrapping = TextWrapping.Wrap, Foreground = TextMain,
+            FontWeight = FontWeights.Bold
+        });
+        root.Children.Add(new TextBlock
+        {
+            Text = "清空后无法撤销。主题、壁纸、WebDAV 与 AI 配置等应用设置会保留；清空后暂停一次自动拉取，避免旧云端备份被拉回。",
+            FontSize = 12, Margin = new Thickness(0, 10, 0, 0), TextWrapping = TextWrapping.Wrap, Foreground = TextSub
+        });
+
+        var cb = new CheckBox
+        {
+            Content = st.HasConfig ? "同时删除云端备份（WebDAV 服务器上的存档文件）" : "同时删除云端备份（当前未配置 WebDAV）",
+            FontSize = 13, Margin = new Thickness(0, 14, 0, 0), Foreground = TextMain,
+            IsChecked = false, IsEnabled = st.HasConfig
+        };
+        root.Children.Add(cb);
+
+        var bar = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            HorizontalAlignment = HorizontalAlignment.Right,
+            Margin = new Thickness(0, 18, 0, 0)
+        };
+        var no = MakeButton("取消", false);
+        var yes = MakeButton("确认清空", true);
+        no.Margin = new Thickness(0, 0, 0, 0);
+        yes.Margin = new Thickness(6, 0, 0, 0);
+        // 确认按钮用危险红（MakeButton 默认琥珀主按钮，这里换成 DangerButtonStyle）
+        yes.Style = (Style)Application.Current.Resources["DangerButtonStyle"];
+        bool confirmed = false;
+        bool dc = false;
+        no.Click += (_, _) => win.DialogResult = false;
+        yes.Click += (_, _) => { confirmed = true; dc = cb.IsChecked == true; win.DialogResult = true; };
+        bar.Children.Add(no);
+        bar.Children.Add(yes);
+        root.Children.Add(bar);
+
+        win.SetBody(root);
+        var res = win.ShowDialog() == true && confirmed;
+        deleteCloud = dc;
+        return res;
     }
 
     /// <summary>
