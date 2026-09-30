@@ -19,6 +19,18 @@ public static class ChangelogDialog
         var root = new StackPanel();
 
         root.Children.Add(VersionBlock(
+            "v1.0.3 · 视觉统一与数据目录",
+            new[]
+            {
+                "主页卡片整体可点击，直达对应页面",
+                "头像 / 壁纸裁剪升级为原图质量输出，支持缩放选区",
+                "背包 / 成就分类改为芯片样式，支持滚轮横向滚动",
+                "主题切换根治：画刷整体动态替换，深浅切换立即生效",
+                "支持自定义数据目录（承载数据库 / 头像 / 文件 / 备份，旧数据递归迁移）",
+                "侧栏导航重排、退出行为可选（最小化到托盘或退出）"
+            }));
+
+        root.Children.Add(VersionBlock(
             "v1.0.4",
             new[]
             {
