@@ -5,7 +5,7 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
       mc:Ignorable="d"
       Title="主页"
-      Background="{DynamicResource AppBgBrush}">
+      Background="Transparent">
     <Page.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
     </Page.Resources>
@@ -54,6 +54,7 @@
                                 </TextBlock.Style>
                             </TextBlock>
                             <Image Source="{Binding AvatarImage}" Width="76" Height="76"
+                                   RenderOptions.BitmapScalingMode="HighQuality"
                                    Visibility="{Binding HasAvatarImage, Converter={StaticResource BoolToVis}}">
                                 <Image.Clip>
                                     <EllipseGeometry Center="38,38" RadiusX="38" RadiusY="38"/>
@@ -128,88 +129,6 @@
                 </Grid>
             </Border>
 
-            <!-- ============ 连续记录成长阶段（GrowthStreak.kt 规格） ============ -->
-            <Border Style="{StaticResource CardStyle}"
-                    Visibility="{Binding HasStreakCard, Converter={StaticResource BoolToVis}}">
-                <StackPanel>
-                    <TextBlock Text="🌱 连续记录" Style="{StaticResource SectionTitleStyle}"/>
-                    <TextBlock Text="{Binding StreakText}" FontSize="13"
-                               Foreground="{DynamicResource TextPrimaryBrush}"
-                               Visibility="{Binding StreakText, Converter={StaticResource EmptyToCollapsed}}"/>
-                    <TextBlock Text="{Binding ComebackText}" FontSize="13" Margin="0,4,0,0"
-                               Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"
-                               Visibility="{Binding ComebackText, Converter={StaticResource EmptyToCollapsed}}"/>
-                </StackPanel>
-            </Border>
-
-            <!-- ============ 今日一签 / 历年今日 ============ -->
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="12"/>
-                    <ColumnDefinition Width="*"
-                                      MinWidth="0"/>
-                </Grid.ColumnDefinitions>
-                <Border Grid.Column="0" Style="{StaticResource CardStyle}"
-                        Visibility="{Binding HasDailyPick, Converter={StaticResource BoolToVis}}">
-                    <StackPanel>
-                        <TextBlock Text="🎴 今日一签" Style="{StaticResource SectionTitleStyle}"/>
-                        <TextBlock Text="{Binding DailyPickText}" FontSize="13" LineHeight="21"
-                                   Foreground="{DynamicResource TextPrimaryBrush}" TextWrapping="Wrap"/>
-                        <TextBlock Text="{Binding DailyPickSub}" FontSize="11" Margin="0,4,0,0"
-                                   Foreground="{DynamicResource TextMutedBrush}"/>
-                    </StackPanel>
-                </Border>
-                <Border Grid.Column="2" Style="{StaticResource CardStyle}" Margin="0,0,0,12"
-                        Visibility="{Binding HasThisDay, Converter={StaticResource BoolToVis}}">
-                    <StackPanel>
-                        <TextBlock Text="🕰️ 历年今日" Style="{StaticResource SectionTitleStyle}"/>
-                        <TextBlock Text="{Binding ThisDayText}" FontSize="13" LineHeight="21"
-                                   Foreground="{DynamicResource TextPrimaryBrush}" TextWrapping="Wrap"/>
-                    </StackPanel>
-                </Border>
-            </Grid>
-
-            <!-- ============ 徽章墙（佩戴最多 3 枚已解锁成就，存 settings.json） ============ -->
-            <TextBlock Text="🎖 徽章墙" Style="{StaticResource SectionTitleStyle}" Margin="0,10,0,8"/>
-            <Border Style="{StaticResource CardStyle}">
-                <StackPanel>
-                    <DockPanel>
-                        <Button Style="{StaticResource SoftButtonStyle}" DockPanel.Dock="Right" Content="佩戴徽章" Padding="12,6"
-                                VerticalAlignment="Top" Click="PickBadges_Click" Cursor="Hand"/>
-                        <ItemsControl ItemsSource="{Binding Badges}" VerticalAlignment="Center">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <WrapPanel Orientation="Horizontal"/>
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <Border Background="{DynamicResource AppBgBrush}"
-                                            BorderBrush="{DynamicResource BorderBrush}"
-                                            BorderThickness="1" CornerRadius="8"
-                                            Padding="10,5" Margin="0,2,8,4">
-                                        <StackPanel Orientation="Horizontal">
-                                            <TextBlock Text="🏆" FontSize="14" VerticalAlignment="Center"/>
-                                            <StackPanel Margin="6,0,0,0">
-                                                <TextBlock Text="{Binding Title}" FontSize="12"
-                                                           FontWeight="SemiBold"
-                                                           Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                                <TextBlock Text="{Binding SubText}" FontSize="10"
-                                                           Foreground="{DynamicResource TextMutedBrush}"/>
-                                            </StackPanel>
-                                        </StackPanel>
-                                    </Border>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </DockPanel>
-                    <TextBlock Text="还没有佩戴徽章：点「佩戴徽章」，把解锁的成就别在胸口 ✨" FontSize="12"
-                               Foreground="{DynamicResource TextMutedBrush}" Margin="2,4,0,0"
-                               Visibility="{Binding NoBadges, Converter={StaticResource BoolToVis}}"/>
-                </StackPanel>
-            </Border>
-
             <!-- ============ 概览：模块入口行（点击直达对应页面） ============ -->
             <TextBlock Text="概览" Style="{StaticResource SectionTitleStyle}" Margin="0,8,0,8"/>
             <UniformGrid Columns="4" Margin="0,0,0,4">
@@ -238,11 +157,11 @@
                     </StackPanel>
                 </Border>
                 <Border Style="{StaticResource StatCardStyle}" Margin="8,0,0,0"
-                        Tag="ai" Cursor="Hand" MouseLeftButtonUp="StatCard_Click" ToolTip="点击进入 AI 助手">
+                        Tag="data" Cursor="Hand" MouseLeftButtonUp="StatCard_Click" ToolTip="点击进入数据看板">
                     <StackPanel>
-                        <TextBlock Text="💡" FontSize="16" HorizontalAlignment="Center"/>
-                        <TextBlock Text="{Binding InspirationCount}" Style="{StaticResource StatNumStyle}"/>
-                        <TextBlock Text="灵感" Style="{StaticResource StatLabelStyle}"/>
+                        <TextBlock Text="📊" FontSize="16" HorizontalAlignment="Center"/>
+                        <TextBlock Text="{Binding DoneRateText}" Style="{StaticResource StatNumStyle}"/>
+                        <TextBlock Text="📂 数据" Style="{StaticResource StatLabelStyle}"/>
                     </StackPanel>
                 </Border>
             </UniformGrid>
@@ -266,15 +185,96 @@
                     </StackPanel>
                 </Border>
                 <Border Style="{StaticResource StatCardStyle}" Margin="8,0,0,0"
-                        Tag="data" Cursor="Hand" MouseLeftButtonUp="StatCard_Click" ToolTip="点击进入数据看板">
+                        Tag="ai" Cursor="Hand" MouseLeftButtonUp="StatCard_Click" ToolTip="点击进入 AI 助手">
                     <StackPanel>
-                        <TextBlock Text="✅" FontSize="16" HorizontalAlignment="Center"/>
-                        <TextBlock Text="{Binding DoneRateText}" Style="{StaticResource StatNumStyle}"/>
-                        <TextBlock Text="完成率" Style="{StaticResource StatLabelStyle}"/>
+                        <TextBlock Text="💡" FontSize="16" HorizontalAlignment="Center"/>
+                        <TextBlock Text="{Binding InspirationCount}" Style="{StaticResource StatNumStyle}"/>
+                        <TextBlock Text="💡 灵感" Style="{StaticResource StatLabelStyle}"/>
                     </StackPanel>
                 </Border>
             </UniformGrid>
 
+
+            <!-- ============ 今日速览（连续记录 / 今日一签 / 徽章墙 合并卡，置于概览下方） ============ -->
+            <Border Style="{StaticResource CardStyle}">
+                <StackPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="18"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0"
+                                    Visibility="{Binding HasStreakCard, Converter={StaticResource BoolToVis}}">
+                            <TextBlock Text="🌱 连续记录" FontSize="13" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextPrimaryBrush}"/>
+                            <TextBlock Text="{Binding StreakText}" FontSize="13" Margin="0,4,0,0" TextWrapping="Wrap"
+                                       Foreground="{DynamicResource TextPrimaryBrush}"
+                                       Visibility="{Binding StreakText, Converter={StaticResource EmptyToCollapsed}}"/>
+                            <TextBlock Text="{Binding ComebackText}" FontSize="12" Margin="0,3,0,0"
+                                       Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"
+                                       Visibility="{Binding ComebackText, Converter={StaticResource EmptyToCollapsed}}"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="2"
+                                    Visibility="{Binding HasDailyPick, Converter={StaticResource BoolToVis}}">
+                            <TextBlock Text="🎴 今日一签" FontSize="13" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextPrimaryBrush}"/>
+                            <TextBlock Text="{Binding DailyPickText}" FontSize="13" LineHeight="20" Margin="0,4,0,0"
+                                       Foreground="{DynamicResource TextPrimaryBrush}" TextWrapping="Wrap"/>
+                            <TextBlock Text="{Binding DailyPickSub}" FontSize="11" Margin="0,3,0,0"
+                                       Foreground="{DynamicResource TextMutedBrush}"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <Border Height="1" Background="{DynamicResource BorderBrush}" Margin="0,12,0,10"/>
+
+                    <DockPanel>
+                        <Button Style="{StaticResource SoftButtonStyle}" DockPanel.Dock="Right" Content="佩戴徽章" Padding="12,5"
+                                Click="PickBadges_Click" Cursor="Hand"/>
+                        <TextBlock Text="🎖 徽章墙" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"
+                                   Foreground="{DynamicResource TextPrimaryBrush}"/>
+                    </DockPanel>
+                    <ItemsControl ItemsSource="{Binding Badges}" Margin="0,8,0,0">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel Orientation="Horizontal"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="{DynamicResource AppBgBrush}"
+                                        BorderBrush="{DynamicResource BorderBrush}"
+                                        BorderThickness="1" CornerRadius="8"
+                                        Padding="10,5" Margin="0,2,8,4">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="🏆" FontSize="14" VerticalAlignment="Center"/>
+                                        <StackPanel Margin="6,0,0,0">
+                                            <TextBlock Text="{Binding Title}" FontSize="12"
+                                                       FontWeight="SemiBold"
+                                                       Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                            <TextBlock Text="{Binding SubText}" FontSize="10"
+                                                       Foreground="{DynamicResource TextMutedBrush}"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBlock Text="还没有佩戴徽章：点「佩戴徽章」，把解锁的成就别在胸口 ✨" FontSize="12"
+                               Foreground="{DynamicResource TextMutedBrush}" Margin="2,6,0,0"
+                               Visibility="{Binding NoBadges, Converter={StaticResource BoolToVis}}"/>
+                </StackPanel>
+            </Border>
+
+            <!-- ============ 历年今日（独立卡） ============ -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,0,0,12"
+                    Visibility="{Binding HasThisDay, Converter={StaticResource BoolToVis}}">
+                <StackPanel>
+                    <TextBlock Text="🕰️ 历年今日" Style="{StaticResource SectionTitleStyle}"/>
+                    <TextBlock Text="{Binding ThisDayText}" FontSize="13" LineHeight="21"
+                               Foreground="{DynamicResource TextPrimaryBrush}" TextWrapping="Wrap"/>
+                </StackPanel>
+            </Border>
 
             <!-- ============ 人生卡 ============ -->
             <Border Style="{StaticResource CardStyle}"
@@ -323,33 +323,30 @@
             <TextBlock Text="🌍 世界日志" Style="{StaticResource SectionTitleStyle}" Margin="0,18,0,8"/>
             <Border Style="{StaticResource CardStyle}">
                 <StackPanel>
-                    <DockPanel>
+                    <!-- 类型 + 心情统一标签行（随笔 / 重要 / 灵感 / 8 种心情，并列一排） -->
+                    <WrapPanel x:Name="MemoTypeRow">
+                        <Button Content="📝 随笔" Style="{StaticResource QuickButtonStyle}" Padding="10,5" Margin="0,0,6,6" Tag="type:note" Click="MemoTag_Click"/>
+                        <Button Content="❗ 重要" Style="{StaticResource QuickButtonStyle}" Padding="10,5" Margin="0,0,6,6" Tag="type:important" Click="MemoTag_Click"/>
+                        <Button Content="💡 灵感" Style="{StaticResource QuickButtonStyle}" Padding="10,5" Margin="0,0,6,6" Tag="type:idea" Click="MemoTag_Click"/>
+                        <Button Content="😄 开心" Style="{StaticResource QuickButtonStyle}" Padding="10,5" Margin="0,0,6,6" Tag="😄 开心" Click="MemoTag_Click"/>
+                        <Button Content="😌 平静" Style="{StaticResource QuickButtonStyle}" Padding="10,5" Margin="0,0,6,6" Tag="😌 平静" Click="MemoTag_Click"/>
+                        <Button Content="🥱 疲惫" Style="{StaticResource QuickButtonStyle}" Padding="10,5" Margin="0,0,6,6" Tag="🥱 疲惫" Click="MemoTag_Click"/>
+                        <Button Content="😤 上头" Style="{StaticResource QuickButtonStyle}" Padding="10,5" Margin="0,0,6,6" Tag="😤 上头" Click="MemoTag_Click"/>
+                        <Button Content="😢 难过" Style="{StaticResource QuickButtonStyle}" Padding="10,5" Margin="0,0,6,6" Tag="😢 难过" Click="MemoTag_Click"/>
+                        <Button Content="🤯 爆炸" Style="{StaticResource QuickButtonStyle}" Padding="10,5" Margin="0,0,6,6" Tag="🤯 爆炸" Click="MemoTag_Click"/>
+                        <Button Content="🥳 庆祝" Style="{StaticResource QuickButtonStyle}" Padding="10,5" Margin="0,0,6,6" Tag="🥳 庆祝" Click="MemoTag_Click"/>
+                        <Button Content="😴 摆烂" Style="{StaticResource QuickButtonStyle}" Padding="10,5" Margin="0,0,6,6" Tag="😴 摆烂" Click="MemoTag_Click"/>
+                    </WrapPanel>
+
+                    <DockPanel Margin="0,2,0,0">
                         <Button Style="{StaticResource PrimaryButtonStyle}" DockPanel.Dock="Right" Content="记录" Padding="14,0" Height="34"
                                 Margin="8,0,0,0" Click="MemoSave_Click" Cursor="Hand"/>
-                        <ComboBox x:Name="MemoType" DockPanel.Dock="Right" Width="96" Height="34"
-                                  VerticalContentAlignment="Center" SelectedIndex="0">
-                            <ComboBoxItem Content="📝 随笔" Tag="note"/>
-                            <ComboBoxItem Content="❗ 重要" Tag="important"/>
-                            <ComboBoxItem Content="💡 灵感" Tag="idea"/>
-                        </ComboBox>
                         <TextBox x:Name="MemoBox" Height="34" VerticalContentAlignment="Center"
                                  Padding="10,0" FontSize="13"
                                  KeyDown="MemoBox_KeyDown"/>
                     </DockPanel>
-                    <TextBlock Text="记一条今天的世界日志（回车或点「记录」），选心情一键直达 ↓"
+                    <TextBlock Text="选一个标签定类型或心情；心情在未输入文字时点「记录」即一键直达（回车同样生效）"
                                FontSize="11" Foreground="{DynamicResource TextMutedBrush}" Margin="2,6,0,0"/>
-
-                    <!-- 心情 8 连（与安卓/网页 MOOD_CHOICES 一致） -->
-                    <WrapPanel Margin="0,8,0,0">
-                        <Button Content="😄 开心" Style="{StaticResource QuickButtonStyle}" Click="Mood_Click" Tag="😄 开心"/>
-                        <Button Content="😌 平静" Style="{StaticResource QuickButtonStyle}" Click="Mood_Click" Tag="😌 平静"/>
-                        <Button Content="🥱 疲惫" Style="{StaticResource QuickButtonStyle}" Click="Mood_Click" Tag="🥱 疲惫"/>
-                        <Button Content="😤 上头" Style="{StaticResource QuickButtonStyle}" Click="Mood_Click" Tag="😤 上头"/>
-                        <Button Content="😢 难过" Style="{StaticResource QuickButtonStyle}" Click="Mood_Click" Tag="😢 难过"/>
-                        <Button Content="🤯 爆炸" Style="{StaticResource QuickButtonStyle}" Click="Mood_Click" Tag="🤯 爆炸"/>
-                        <Button Content="🥳 庆祝" Style="{StaticResource QuickButtonStyle}" Click="Mood_Click" Tag="🥳 庆祝"/>
-                        <Button Content="😴 摆烂" Style="{StaticResource QuickButtonStyle}" Click="Mood_Click" Tag="😴 摆烂"/>
-                    </WrapPanel>
 
                     <!-- 最近 5 条 -->
                     <ItemsControl ItemsSource="{Binding RecentMemos}" Margin="0,12,0,0">

@@ -1,7 +1,9 @@
 ﻿using System.IO;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using EarthOnline.Desktop.Data;
 using EarthOnline.Desktop.Data.Entities;
 using EarthOnline.Desktop.Dialogs;
@@ -14,13 +16,6 @@ namespace EarthOnline.Desktop.Pages;
 public partial class HomePage : Page
 {
     private readonly HomeViewModel _vm = new();
-
-    public HomePage()
-    {
-        InitializeComponent();
-        DataContext = _vm;
-        Loaded += (_, _) => _vm.Load();
-    }
 
     /// <summary>概览统计卡点击：根据 Tag 跳转到对应模块（v1.0.3 主页交互重构）。</summary>
     private void StatCard_Click(object sender, MouseButtonEventArgs e)
@@ -63,23 +58,68 @@ public partial class HomePage : Page
 
     // ==================== 世界日志 ====================
 
-    private void MemoSave_Click(object sender, RoutedEventArgs e)
+    private string _memoType = "note";
+    private string _moodTag = "";
+
+    public HomePage()
     {
-        var type = (MemoType.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "note";
-        if (_vm.AddMemo(type, _vm.MemoInput)) _vm.Load();   // 问候语/连续记录随新记录刷新
+        InitializeComponent();
+        DataContext = _vm;
+        Loaded += (_, _) => _vm.Load();
+        // 默认选中「随笔」标签
+        ApplyMemoTagSelection(MemoTypeRow.Children.OfType<Button>()
+            .FirstOrDefault(b => (b.Tag as string) == "type:note"));
     }
+
+    /// <summary>统一标签行：随笔/重要/灵感 设定类型；心情标签选中后未输入文字点「记录」一键直达。</summary>
+    private void MemoTag_Click(object sender, RoutedEventArgs e)
+    {
+        if ((sender as Button)?.Tag is not string tag) return;
+        if (tag.StartsWith("type:", StringComparison.Ordinal))
+        {
+            _memoType = tag["type:".Length..];
+            _moodTag = "";
+        }
+        else
+        {
+            _memoType = "mood";
+            _moodTag = tag;
+            // 保留原「心情一键记录」体验：文字为空时点心情立即落一条
+            if (string.IsNullOrWhiteSpace(_vm.MemoInput))
+            {
+                if (_vm.AddMemo("mood", tag)) _vm.Load();
+                return;
+            }
+        }
+        ApplyMemoTagSelection(sender as Button);
+    }
+
+    /// <summary>选中态高亮：选中标签琥珀底白字，其余还原样式默认。</summary>
+    private void ApplyMemoTagSelection(Button? selected)
+    {
+        if (MemoTypeRow is null) return;
+        foreach (var b in MemoTypeRow.Children.OfType<Button>())
+        {
+            bool sel = ReferenceEquals(b, selected);
+            b.Background = sel ? ThemeService.Brush("AccentBrush") : null;
+            b.BorderBrush = sel ? ThemeService.Brush("AccentBrush") : null;
+            b.Foreground = sel ? Brushes.White : null;
+        }
+    }
+
+    private void MemoSave_Click(object sender, RoutedEventArgs e) => SaveMemo();
 
     private void MemoBox_KeyDown(object sender, KeyEventArgs e)
     {
-        if (e.Key != Key.Enter) return;
-        var type = (MemoType.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "note";
-        if (_vm.AddMemo(type, _vm.MemoInput)) _vm.Load();
+        if (e.Key == Key.Enter) SaveMemo();
     }
 
-    /// <summary>心情一键记录（type=mood，text=「emoji 标签」，与两端一致）。</summary>
-    private void Mood_Click(object sender, RoutedEventArgs e)
+    private void SaveMemo()
     {
-        if ((sender as Button)?.Tag is string mood && _vm.AddMemo("mood", mood)) _vm.Load();
+        var text = _vm.MemoInput ?? "";
+        // 心情类型且未输入文字：直接记录选中的心情标签（与安卓/网页 mood 口径一致）
+        if (_memoType == "mood" && string.IsNullOrWhiteSpace(text)) text = _moodTag;
+        if (_vm.AddMemo(_memoType, text)) _vm.Load();
     }
 
     private void MemoDelete_Click(object sender, RoutedEventArgs e)

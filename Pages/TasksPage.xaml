@@ -6,7 +6,7 @@
       xmlns:local="clr-namespace:EarthOnline.Desktop.Pages"
       mc:Ignorable="d"
       Title="任务"
-      Background="{DynamicResource AppBgBrush}">
+      Background="Transparent">
     <Page.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
     </Page.Resources>
@@ -33,6 +33,8 @@
                         <ComboBoxItem Content="支线" Tag="side"/>
                         <ComboBoxItem Content="待办" Tag="todo"/>
                     </ComboBox>
+                    <CheckBox x:Name="HideDoneBox" Content="隐藏已完成" FontSize="12" Margin="12,0,0,0"
+                              VerticalAlignment="Center" Checked="HideDone_Changed" Unchecked="HideDone_Changed"/>
                     <Button Style="{StaticResource PrimaryButtonStyle}" Content="＋ 新建任务" Margin="10,0,0,0"
                             Padding="12,6" Click="AddRoot_Click" Cursor="Hand"/>
                 </StackPanel>
@@ -79,7 +81,20 @@
                                            Visibility="{Binding HasParent, Converter={StaticResource BoolToVis}}"/>
                                 <TextBlock Text="{Binding StatusEmoji}" Width="22" FontSize="13"/>
                                 <TextBlock Text="{Binding Title}" FontSize="14"
-                                           Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                           Foreground="{DynamicResource TextPrimaryBrush}">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+                                            <Style.Triggers>
+                                                <!-- 完成态：标题直接打删除线 + 文字变淡，视觉醒目 -->
+                                                <DataTrigger Binding="{Binding IsDone}" Value="True">
+                                                    <Setter Property="TextDecorations" Value="Strikethrough"/>
+                                                    <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
                                 <TextBlock Text="{Binding ProgressText}" FontSize="12" Margin="10,0,0,0"
                                            Foreground="{DynamicResource TextMutedBrush}"/>
                                 <TextBlock Text="{Binding DueText}" FontSize="12" Margin="10,0,0,0"

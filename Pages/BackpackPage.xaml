@@ -5,7 +5,7 @@
       xmlns:d="http://schemas.openxmlformats.org/markup-compatibility/2006"
       mc:Ignorable="d"
       Title="背包"
-      Background="{DynamicResource AppBgBrush}">
+      Background="Transparent">
     <Page.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
     </Page.Resources>

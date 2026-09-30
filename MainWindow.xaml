@@ -20,9 +20,9 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <!-- ============ 左侧导航栏 ============ -->
+        <!-- ============ 左侧导航栏（纳入壁纸覆盖：半透明遮罩垫层，文字可读且不割裂） ============ -->
         <Border Grid.Column="0"
-                Background="{DynamicResource CardBgBrush}"
+                Background="{DynamicResource NavMaskBrush}"
                 BorderBrush="{DynamicResource BorderBrush}"
                 BorderThickness="0,0,1,0">
             <Grid>
@@ -147,10 +147,19 @@
         </Border>
 
         <!-- ============ 右侧内容区 ============ -->
+        <!-- 内容区文字垫层：半透明遮罩让壁纸透出微光，同时保证页面文字清晰可读 -->
+        <Border Grid.Column="1"
+                Margin="10"
+                CornerRadius="14"
+                Background="{DynamicResource ContentScrimBrush}"
+                BorderBrush="{DynamicResource BorderBrush}"
+                BorderThickness="1"/>
+
         <Frame x:Name="ContentFrame"
                Grid.Column="1"
+               Margin="10"
                NavigationUIVisibility="Hidden"
-               Background="{DynamicResource AppBgBrush}"
+               Background="Transparent"
                JournalOwnership="OwnsJournal"/>
 
         <!-- 全局同步状态提示条（对齐 Android 全局离线横幅）：非弹窗、置顶、自动消退、可手关 -->

@@ -232,7 +232,7 @@ public partial class DataPage : Page
         int rows = (int)Math.Ceiling((offset + days) / 7.0);
         for (int r = 0; r < rows; r++)
         {
-            DayGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(56) });
+            DayGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(62) });
         }
 
         var todayKey = StatsService.TodayStr();
@@ -240,6 +240,17 @@ public partial class DataPage : Page
             .Where(t => t.Status != "done" && !string.IsNullOrEmpty(t.DueDate))
             .GroupBy(t => t.DueDate!.Substring(0, 10))
             .ToDictionary(g => g.Key, g => g.Count());
+
+        // 每日日志摘要：记录条数 + 当日第一条心情 emoji（日历格内展示）
+        var memoByDay = _memos
+            .Where(m => !string.IsNullOrEmpty(m.CreatedAt))
+            .GroupBy(m => StatsService.DayKeyOf(m.CreatedAt))
+            .ToDictionary(g => g.Key, g =>
+            {
+                string mood = g.FirstOrDefault(m => m.Type == "mood")?.Text ?? "";
+                int sp = mood.IndexOf(' ');
+                return (Count: g.Count(), Mood: sp > 0 ? mood[..sp] : mood);
+            });
 
         for (int d = 1; d <= days; d++)
         {
@@ -281,14 +292,29 @@ public partial class DataPage : Page
                 FontSize = 14,
                 Foreground = ThemeService.Brush("TextPrimaryBrush")
             });
+            // 摘要行：完成数 + 记录数（当日有内容才显示）
+            string memoPart = memoByDay.TryGetValue(key, out var mm) && mm.Count > 0 ? $"{mm.Count}记" : "";
+            string summary = (count > 0 ? $"✓{count}" : "") +
+                             (!string.IsNullOrEmpty(memoPart) ? (count > 0 ? " · " : "") + memoPart : "");
             stack.Children.Add(new TextBlock
             {
-                Text = count > 0 ? "✓ " + count.ToString(CultureInfo.InvariantCulture) : "",
+                Text = summary,
                 HorizontalAlignment = HorizontalAlignment.Center,
-                FontSize = 11,
+                FontSize = 10.5,
                 Margin = new Thickness(0, 2, 0, 0),
                 Foreground = ThemeService.Brush("AccentBrush")
             });
+            // 心情 emoji（当日第一条心情日志）
+            if (memoByDay.TryGetValue(key, out var md) && !string.IsNullOrEmpty(md.Mood))
+            {
+                stack.Children.Add(new TextBlock
+                {
+                    Text = md.Mood,
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    FontSize = 11,
+                    Margin = new Thickness(0, 1, 0, 0)
+                });
+            }
             // 截止日红点（当天有未完成任务到期）
             if (due > 0)
             {

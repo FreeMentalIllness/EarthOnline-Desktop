@@ -30,6 +30,8 @@ public class TaskNode : INotifyPropertyChanged
 
     public string Id => Task.Id;
     public string Title => Task.Title;
+    /// <summary>完成态：标题打删除线（XAML DataTrigger 用）。</summary>
+    public bool IsDone => Task.Status == "done";
     public string DueText => string.IsNullOrEmpty(Task.DueDate) ? "" : "截止 " + Task.DueDate;
 
     /// <summary>进度文案：叶子显示自身进度；父任务显示子任务聚合（Σ 标记），百分比不含 Σ 时与自身一致。</summary>
@@ -60,11 +62,26 @@ public partial class TasksPage : Page
     public TasksPage()
     {
         InitializeComponent();
+        HideDoneBox.IsChecked = SettingsStore.Load().HideDoneTasks;
         Loaded += (_, _) =>
         {
             _loaded = true;
             Reload();
         };
+    }
+
+    /// <summary>「隐藏已完成任务」开关：切换即重建树并持久化偏好。</summary>
+    private void HideDone_Changed(object sender, RoutedEventArgs e)
+    {
+        if (HideDoneBox is null) return; // 初始化期防御
+        try
+        {
+            var s = SettingsStore.Load();
+            s.HideDoneTasks = HideDoneBox.IsChecked == true;
+            s.Save();
+        }
+        catch { /* 偏好保存失败不影响切换 */ }
+        if (_loaded) BuildTree();
     }
 
     private void Reload()
@@ -92,6 +109,10 @@ public partial class TasksPage : Page
         var filter = (CategoryFilter.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "";
         var scoped = string.IsNullOrEmpty(filter) ? _all : _all.Where(t => t.Category == filter).ToList();
 
+        // 隐藏已完成：done 且所有后代都 done 的节点整体隐藏（有未完成子任务的父亲保留）
+        if (HideDoneBox?.IsChecked == true)
+            scoped = scoped.Where(t => !IsEffectivelyDone(t, scoped)).ToList();
+
         var nodes = new ObservableCollection<TaskNode>();
         foreach (var t in scoped.Where(t => string.IsNullOrEmpty(t.ParentId)))
         {
@@ -99,6 +120,10 @@ public partial class TasksPage : Page
         }
         TaskTree.ItemsSource = nodes;
     }
+
+    /// <summary>自身 done 且子任务池里不存在未完成后代 → 视为「可隐藏」。</summary>
+    private static bool IsEffectivelyDone(TaskEntity t, List<TaskEntity> pool)
+        => t.Status == "done" && !pool.Any(c => c.ParentId == t.Id && !IsEffectivelyDone(c, pool));
 
     private static TaskNode BuildNode(TaskEntity task, List<TaskEntity> pool)
     {

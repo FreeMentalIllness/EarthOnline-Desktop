@@ -1,6 +1,7 @@
 ﻿using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 using EarthOnline.Desktop.Data;
 using EarthOnline.Desktop.Dialogs;
 using EarthOnline.Desktop.Services;
@@ -44,8 +45,71 @@ public partial class SettingsPage : Page
             WallpaperText.Text = string.IsNullOrEmpty(s.WallpaperPath)
                 ? "未设置（使用纯色背景）"
                 : Path.GetFileName(s.WallpaperPath);
+
+            WallpaperOpacitySlider.Value = Math.Clamp(s.WallpaperOpacity <= 0 ? 1.0 : s.WallpaperOpacity, 0.1, 1.0);
+            UpdateWallpaperOpacityText();
         }
         finally { _suppressGeneral = false; }
+    }
+
+    /// <summary>壁纸透明度滑杆：即时预览并保存（深色模式下 ThemeService 自动 ×0.4）。</summary>
+    private void WallpaperOpacity_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (WallpaperOpacityText is null) return; // 初始化期防御
+        UpdateWallpaperOpacityText();
+        if (_suppressGeneral) return;
+        try
+        {
+            var s = SettingsStore.Load();
+            s.WallpaperOpacity = Math.Clamp(e.NewValue, 0.1, 1.0);
+            s.Save();
+            ThemeService.ApplyWallpaper(s);
+        }
+        catch { /* 滑杆失败不影响使用 */ }
+    }
+
+    private void UpdateWallpaperOpacityText()
+        => WallpaperOpacityText.Text = $"{Math.Round(WallpaperOpacitySlider.Value * 100)}%";
+
+    // ==================== 设置搜索（按关键词过滤卡片） ====================
+
+    private void SettingsSearch_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (SettingsRoot is null || SettingsSearchBox is null) return; // 初始化期防御
+        string q = (SettingsSearchBox.Text ?? "").Trim();
+        SearchClearBtn.Visibility = q.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
+        foreach (var child in SettingsRoot.Children)
+        {
+            // 只过滤卡片；标题行（PageTitle/SubTitle/Section 标题）保持原位
+            if (child is not Border card) continue;
+            if (q.Length == 0) { card.Visibility = Visibility.Visible; continue; }
+            string text = CollectText(card);
+            card.Visibility = text.Contains(q, StringComparison.OrdinalIgnoreCase)
+                ? Visibility.Visible : Visibility.Collapsed;
+        }
+    }
+
+    private void SearchClear_Click(object sender, RoutedEventArgs e)
+    {
+        SettingsSearchBox.Text = "";
+        SettingsSearch_TextChanged(sender, null!);
+        SettingsSearchBox.Focus();
+    }
+
+    /// <summary>收集卡片内全部 TextBlock 文本（含按钮 Content）作为搜索语料。</summary>
+    private static string CollectText(DependencyObject root)
+    {
+        var sb = new System.Text.StringBuilder();
+        int n = VisualTreeHelper.GetChildrenCount(root);
+        for (int i = 0; i < n; i++)
+        {
+            var c = VisualTreeHelper.GetChild(root, i);
+            if (c is TextBlock tb) sb.Append(tb.Text).Append(' ');
+            if (c is Button b && b.Content is string s) sb.Append(s).Append(' ');
+            if (c is System.Windows.Controls.Primitives.ToggleButton tg && tg.Content is string ts) sb.Append(ts).Append(' ');
+            sb.Append(CollectText(c));
+        }
+        return sb.ToString();
     }
 
     /// <summary>主题 / 字号切换（RadioButton Checked 共用；初始化期由 _suppressGeneral 挡住）。</summary>

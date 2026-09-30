@@ -324,6 +324,9 @@ public partial class HomeViewModel : ObservableObject
             bmp.BeginInit();
             bmp.CacheOption = BitmapCacheOption.OnLoad;
             bmp.UriSource = new Uri(path);
+            // 按显示尺寸的 2 倍解码（76px 圆形 → 152px），避免全尺寸原图缩到 76px
+            // 时的重采样发糊/锐化过重；同时仍是高质量插值，不做像素级硬缩。
+            bmp.DecodePixelWidth = 152;
             bmp.EndInit();
             bmp.Freeze();
             AvatarImage = bmp;

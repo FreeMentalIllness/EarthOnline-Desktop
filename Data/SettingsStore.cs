@@ -39,6 +39,12 @@ public class SettingsStore
     /// <summary>自定义壁纸图片路径（空 = 使用纯色背景）。</summary>
     public string WallpaperPath { get; set; } = "";
 
+    /// <summary>壁纸不透明度（0.1 ~ 1.0，默认 1.0；深色模式自动 ×0.4 保证文字可读）。</summary>
+    public double WallpaperOpacity { get; set; } = 1.0;
+
+    /// <summary>任务页「隐藏已完成任务」偏好。</summary>
+    public bool HideDoneTasks { get; set; }
+
     /// <summary>AI 接口根地址（OpenAI 兼容；程序内自动拼 /chat/completions）。不预设默认值。</summary>
     public string AiBaseUrl { get; set; } = "";
 

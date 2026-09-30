@@ -28,6 +28,9 @@ public static class ThemeService
         ("AccentBrush",       Color.FromRgb(0xD4, 0xA3, 0x73), Color.FromRgb(0xE0, 0xA9, 0x6D)),
         // ---- 代码生成界面专用（指标卡 / 日历热图 / 图表 / 气泡 / 芯片）----
         ("SoftBgBrush",       Color.FromRgb(0xF8, 0xF6, 0xF2), Color.FromRgb(0x2E, 0x2B, 0x27)),
+        // 壁纸模式：侧栏与内容区文字垫层（半透明遮罩，壁纸微透、文字可读）
+        ("NavMaskBrush",      Color.FromArgb(0xF0, 0xFF, 0xFF, 0xFF), Color.FromArgb(0xF0, 0x1F, 0x1D, 0x1B)),
+        ("ContentScrimBrush", Color.FromArgb(0xD9, 0xFF, 0xFF, 0xFF), Color.FromArgb(0xD9, 0x1F, 0x1D, 0x1B)),
         ("ChipFillBrush",     Color.FromRgb(0xEF, 0xE9, 0xE0), Color.FromRgb(0x3A, 0x36, 0x30)),
         ("Heat0Brush",        Color.FromRgb(0xFA, 0xF8, 0xF5), Color.FromRgb(0x26, 0x23, 0x20)),
         ("Heat1Brush",        Color.FromRgb(0xF5, 0xE9, 0xDC), Color.FromRgb(0x3A, 0x32, 0x2A)),
@@ -151,10 +154,13 @@ public static class ThemeService
         {
             try
             {
+                // 不透明度可调（设置页滑杆）；深色模式自动 ×0.4（对齐安卓壁纸透出口径），保证文字可读
+                double op = Math.Clamp(s.WallpaperOpacity <= 0 ? 1.0 : s.WallpaperOpacity, 0.1, 1.0);
+                if (IsDark(s)) op *= 0.4;
                 var img = new ImageBrush(new BitmapImage(new Uri(path)))
                 {
                     Stretch = Stretch.UniformToFill,
-                    Opacity = 1.0
+                    Opacity = op
                 };
                 // 冻结以支持跨线程/提升性能
                 if (img.CanFreeze) img.Freeze();

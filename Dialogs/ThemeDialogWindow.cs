@@ -85,6 +85,10 @@ public sealed class ThemeDialogWindow : Window
             Padding = new Thickness(20, 4, 20, 20),
             Child = null
         };
+        // 关键：限制主体高度上限。否则 StackPanel 纵向给 ScrollViewer 无限高度，
+        // 内容超过窗口 MaxHeight 时被直接裁掉且永远滚不动（「编辑资料无法下滑」根因）。
+        // 72 = 标题栏 46 + 主体上下 padding 24 + 卡片边框 2。
+        _bodyHost.MaxHeight = Math.Max(200, maxHeight - 72);
 
         var stack = new StackPanel();
         stack.Children.Add(titleBar);
