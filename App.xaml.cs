@@ -49,6 +49,10 @@ public partial class App : Application
         try { AutoBackupService.Start(); }
         catch { /* 备份功能失败不影响使用 */ }
 
+        // 自定义数据目录不可写回落：启动即温和提示并引导修改（不崩溃、不静默）
+        if (DataRootNotice != null)
+            (MainWindow as MainWindow)?.ShowSyncBanner(DataRootNotice, true);
+
         // 自动同步开启时：冷启动后台拉取云端更新（不阻塞窗口显示）
         var s = SettingsStore.Load();
         if (s.HasConfig && s.AutoSync)
@@ -69,9 +73,10 @@ public partial class App : Application
         }
     }
 
-    /// <summary>解析并设置数据目录（v1.0.3）：显式设置 &gt; 应用根 EarthOnlineData（可写）&gt; %LOCALAPPDATA%\EarthOnline；并从旧目录一次性迁移数据。</summary>
+    /// <summary>解析并设置数据目录（方案 A 便携优先）：显式设置 &gt; 应用根 EarthOnlineData（可写）&gt; %LOCALAPPDATA%\EarthOnline；并从旧目录一次性迁移数据。</summary>
     private static void InitDataRoot()
     {
+        DataRootNotice = null;
         try
         {
             var s = SettingsStore.Load();
@@ -85,6 +90,9 @@ public partial class App : Application
         }
     }
 
+    /// <summary>启动回落提示（自定义目录不可写等原因），主窗口就绪后经提示条展示一次。</summary>
+    public static string? DataRootNotice { get; private set; }
+
     private static string ResolveDataRoot(string dataDirectory)
     {
         // 1) 用户显式指定且可写
@@ -95,7 +103,12 @@ public partial class App : Application
                 System.IO.Directory.CreateDirectory(dataDirectory);
                 return dataDirectory;
             }
-            catch { /* 不可写回落默认 */ }
+            catch
+            {
+                // 自定义目录不可写：记录友好提示后回落默认（启动后在提示条引导用户修改，不崩溃）
+                DataRootNotice = "自定义数据目录不可写（权限不足或路径无效），本次启动已使用默认目录。" +
+                                 "请在「设置 → 数据目录」改成一个可写的普通文件夹。";
+            }
         }
         // 2) 默认：应用根目录下的 EarthOnlineData（便于随程序携带），可写时优先
         try

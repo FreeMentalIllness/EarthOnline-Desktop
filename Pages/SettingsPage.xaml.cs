@@ -304,10 +304,42 @@ public partial class SettingsPage : Page
 
     private void ApplyDataDir_Click(object sender, RoutedEventArgs e)
     {
+        var target = (DataDirBox.Text ?? "").Trim();
+
+        // 保存前预检：目标目录必须真实可写（防系统受保护目录导致重启后数据落错地方）
+        if (!string.IsNullOrWhiteSpace(target))
+        {
+            string probe = Path.Combine(target, "earth_online_write_probe.tmp");
+            try
+            {
+                Directory.CreateDirectory(target);
+                File.WriteAllText(probe, "probe");
+                File.Delete(probe);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                SimpleDialogs.Alert(
+                    "该目录没有写入权限（常见于 Program Files、Windows 等系统受保护目录）。\n\n" +
+                    "请换一个可写的普通文件夹，例如：\n" +
+                    "  · D:\\EarthOnlineData\n" +
+                    "  · 或直接留空使用默认目录（应用旁 EarthOnlineData）。",
+                    "数据目录不可写");
+                return;
+            }
+            catch (Exception ex)
+            {
+                SimpleDialogs.Alert(
+                    "无法使用该目录：" + ex.Message + "\n\n" +
+                    "请确认路径存在且可写（网络盘/U 盘可能未就绪），或直接留空使用默认目录。",
+                    "数据目录无效");
+                return;
+            }
+        }
+
         try
         {
             var s = SettingsStore.Load();
-            s.DataDirectory = (DataDirBox.Text ?? "").Trim();
+            s.DataDirectory = target;
             s.Save();
             DataDirStatus.Text = string.IsNullOrWhiteSpace(s.DataDirectory)
                 ? "已保存：使用默认目录。" + "重启应用后生效。"
