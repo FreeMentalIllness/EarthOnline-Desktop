@@ -12,7 +12,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
     <!-- 版本号：UpdateService 以此为当前版本，与 GitHub Releases 的 tag（v1.0.0 格式）比较 -->
-    <Version>1.0.3</Version>
+    <Version>1.0.4</Version>
     <AssemblyTitle>地球Online 桌面端</AssemblyTitle>
     <Product>地球Online</Product>
   </PropertyGroup>
