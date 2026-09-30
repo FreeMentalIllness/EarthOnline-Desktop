@@ -107,7 +107,7 @@ public static class ItemDialog
         if (win.ShowDialog() != true) return false;
         if (string.IsNullOrWhiteSpace(nameBox.Text))
         {
-            MessageBox.Show("物品名称不能为空", "地球Online", MessageBoxButton.OK, MessageBoxImage.Warning);
+            SimpleDialogs.Alert("物品名称不能为空", "地球Online", MessageBoxButton.OK, MessageBoxImage.Warning);
             return false;
         }
 

@@ -279,6 +279,41 @@ public partial class MainWindow : Window
         Navigate(CurrentNavKey());
     }
 
+    // ==================== 全局同步状态提示条（对齐 Android 离线横幅） ====================
+
+    private System.Windows.Threading.DispatcherTimer? _bannerTimer;
+
+    /// <summary>
+    /// 顶部非弹窗提示条：同步成功/失败、离线等全局状态。
+    /// 6 秒自动消退；手动可关。跨线程安全（自动调度到 UI 线程）。
+    /// </summary>
+    public void ShowSyncBanner(string message, bool isError)
+    {
+        if (SyncBanner is null) return; // 构造期防御
+        Dispatcher.Invoke(() =>
+        {
+            SyncBannerText.Text = message;
+            SyncBannerIcon.Text = isError ? "⚠️" : "✅";
+            SyncBanner.BorderBrush = ThemeService.Brush(isError ? "DueDotBrush" : "StatusDoneBrush");
+            SyncBanner.Visibility = Visibility.Visible;
+
+            _bannerTimer?.Stop();
+            _bannerTimer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromSeconds(6) };
+            _bannerTimer.Tick += (_, _) =>
+            {
+                SyncBanner.Visibility = Visibility.Collapsed;
+                _bannerTimer.Stop();
+            };
+            _bannerTimer.Start();
+        });
+    }
+
+    private void SyncBannerClose_Click(object sender, RoutedEventArgs e)
+    {
+        _bannerTimer?.Stop();
+        SyncBanner.Visibility = Visibility.Collapsed;
+    }
+
     // ==================== 键盘快捷键 ====================
 
     private void MainWindow_PreviewKeyDown(object sender, KeyEventArgs e)

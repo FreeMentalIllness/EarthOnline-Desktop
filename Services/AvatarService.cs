@@ -1,7 +1,8 @@
-using System.IO;
+﻿using System.IO;
 using EarthOnline.Desktop.Data;
 using EarthOnline.Desktop.Data.Entities;
 using Microsoft.Win32;
+using EarthOnline.Desktop.Dialogs;
 
 namespace EarthOnline.Desktop.Services;
 
@@ -34,7 +35,7 @@ public static class AvatarService
         }
         catch (Exception ex)
         {
-            System.Windows.MessageBox.Show("复制头像失败：" + ex.Message, "地球Online",
+            SimpleDialogs.Alert("复制头像失败：" + ex.Message, "地球Online",
                 System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
             return null;
         }

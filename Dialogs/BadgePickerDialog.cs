@@ -23,7 +23,7 @@ public static class BadgePickerDialog
     {
         if (unlocked.Count == 0)
         {
-            MessageBox.Show("还没有已解锁的成就，先去成就页解锁一枚吧 🏆", "地球Online",
+            SimpleDialogs.Alert("还没有已解锁的成就，先去成就页解锁一枚吧 🏆", "地球Online",
                 MessageBoxButton.OK, MessageBoxImage.Information);
             return false;
         }
@@ -59,7 +59,7 @@ public static class BadgePickerDialog
                 if (selected.Count >= MaxPinned)
                 {
                     cb.IsChecked = false;   // 触发 Unchecked → 不会加入
-                    MessageBox.Show($"最多佩戴 {MaxPinned} 枚徽章，先取消一枚再试。", "地球Online",
+                    SimpleDialogs.Alert($"最多佩戴 {MaxPinned} 枚徽章，先取消一枚再试。", "地球Online",
                         MessageBoxButton.OK, MessageBoxImage.Information);
                     return;
                 }

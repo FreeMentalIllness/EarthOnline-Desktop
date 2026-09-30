@@ -1,9 +1,10 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using EarthOnline.Desktop.Services;
+using EarthOnline.Desktop.Dialogs;
 
 namespace EarthOnline.Desktop.Pages;
 
@@ -56,7 +57,7 @@ public partial class AiPage : Page
         // 与网页端同策略：模型为必填项，留空不允许保存（避免"以为配好了其实是空的"）
         if (string.IsNullOrWhiteSpace(ModelBox.Text))
         {
-            MessageBox.Show("请先填写模型名称", "地球Online",
+            SimpleDialogs.Alert("请先填写模型名称", "地球Online",
                 MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
@@ -72,14 +73,14 @@ public partial class AiPage : Page
         }
         catch (Exception ex)
         {
-            MessageBox.Show("保存失败：" + ex.Message, "地球Online",
+            SimpleDialogs.Alert("保存失败：" + ex.Message, "地球Online",
                 MessageBoxButton.OK, MessageBoxImage.Error);
             return;
         }
 
         _cfg = AiService.Load();
         RefreshState();
-        MessageBox.Show("AI 配置已保存（密钥经 Windows DPAPI 加密后存于本机）", "地球Online",
+        SimpleDialogs.Alert("AI 配置已保存（密钥经 Windows DPAPI 加密后存于本机）", "地球Online",
             MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
@@ -111,18 +112,18 @@ public partial class AiPage : Page
         var q = InputBox.Text.Trim();
         if (q.Length == 0)
         {
-            MessageBox.Show("先输入点什么吧", "地球Online", MessageBoxButton.OK, MessageBoxImage.Information);
+            SimpleDialogs.Alert("先输入点什么吧", "地球Online", MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
         if (!_cfg.IsReady)
         {
-            MessageBox.Show("请先配置 API 地址和密钥", "地球Online",
+            SimpleDialogs.Alert("请先配置 API 地址和密钥", "地球Online",
                 MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
         if (string.IsNullOrWhiteSpace(_cfg.Model))
         {
-            MessageBox.Show("请先填写模型名称", "地球Online",
+            SimpleDialogs.Alert("请先填写模型名称", "地球Online",
                 MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
@@ -185,7 +186,7 @@ public partial class AiPage : Page
     private void Clear_Click(object sender, RoutedEventArgs e)
     {
         if (_msgs.Count > 0 &&
-            MessageBox.Show("清空当前对话？（不会影响已保存的接口配置）", "地球Online",
+            SimpleDialogs.Alert("清空当前对话？（不会影响已保存的接口配置）", "地球Online",
                 MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
         {
             return;

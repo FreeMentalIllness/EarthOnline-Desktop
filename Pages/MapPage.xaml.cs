@@ -81,7 +81,7 @@ public partial class MapPage : Page
         }
         catch (Exception ex)
         {
-            MessageBox.Show("加载足迹失败：" + ex.Message, "地球Online",
+            SimpleDialogs.Alert("加载足迹失败：" + ex.Message, "地球Online",
                 MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
@@ -345,7 +345,7 @@ public partial class MapPage : Page
         }
         catch (Exception ex)
         {
-            MessageBox.Show("保存足迹失败：" + ex.Message, "地球Online",
+            SimpleDialogs.Alert("保存足迹失败：" + ex.Message, "地球Online",
                 MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
@@ -386,7 +386,7 @@ public partial class MapPage : Page
                 CultureInfo.InvariantCulture, out var lng) ||
             lat is < -90 or > 90 || lng is < -180 or > 180)
         {
-            MessageBox.Show("请输入有效的经纬度（纬度 -90~90，经度 -180~180）", "地球Online",
+            SimpleDialogs.Alert("请输入有效的经纬度（纬度 -90~90，经度 -180~180）", "地球Online",
                 MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
@@ -472,14 +472,14 @@ public partial class MapPage : Page
         var name = nameBox.Text.Trim();
         if (string.IsNullOrEmpty(name))
         {
-            MessageBox.Show("名称不能为空", "地球Online", MessageBoxButton.OK, MessageBoxImage.Warning);
+            SimpleDialogs.Alert("名称不能为空", "地球Online", MessageBoxButton.OK, MessageBoxImage.Warning);
             return false;
         }
         if (!double.TryParse(latBox.Text, NumberStyles.Float, inv, out var lat) ||
             !double.TryParse(lngBox.Text, NumberStyles.Float, inv, out var lng) ||
             lat is < -90 or > 90 || lng is < -180 or > 180)
         {
-            MessageBox.Show("经纬度不合法（纬度 -90~90，经度 -180~180）", "地球Online",
+            SimpleDialogs.Alert("经纬度不合法（纬度 -90~90，经度 -180~180）", "地球Online",
                 MessageBoxButton.OK, MessageBoxImage.Warning);
             return false;
         }

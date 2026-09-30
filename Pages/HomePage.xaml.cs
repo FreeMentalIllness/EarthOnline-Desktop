@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -56,7 +56,7 @@ public partial class HomePage : Page
         }
         catch (Exception ex)
         {
-            MessageBox.Show("保存资料失败：" + ex.Message, "地球Online",
+            SimpleDialogs.Alert("保存资料失败：" + ex.Message, "地球Online",
                 MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
@@ -102,7 +102,7 @@ public partial class HomePage : Page
         }
         catch (Exception ex)
         {
-            MessageBox.Show("读取成就失败：" + ex.Message, "地球Online",
+            SimpleDialogs.Alert("读取成就失败：" + ex.Message, "地球Online",
                 MessageBoxButton.OK, MessageBoxImage.Error);
             return;
         }
@@ -118,7 +118,7 @@ public partial class HomePage : Page
         }
         catch (Exception ex)
         {
-            MessageBox.Show("保存徽章佩戴失败：" + ex.Message, "地球Online",
+            SimpleDialogs.Alert("保存徽章佩戴失败：" + ex.Message, "地球Online",
                 MessageBoxButton.OK, MessageBoxImage.Error);
             return;
         }

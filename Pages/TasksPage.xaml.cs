@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
@@ -80,7 +80,7 @@ public partial class TasksPage : Page
         }
         catch (Exception ex)
         {
-            MessageBox.Show("加载任务失败：" + ex.Message, "地球Online", MessageBoxButton.OK, MessageBoxImage.Error);
+            SimpleDialogs.Alert("加载任务失败：" + ex.Message, "地球Online", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
@@ -262,7 +262,7 @@ public partial class TasksPage : Page
         var parent = SelectedTask();
         if (parent is null)
         {
-            MessageBox.Show("请先选中一个任务作为父任务", "地球Online", MessageBoxButton.OK, MessageBoxImage.Information);
+            SimpleDialogs.Alert("请先选中一个任务作为父任务", "地球Online", MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
         CreateTask(parent.Id);
@@ -299,7 +299,7 @@ public partial class TasksPage : Page
         var sel = SelectedTask();
         if (sel is null)
         {
-            MessageBox.Show("请先选中一个任务", "地球Online", MessageBoxButton.OK, MessageBoxImage.Information);
+            SimpleDialogs.Alert("请先选中一个任务", "地球Online", MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
 

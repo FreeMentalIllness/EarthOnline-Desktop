@@ -298,7 +298,7 @@ public static class ProfileDialog
         if (birth.Length > 0 && !DateTime.TryParse(birth, out _))
         {
             DiscardPendingAvatar();     // 校验失败同样算放弃本次编辑
-            MessageBox.Show("生日格式不对，请用 YYYY-MM-DD（例如 1995-08-20）", "地球Online",
+            SimpleDialogs.Alert("生日格式不对，请用 YYYY-MM-DD（例如 1995-08-20）", "地球Online",
                 MessageBoxButton.OK, MessageBoxImage.Warning);
             return false;
         }

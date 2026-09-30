@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using EarthOnline.Desktop.Dialogs;
 
 namespace EarthOnline.Desktop.Services;
 
@@ -134,7 +135,7 @@ public static class UpdateService
             }
 
             // 下载完成后确认 → 生成 bat → 退出
-            var answer = MessageBox.Show(
+            var answer = SimpleDialogs.Alert(
                 $"更新包已下载完成（{exeSize / 1024 / 1024} MB）。\n\n" +
                 "点击「确定」后程序将自动退出并安装更新（约 5 秒后自动重启），\n" +
                 "期间请不要手动启动程序。",
@@ -153,13 +154,13 @@ public static class UpdateService
         catch (HttpRequestException)
         {
             TryDelete(tempExe);
-            MessageBox.Show("网络异常，请检查网络或代理。", "地球Online · 更新",
+            SimpleDialogs.Alert("网络异常，请检查网络或代理。", "地球Online · 更新",
                 MessageBoxButton.OK, MessageBoxImage.Warning);
         }
         catch (Exception ex)
         {
             TryDelete(tempExe);
-            MessageBox.Show("更新失败：" + ex.Message, "地球Online · 更新",
+            SimpleDialogs.Alert("更新失败：" + ex.Message, "地球Online · 更新",
                 MessageBoxButton.OK, MessageBoxImage.Warning);
         }
         return false;

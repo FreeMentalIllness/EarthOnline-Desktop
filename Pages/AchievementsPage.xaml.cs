@@ -1,4 +1,4 @@
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using EarthOnline.Desktop.Data;
@@ -163,7 +163,7 @@ public partial class AchievementsPage : Page
         }
         catch (Exception ex)
         {
-            MessageBox.Show("加载成就失败：" + ex.Message, "地球Online", MessageBoxButton.OK, MessageBoxImage.Error);
+            SimpleDialogs.Alert("加载成就失败：" + ex.Message, "地球Online", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
@@ -190,13 +190,13 @@ public partial class AchievementsPage : Page
         if (newly > 0)
         {
             // 常规弹窗只做兜底提示；Steam 风格通知在业务页自动触发
-            MessageBox.Show($"新增解锁 {newly} 条成就！" +
+            SimpleDialogs.Alert($"新增解锁 {newly} 条成就！" +
                 (newly > 3 ? $"等 {newly} 条" : "：" + string.Join("、", titles)),
                 "地球Online", MessageBoxButton.OK, MessageBoxImage.Information);
         }
         else
         {
-            MessageBox.Show("已重新判定，没有新的解锁。", "地球Online", MessageBoxButton.OK, MessageBoxImage.Information);
+            SimpleDialogs.Alert("已重新判定，没有新的解锁。", "地球Online", MessageBoxButton.OK, MessageBoxImage.Information);
         }
     }
 
@@ -225,7 +225,7 @@ public partial class AchievementsPage : Page
         if (AchList.SelectedItem is not AchRow row) return;
         if (!row.IsCustom)
         {
-            MessageBox.Show("自动成就由系统判定，不能删除。", "地球Online", MessageBoxButton.OK, MessageBoxImage.Information);
+            SimpleDialogs.Alert("自动成就由系统判定，不能删除。", "地球Online", MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
         if (!SimpleDialogs.Confirm($"确定删除自定义成就「{row.DisplayTitle}」？")) return;

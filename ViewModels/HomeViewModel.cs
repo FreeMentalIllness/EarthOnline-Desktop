@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
@@ -10,6 +10,7 @@ using EarthOnline.Desktop.Data.Entities;
 using EarthOnline.Desktop.Data.Models;
 using EarthOnline.Desktop.Services;
 using Microsoft.EntityFrameworkCore;
+using EarthOnline.Desktop.Dialogs;
 
 namespace EarthOnline.Desktop.ViewModels;
 
@@ -444,7 +445,7 @@ public partial class HomeViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            System.Windows.MessageBox.Show("保存日志失败：" + ex.Message, "地球Online",
+            SimpleDialogs.Alert("保存日志失败：" + ex.Message, "地球Online",
                 System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
             return false;
         }
@@ -468,7 +469,7 @@ public partial class HomeViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            System.Windows.MessageBox.Show("删除日志失败：" + ex.Message, "地球Online",
+            SimpleDialogs.Alert("删除日志失败：" + ex.Message, "地球Online",
                 System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
             return;
         }

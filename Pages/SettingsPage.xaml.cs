@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using EarthOnline.Desktop.Data;
@@ -73,7 +73,7 @@ public partial class SettingsPage : Page
         }
         catch (Exception ex)
         {
-            MessageBox.Show("应用外观设置失败：" + ex.Message, "地球Online",
+            SimpleDialogs.Alert("应用外观设置失败：" + ex.Message, "地球Online",
                 MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
@@ -102,7 +102,7 @@ public partial class SettingsPage : Page
         }
         catch (Exception ex)
         {
-            MessageBox.Show("设置壁纸失败：" + ex.Message, "地球Online",
+            SimpleDialogs.Alert("设置壁纸失败：" + ex.Message, "地球Online",
                 MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
@@ -126,7 +126,7 @@ public partial class SettingsPage : Page
         }
         catch (Exception ex)
         {
-            MessageBox.Show("清除壁纸失败：" + ex.Message, "地球Online",
+            SimpleDialogs.Alert("清除壁纸失败：" + ex.Message, "地球Online",
                 MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
@@ -143,7 +143,7 @@ public partial class SettingsPage : Page
         }
         catch (Exception ex)
         {
-            MessageBox.Show("打开浏览器失败：" + ex.Message, "地球Online",
+            SimpleDialogs.Alert("打开浏览器失败：" + ex.Message, "地球Online",
                 MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
@@ -160,7 +160,7 @@ public partial class SettingsPage : Page
         }
         catch (Exception ex)
         {
-            MessageBox.Show("打开浏览器失败：" + ex.Message, "地球Online",
+            SimpleDialogs.Alert("打开浏览器失败：" + ex.Message, "地球Online",
                 MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
@@ -177,7 +177,7 @@ public partial class SettingsPage : Page
         }
         catch (Exception ex)
         {
-            MessageBox.Show("打开文件夹失败：" + ex.Message, "地球Online",
+            SimpleDialogs.Alert("打开文件夹失败：" + ex.Message, "地球Online",
                 MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
@@ -217,7 +217,7 @@ public partial class SettingsPage : Page
         }
         catch (Exception ex)
         {
-            MessageBox.Show("设置开机自启失败：" + ex.Message, "地球Online",
+            SimpleDialogs.Alert("设置开机自启失败：" + ex.Message, "地球Online",
                 MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
@@ -235,7 +235,7 @@ public partial class SettingsPage : Page
         }
         catch (Exception ex)
         {
-            MessageBox.Show("保存退出行为失败：" + ex.Message, "地球Online",
+            SimpleDialogs.Alert("保存退出行为失败：" + ex.Message, "地球Online",
                 MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
@@ -291,7 +291,7 @@ public partial class SettingsPage : Page
         }
         catch (Exception ex)
         {
-            MessageBox.Show("选择目录失败：" + ex.Message, "地球Online",
+            SimpleDialogs.Alert("选择目录失败：" + ex.Message, "地球Online",
                 MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
@@ -315,7 +315,7 @@ public partial class SettingsPage : Page
         }
         catch (Exception ex)
         {
-            MessageBox.Show("保存数据目录失败：" + ex.Message, "地球Online",
+            SimpleDialogs.Alert("保存数据目录失败：" + ex.Message, "地球Online",
                 MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
@@ -329,7 +329,7 @@ public partial class SettingsPage : Page
         if (!r.Ok)
         {
             // 网络异常 / 解析失败：弹窗提示，绝不闪退
-            MessageBox.Show(r.Message, "地球Online · 检查更新",
+            SimpleDialogs.Alert(r.Message, "地球Online · 检查更新",
                 MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
@@ -341,7 +341,7 @@ public partial class SettingsPage : Page
         {
             // 发现新版且 Release 带有 exe 资产 → 应用内下载 + bat 自更新
             var sizeText = r.ExeSize > 0 ? $"（约 {r.ExeSize / 1024 / 1024} MB）" : "";
-            if (MessageBox.Show(
+            if (SimpleDialogs.Alert(
                     r.Message + $"\n\n是否立即下载并自动安装{sizeText}？\n下载完成后程序将自动退出、覆盖并重启。",
                     "地球Online · 更新",
                     MessageBoxButton.YesNo, MessageBoxImage.Information) == MessageBoxResult.Yes)
@@ -357,7 +357,7 @@ public partial class SettingsPage : Page
         else if (isNew && r.DownloadPage is not null)
         {
             // 新版存在但资产里没有 exe（异常发布）→ 退回打开下载页
-            if (MessageBox.Show(r.Message + "\n\n现在打开 Releases 页面手动下载吗？", "地球Online",
+            if (SimpleDialogs.Alert(r.Message + "\n\n现在打开 Releases 页面手动下载吗？", "地球Online",
                     MessageBoxButton.YesNo, MessageBoxImage.Information) == MessageBoxResult.Yes)
             {
                 OpenReleases_Click(sender, e);
@@ -377,7 +377,7 @@ public partial class SettingsPage : Page
         }
         catch (Exception ex)
         {
-            MessageBox.Show("打开浏览器失败：" + ex.Message, "地球Online",
+            SimpleDialogs.Alert("打开浏览器失败：" + ex.Message, "地球Online",
                 MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
@@ -431,7 +431,7 @@ public partial class SettingsPage : Page
         }
         catch (Exception ex)
         {
-            MessageBox.Show("保存资料失败：" + ex.Message, "地球Online",
+            SimpleDialogs.Alert("保存资料失败：" + ex.Message, "地球Online",
                 MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
@@ -446,7 +446,7 @@ public partial class SettingsPage : Page
         var v = input.Trim();
         if (v.Length > 0 && !DateTime.TryParse(v, out _))
         {
-            MessageBox.Show("日期格式不对，请用 YYYY-MM-DD（例如 1995-08-20）", "地球Online",
+            SimpleDialogs.Alert("日期格式不对，请用 YYYY-MM-DD（例如 1995-08-20）", "地球Online",
                 MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
@@ -475,11 +475,11 @@ public partial class SettingsPage : Page
         try
         {
             File.WriteAllText(dlg.FileName, BackupService.ExportJson());
-            MessageBox.Show("已导出到：\n" + dlg.FileName, "地球Online", MessageBoxButton.OK, MessageBoxImage.Information);
+            SimpleDialogs.Alert("已导出到：\n" + dlg.FileName, "地球Online", MessageBoxButton.OK, MessageBoxImage.Information);
         }
         catch (Exception ex)
         {
-            MessageBox.Show("导出失败：" + ex.Message, "地球Online", MessageBoxButton.OK, MessageBoxImage.Error);
+            SimpleDialogs.Alert("导出失败：" + ex.Message, "地球Online", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
@@ -492,14 +492,14 @@ public partial class SettingsPage : Page
             int n = BackupService.ImportJson(File.ReadAllText(dlg.FileName));
             AchievementNotifier.Check();
             LoadProfile();
-            MessageBox.Show($"已导入 {n} 条数据（按主键合并，未清空原有内容）。",
+            SimpleDialogs.Alert($"已导入 {n} 条数据（按主键合并，未清空原有内容）。",
                 "地球Online", MessageBoxButton.OK, MessageBoxImage.Information);
             // 跨端灵感接力：导入落库后检测来自手机的新灵感并温和提示
             IdeaRelayService.CheckAfterImport();
         }
         catch (Exception ex)
         {
-            MessageBox.Show("导入失败：" + ex.Message, "地球Online", MessageBoxButton.OK, MessageBoxImage.Error);
+            SimpleDialogs.Alert("导入失败：" + ex.Message, "地球Online", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
@@ -523,7 +523,7 @@ public partial class SettingsPage : Page
         var key = AmapKeyBox.Text.Trim();
         if (key.Length == 0)
         {
-            MessageBox.Show("要清空请点「清空（回落内置）」；保存需要填写 Key。", "地球Online",
+            SimpleDialogs.Alert("要清空请点「清空（回落内置）」；保存需要填写 Key。", "地球Online",
                 MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
@@ -531,12 +531,12 @@ public partial class SettingsPage : Page
         {
             AmapConfig.Save(key, AmapSecBox.Text.Trim());
             LoadAmap();
-            MessageBox.Show("已保存（密钥经 Windows DPAPI 加密后存于本机）。重新打开地图页生效。",
+            SimpleDialogs.Alert("已保存（密钥经 Windows DPAPI 加密后存于本机）。重新打开地图页生效。",
                 "地球Online", MessageBoxButton.OK, MessageBoxImage.Information);
         }
         catch (Exception ex)
         {
-            MessageBox.Show("保存失败：" + ex.Message, "地球Online", MessageBoxButton.OK, MessageBoxImage.Error);
+            SimpleDialogs.Alert("保存失败：" + ex.Message, "地球Online", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
@@ -549,7 +549,7 @@ public partial class SettingsPage : Page
         }
         catch (Exception ex)
         {
-            MessageBox.Show("清空失败：" + ex.Message, "地球Online", MessageBoxButton.OK, MessageBoxImage.Error);
+            SimpleDialogs.Alert("清空失败：" + ex.Message, "地球Online", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
@@ -564,7 +564,7 @@ public partial class SettingsPage : Page
         }
         catch (Exception ex)
         {
-            MessageBox.Show("重置引导状态失败：" + ex.Message, "地球Online",
+            SimpleDialogs.Alert("重置引导状态失败：" + ex.Message, "地球Online",
                 MessageBoxButton.OK, MessageBoxImage.Error);
             return;
         }
@@ -604,7 +604,7 @@ public partial class SettingsPage : Page
         }
         catch (Exception ex)
         {
-            MessageBox.Show("设置自动备份失败：" + ex.Message, "地球Online",
+            SimpleDialogs.Alert("设置自动备份失败：" + ex.Message, "地球Online",
                 MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
@@ -614,7 +614,7 @@ public partial class SettingsPage : Page
         var path = AutoBackupService.Snapshot(force: true);
         if (path is null)
         {
-            MessageBox.Show("没有生成快照：可能数据为空，或写入失败。", "地球Online",
+            SimpleDialogs.Alert("没有生成快照：可能数据为空，或写入失败。", "地球Online",
                 MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
@@ -626,7 +626,7 @@ public partial class SettingsPage : Page
     {
         if (BackupList.SelectedItem is not BackupSnapshot snap)
         {
-            MessageBox.Show("请先在上方列表里选择一份快照。", "地球Online",
+            SimpleDialogs.Alert("请先在上方列表里选择一份快照。", "地球Online",
                 MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
@@ -642,14 +642,14 @@ public partial class SettingsPage : Page
             AchievementNotifier.Check();
             LoadProfile();
             LoadBackups();
-            MessageBox.Show($"已从 {snap.Label} 恢复 {n} 条数据。",
+            SimpleDialogs.Alert($"已从 {snap.Label} 恢复 {n} 条数据。",
                 "地球Online", MessageBoxButton.OK, MessageBoxImage.Information);
             // 跨端灵感接力：快照恢复落库后同样检测来自手机的新灵感
             IdeaRelayService.CheckAfterImport();
         }
         catch (Exception ex)
         {
-            MessageBox.Show("恢复失败：" + ex.Message, "地球Online",
+            SimpleDialogs.Alert("恢复失败：" + ex.Message, "地球Online",
                 MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
@@ -667,7 +667,7 @@ public partial class SettingsPage : Page
         }
         catch (Exception ex)
         {
-            MessageBox.Show("打开文件夹失败：" + ex.Message, "地球Online",
+            SimpleDialogs.Alert("打开文件夹失败：" + ex.Message, "地球Online",
                 MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
@@ -714,7 +714,7 @@ public partial class SettingsPage : Page
         var r = await SyncService.PushAsync(force: true);
         SyncStatusText.Text = r.Message;
         LoadConfig();
-        MessageBox.Show(r.Message, "地球Online",
+        SimpleDialogs.Alert(r.Message, "地球Online",
             MessageBoxButton.OK, r.Ok ? MessageBoxImage.Information : MessageBoxImage.Warning);
     }
 
@@ -729,7 +729,7 @@ public partial class SettingsPage : Page
         LoadConfig();
         LoadProfile();
         AchievementNotifier.Check();
-        MessageBox.Show(r.Message, "地球Online",
+        SimpleDialogs.Alert(r.Message, "地球Online",
             MessageBoxButton.OK, r.Ok ? MessageBoxImage.Information : MessageBoxImage.Warning);
     }
 }

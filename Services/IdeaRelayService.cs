@@ -7,6 +7,7 @@ using System.Windows.Threading;
 using EarthOnline.Desktop.Data;
 using EarthOnline.Desktop.Data.Entities;
 using Microsoft.EntityFrameworkCore;
+using EarthOnline.Desktop.Dialogs;
 
 namespace EarthOnline.Desktop.Services;
 
@@ -309,7 +310,7 @@ public static class IdeaRelayService
             }
             catch (Exception ex)
             {
-                MessageBox.Show("转换失败：" + ex.Message, "地球Online",
+                SimpleDialogs.Alert("转换失败：" + ex.Message, "地球Online",
                     MessageBoxButton.OK, MessageBoxImage.Error);
             }
         };

@@ -119,7 +119,7 @@ public static class CategoryDialog
             var cats = Load();
             if (cats.Any(c => c.Name == name))
             {
-                MessageBox.Show("已存在同名分类", "地球Online", MessageBoxButton.OK, MessageBoxImage.Warning);
+                SimpleDialogs.Alert("已存在同名分类", "地球Online", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
             using (var db = new AppDbContext(AppPaths.DbFile))
@@ -148,7 +148,7 @@ public static class CategoryDialog
             name = name.Trim();
             if (cats.Any(c => c.Id != cur.Id && c.Name == name))
             {
-                MessageBox.Show("已存在同名分类", "地球Online", MessageBoxButton.OK, MessageBoxImage.Warning);
+                SimpleDialogs.Alert("已存在同名分类", "地球Online", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
             using (var db = new AppDbContext(AppPaths.DbFile))

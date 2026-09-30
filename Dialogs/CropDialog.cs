@@ -43,7 +43,7 @@ public static class CropDialog
         }
         catch
         {
-            MessageBox.Show("无法读取该图片，请换一张试试。", "地球Online",
+            SimpleDialogs.Alert("无法读取该图片，请换一张试试。", "地球Online",
                 MessageBoxButton.OK, MessageBoxImage.Warning);
             return false;
         }
@@ -183,7 +183,7 @@ public static class CropDialog
             }
             else
             {
-                MessageBox.Show("裁剪失败，请重试。", "地球Online",
+                SimpleDialogs.Alert("裁剪失败，请重试。", "地球Online",
                     MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         };

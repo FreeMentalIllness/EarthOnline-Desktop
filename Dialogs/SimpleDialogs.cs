@@ -124,6 +124,53 @@ public static class SimpleDialogs
         return win.ShowDialog() == true;
     }
 
+    /// <summary>
+    /// 主题化提示弹窗：签名与 System.Windows.MessageBox.Show 兼容（含 YesNo 返回值），
+    /// 便于全项目一处替换。No/Cancel 关闭一律返回 No。
+    /// </summary>
+    public static MessageBoxResult Alert(
+        string message, string title = "地球Online",
+        MessageBoxButton buttons = MessageBoxButton.OK, MessageBoxImage icon = MessageBoxImage.None)
+    {
+        bool askYesNo = buttons == MessageBoxButton.YesNo || buttons == MessageBoxButton.YesNoCancel;
+        var win = MakeWindow(title, 380);
+        var root = new StackPanel { Margin = new Thickness(0, 6, 0, 0) };
+
+        root.Children.Add(new TextBlock
+        {
+            Text = message, FontSize = 13, LineHeight = 20, TextWrapping = TextWrapping.Wrap,
+            Foreground = TextMain
+        });
+
+        var bar = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            HorizontalAlignment = HorizontalAlignment.Right,
+            Margin = new Thickness(0, 18, 0, 0)
+        };
+        var result = MessageBoxResult.None;
+        if (askYesNo)
+        {
+            var no = MakeButton("否", false);
+            var yes = MakeButton("是", true);
+            no.Click += (_, _) => { result = MessageBoxResult.No; win.DialogResult = false; };
+            yes.Click += (_, _) => { result = MessageBoxResult.Yes; win.DialogResult = true; };
+            bar.Children.Add(no);
+            bar.Children.Add(yes);
+        }
+        else
+        {
+            var ok = MakeButton("好的", true);
+            ok.Click += (_, _) => { result = MessageBoxResult.OK; win.DialogResult = true; };
+            bar.Children.Add(ok);
+        }
+        root.Children.Add(bar);
+
+        win.SetBody(root);
+        win.ShowDialog();
+        return result;
+    }
+
     /// <summary>任务编辑（新建 / 修改）。返回是否点了「保存」。</summary>
     public static bool EditTask(TaskEntity task)
     {
@@ -214,7 +261,7 @@ public static class SimpleDialogs
                 var st = Data.SettingsStore.Load();
                 st.BlankTitleTries++;
                 st.Save();
-                MessageBox.Show("标题不能为空", "地球Online", MessageBoxButton.OK, MessageBoxImage.Warning);
+                SimpleDialogs.Alert("标题不能为空", "地球Online", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
             task.Title = t;

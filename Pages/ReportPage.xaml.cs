@@ -44,7 +44,7 @@ public partial class ReportPage : Page
         }
         catch (Exception ex)
         {
-            MessageBox.Show("生成报告失败：" + ex.Message, "地球Online", MessageBoxButton.OK, MessageBoxImage.Error);
+            SimpleDialogs.Alert("生成报告失败：" + ex.Message, "地球Online", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 

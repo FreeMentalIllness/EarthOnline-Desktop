@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using EarthOnline.Desktop.Data;
@@ -6,6 +6,7 @@ using EarthOnline.Desktop.Data.Entities;
 using EarthOnline.Desktop.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Win32;
+using EarthOnline.Desktop.Dialogs;
 
 namespace EarthOnline.Desktop.Pages;
 
@@ -116,7 +117,7 @@ public partial class OnboardingPage : Page
         var birth = BirthBox.Text.Trim();
         if (birth.Length > 0 && !DateTime.TryParse(birth, out _))
         {
-            MessageBox.Show("生日格式不对，请用 YYYY-MM-DD（例如 1995-08-20）", "地球Online",
+            SimpleDialogs.Alert("生日格式不对，请用 YYYY-MM-DD（例如 1995-08-20）", "地球Online",
                 MessageBoxButton.OK, MessageBoxImage.Warning);
             return false;
         }
@@ -137,7 +138,7 @@ public partial class OnboardingPage : Page
         }
         catch (Exception ex)
         {
-            MessageBox.Show("保存角色失败：" + ex.Message, "地球Online",
+            SimpleDialogs.Alert("保存角色失败：" + ex.Message, "地球Online",
                 MessageBoxButton.OK, MessageBoxImage.Error);
         }
         return true;
@@ -183,7 +184,7 @@ public partial class OnboardingPage : Page
         }
         catch (Exception ex)
         {
-            MessageBox.Show("导入失败：" + ex.Message, "地球Online", MessageBoxButton.OK, MessageBoxImage.Error);
+            SimpleDialogs.Alert("导入失败：" + ex.Message, "地球Online", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
@@ -203,7 +204,7 @@ public partial class OnboardingPage : Page
         }
         catch (Exception ex)
         {
-            MessageBox.Show("导出失败：" + ex.Message, "地球Online", MessageBoxButton.OK, MessageBoxImage.Error);
+            SimpleDialogs.Alert("导出失败：" + ex.Message, "地球Online", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 

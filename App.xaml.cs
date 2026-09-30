@@ -55,7 +55,15 @@ public partial class App : Application
         {
             _ = Task.Run(async () =>
             {
-                try { await SyncService.PullIfRemoteNewerAsync(); }
+                try
+                {
+                    var r = await SyncService.PullIfRemoteNewerAsync();
+                    // 结果走主窗口顶部提示条（对齐 Android 离线横幅），不打断使用
+                    if (r.Ok && r.Changed)
+                        (MainWindow as MainWindow)?.ShowSyncBanner(r.Message, false);
+                    else if (!r.Ok && r.Message != "云端还没有备份文件" && r.Message != "未配置 WebDAV")
+                        (MainWindow as MainWindow)?.ShowSyncBanner(r.Message, true);
+                }
                 catch { /* 同步失败绝不影响启动 */ }
             });
         }

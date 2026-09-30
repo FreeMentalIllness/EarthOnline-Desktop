@@ -1,10 +1,11 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using EarthOnline.Desktop.Data.Entities;
 using EarthOnline.Desktop.Services;
+using EarthOnline.Desktop.Dialogs;
 
 namespace EarthOnline.Desktop.Pages;
 
@@ -70,7 +71,7 @@ public partial class DataPage : Page
         }
         catch (Exception ex)
         {
-            MessageBox.Show("加载数据失败：" + ex.Message, "地球Online", MessageBoxButton.OK, MessageBoxImage.Error);
+            SimpleDialogs.Alert("加载数据失败：" + ex.Message, "地球Online", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 

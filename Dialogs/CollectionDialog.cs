@@ -191,7 +191,7 @@ public static class CollectionDialog
         if (win.ShowDialog() != true) return false;
         if (string.IsNullOrWhiteSpace(titleBox.Text))
         {
-            MessageBox.Show("收藏标题不能为空", "地球Online", MessageBoxButton.OK, MessageBoxImage.Warning);
+            SimpleDialogs.Alert("收藏标题不能为空", "地球Online", MessageBoxButton.OK, MessageBoxImage.Warning);
             return false;
         }
 
@@ -212,7 +212,7 @@ public static class CollectionDialog
             }
             catch (Exception ex)
             {
-                MessageBox.Show("附件复制失败（已保存其余内容）：" + ex.Message, "地球Online",
+                SimpleDialogs.Alert("附件复制失败（已保存其余内容）：" + ex.Message, "地球Online",
                     MessageBoxButton.OK, MessageBoxImage.Warning);
                 col.FileUri = pending.ExistingUri ?? col.FileUri;
             }
@@ -236,7 +236,7 @@ public static class CollectionDialog
     {
         if (string.IsNullOrEmpty(uri) || !File.Exists(uri))
         {
-            MessageBox.Show("附件文件不存在（可能已被移动或删除）", "地球Online",
+            SimpleDialogs.Alert("附件文件不存在（可能已被移动或删除）", "地球Online",
                 MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
@@ -250,7 +250,7 @@ public static class CollectionDialog
         }
         catch (Exception ex)
         {
-            MessageBox.Show("打开附件失败：" + ex.Message, "地球Online",
+            SimpleDialogs.Alert("打开附件失败：" + ex.Message, "地球Online",
                 MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
