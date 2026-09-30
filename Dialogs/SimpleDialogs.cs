@@ -182,30 +182,31 @@ public static class SimpleDialogs
         var titleBox = new TextBox { Text = task.Title, Padding = new Thickness(8), FontSize = 14, Background = Card, BorderBrush = Border };
         root.Children.Add(titleBox);
 
-        // 分类 + 状态
+        // 分类 + 状态（用 ComboBoxItem+Tag 直挂子项：本项目的 ComboBox 主题模板下
+        // ItemsSource+DisplayMemberPath 会把选中项显示成原始类名而非文本，见自测探针结论）
         var row1 = new Grid { Margin = new Thickness(0, 12, 0, 0) };
         row1.ColumnDefinitions.Add(new ColumnDefinition());
         row1.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(12) });
         row1.ColumnDefinitions.Add(new ColumnDefinition());
+        row1.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+        row1.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
 
-        var catBox = new ComboBox
-        {
-            Padding = new Thickness(8), Background = Card, BorderBrush = Border,
-            ItemsSource = new[] { new KV("main", "主线"), new KV("side", "支线"), new KV("todo", "待办") },
-            DisplayMemberPath = "Label", SelectedValuePath = "Value", SelectedValue = task.Category
-        };
-        var statusBox = new ComboBox
-        {
-            Padding = new Thickness(8), Background = Card, BorderBrush = Border,
-            ItemsSource = new[]
-            {
-                new KV("planning", "筹划中"), new KV("active", "进行中"),
-                new KV("paused", "已暂停"), new KV("done", "已完成")
-            },
-            DisplayMemberPath = "Label", SelectedValuePath = "Value", SelectedValue = task.Status
-        };
+        root.Children.Add(SpannedLabelRow("类型", "状态"));
+
+        var catBox = new ComboBox { Padding = new Thickness(8, 6, 26, 6) };
+        foreach (var (v, l) in new[] { ("main", "主线"), ("side", "支线"), ("todo", "待办") })
+            catBox.Items.Add(new ComboBoxItem { Content = l, Tag = v });
+        SelectCombo(catBox, task.Category);
+
+        var statusBox = new ComboBox { Padding = new Thickness(8, 6, 26, 6) };
+        foreach (var (v, l) in new[] { ("planning", "筹划中"), ("active", "进行中"), ("paused", "已暂停"), ("done", "已完成") })
+            statusBox.Items.Add(new ComboBoxItem { Content = l, Tag = v });
+        SelectCombo(statusBox, task.Status);
+
         Grid.SetColumn(catBox, 0);
+        Grid.SetRow(catBox, 1);
         Grid.SetColumn(statusBox, 2);
+        Grid.SetRow(statusBox, 1);
         row1.Children.Add(catBox);
         row1.Children.Add(statusBox);
         root.Children.Add(row1);
@@ -265,8 +266,8 @@ public static class SimpleDialogs
                 return;
             }
             task.Title = t;
-            task.Category = (catBox.SelectedValue as string) ?? "todo";
-            task.Status = (statusBox.SelectedValue as string) ?? "planning";
+            task.Category = (catBox.SelectedItem as ComboBoxItem)?.Tag as string ?? "todo";
+            task.Status = (statusBox.SelectedItem as ComboBoxItem)?.Tag as string ?? "planning";
             task.Progress = (int)slider.Value;
             task.DueDate = string.IsNullOrWhiteSpace(dateBox.Text) ? null : dateBox.Text.Trim();
             task.Note = string.IsNullOrWhiteSpace(noteBox.Text) ? null : noteBox.Text.Trim();
@@ -284,11 +285,34 @@ public static class SimpleDialogs
         Text = text, FontSize = 12, Foreground = TextSub, Margin = new Thickness(0, topMargin, 0, 6)
     };
 
-    public sealed class KV
+    /// <summary>并排两列的字段小标题（类型 / 状态行用），列结构必须与 Combo 行一致。</summary>
+    private static Grid SpannedLabelRow(string left, string right)
     {
-        public string Value { get; set; } = "";
-        public string Label { get; set; } = "";
-        public KV(string v, string l) { Value = v; Label = l; }
+        var g = new Grid();
+        g.ColumnDefinitions.Add(new ColumnDefinition());
+        g.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(12) });
+        g.ColumnDefinitions.Add(new ColumnDefinition());
+        var l = new TextBlock { Text = left, FontSize = 12, Foreground = TextSub, Margin = new Thickness(0, 0, 0, 6) };
+        var r = new TextBlock { Text = right, FontSize = 12, Foreground = TextSub, Margin = new Thickness(0, 0, 0, 6) };
+        Grid.SetColumn(l, 0);
+        Grid.SetColumn(r, 2);
+        g.Children.Add(l);
+        g.Children.Add(r);
+        return g;
+    }
+
+    /// <summary>按值选中 ComboBoxItem 子项；未知值回落第一项，保证框内永远有可见文本。</summary>
+    private static void SelectCombo(ComboBox box, string? value)
+    {
+        for (int i = 0; i < box.Items.Count; i++)
+        {
+            if ((box.Items[i] as ComboBoxItem)?.Tag as string == value)
+            {
+                box.SelectedIndex = i;
+                return;
+            }
+        }
+        box.SelectedIndex = 0;
     }
 }
 

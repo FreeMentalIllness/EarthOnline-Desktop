@@ -38,7 +38,7 @@
 
                     <!-- 头像：自定义图片优先（圆形裁剪），否则 emoji 预设（复用安卓 avatarKey） -->
                     <Border Grid.Column="0" Width="76" Height="76" CornerRadius="38"
-                            Background="{DynamicResource AppBgBrush}"
+                            Background="{DynamicResource ChipFillBrush}"
                             Margin="0,0,20,0">
                         <Grid>
                             <TextBlock Text="{Binding AvatarEmoji}" FontSize="36"
@@ -97,7 +97,7 @@
                                     Visibility="{Binding HasLevel, Converter={StaticResource EmptyToCollapsed}}">
                             <ProgressBar Height="8" Minimum="0" Maximum="100"
                                          Value="{Binding LevelProgress, Mode=OneWay}"
-                                         BorderThickness="0" Background="{DynamicResource AppBgBrush}"
+                                         BorderThickness="0" Background="{DynamicResource SoftBgBrush}"
                                          Foreground="#D4A373"/>
                             <TextBlock Text="{Binding LevelSubText}" FontSize="11" Margin="0,3,0,0"
                                        Foreground="{DynamicResource TextMutedBrush}"/>
@@ -111,7 +111,7 @@
                             </ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Border Background="{DynamicResource AppBgBrush}"
+                                    <Border Background="{DynamicResource ChipFillBrush}"
                                             BorderBrush="{DynamicResource BorderBrush}"
                                             BorderThickness="1" CornerRadius="6"
                                             Padding="8,3" Margin="0,4,6,0">
@@ -156,27 +156,8 @@
                         <TextBlock Text="成就" Style="{StaticResource StatLabelStyle}"/>
                     </StackPanel>
                 </Border>
+                <!-- 数据 ↔ 足迹换位：足迹上模块行（导航入口），数据单独成宽卡放下一行 -->
                 <Border Style="{StaticResource StatCardStyle}" Margin="8,0,0,0"
-                        Tag="data" Cursor="Hand" MouseLeftButtonUp="StatCard_Click" ToolTip="点击进入数据看板">
-                    <StackPanel>
-                        <TextBlock Text="📊" FontSize="16" HorizontalAlignment="Center"/>
-                        <TextBlock Text="{Binding DoneRateText}" Style="{StaticResource StatNumStyle}"/>
-                        <TextBlock Text="📂 数据" Style="{StaticResource StatLabelStyle}"/>
-                    </StackPanel>
-                </Border>
-            </UniformGrid>
-
-            <!-- ============ 概览：速览数据行（等级 / 足迹 / 完成率，去重不再与模块行重复） ============ -->
-            <UniformGrid Columns="3" Margin="0,0,0,4">
-                <Border Style="{StaticResource StatCardStyle}" Margin="0,0,8,0"
-                        Tag="data" Cursor="Hand" MouseLeftButtonUp="StatCard_Click" ToolTip="点击进入数据看板">
-                    <StackPanel>
-                        <TextBlock Text="⭐" FontSize="16" HorizontalAlignment="Center"/>
-                        <TextBlock Text="{Binding LevelStatText}" Style="{StaticResource StatNumStyle}"/>
-                        <TextBlock Text="等级" Style="{StaticResource StatLabelStyle}"/>
-                    </StackPanel>
-                </Border>
-                <Border Style="{StaticResource StatCardStyle}" Margin="4,0,4,0"
                         Tag="map" Cursor="Hand" MouseLeftButtonUp="StatCard_Click" ToolTip="点击进入足迹地图">
                     <StackPanel>
                         <TextBlock Text="🗺" FontSize="16" HorizontalAlignment="Center"/>
@@ -184,15 +165,27 @@
                         <TextBlock Text="足迹" Style="{StaticResource StatLabelStyle}"/>
                     </StackPanel>
                 </Border>
-                <Border Style="{StaticResource StatCardStyle}" Margin="8,0,0,0"
-                        Tag="ai" Cursor="Hand" MouseLeftButtonUp="StatCard_Click" ToolTip="点击进入 AI 助手">
-                    <StackPanel>
-                        <TextBlock Text="💡" FontSize="16" HorizontalAlignment="Center"/>
-                        <TextBlock Text="{Binding InspirationCount}" Style="{StaticResource StatNumStyle}"/>
-                        <TextBlock Text="💡 灵感" Style="{StaticResource StatLabelStyle}"/>
-                    </StackPanel>
-                </Border>
             </UniformGrid>
+
+            <!-- ============ 概览：数据宽卡（完成率摘要，等级 / 灵感速览已按需求移除） ============ -->
+            <Border x:Name="OverviewDataCard" Style="{StaticResource StatCardStyle}" Margin="0,8,0,4"
+                    Tag="data" Cursor="Hand" MouseLeftButtonUp="StatCard_Click" ToolTip="点击进入数据看板">
+                <Grid>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="📊" FontSize="22" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding DoneRateText}" FontSize="22" FontWeight="SemiBold"
+                                   VerticalAlignment="Center" Margin="12,0,0,0"
+                                   Foreground="{DynamicResource TextPrimaryBrush}"/>
+                        <StackPanel VerticalAlignment="Center" Margin="12,0,0,0">
+                            <TextBlock Text="完成率" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            <TextBlock Text="任务 / 背包 / 成就 / 日志汇总" FontSize="10"
+                                       Foreground="{DynamicResource TextMutedBrush}" Margin="0,1,0,0"/>
+                        </StackPanel>
+                    </StackPanel>
+                    <TextBlock Text="进入数据看板 →" FontSize="12" HorizontalAlignment="Right"
+                               VerticalAlignment="Center" Foreground="{DynamicResource TextMutedBrush}"/>
+                </Grid>
+            </Border>
 
 
             <!-- ============ 今日速览（连续记录 / 今日一签 / 徽章墙 合并卡，置于概览下方） ============ -->
@@ -242,7 +235,7 @@
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Border Background="{DynamicResource AppBgBrush}"
+                                <Border Background="{DynamicResource ChipFillBrush}"
                                         BorderBrush="{DynamicResource BorderBrush}"
                                         BorderThickness="1" CornerRadius="8"
                                         Padding="10,5" Margin="0,2,8,4">
@@ -323,19 +316,23 @@
             <TextBlock Text="🌍 世界日志" Style="{StaticResource SectionTitleStyle}" Margin="0,18,0,8"/>
             <Border Style="{StaticResource CardStyle}">
                 <StackPanel>
-                    <!-- 类型 + 心情统一标签行（随笔 / 重要 / 灵感 / 8 种心情，并列一排） -->
+                    <!-- 类型统一标签行（随笔 / 重要 / 灵感 / 心情，四选一并列） -->
                     <WrapPanel x:Name="MemoTypeRow">
                         <Button Content="📝 随笔" Style="{StaticResource QuickButtonStyle}" Padding="10,5" Margin="0,0,6,6" Tag="type:note" Click="MemoTag_Click"/>
                         <Button Content="❗ 重要" Style="{StaticResource QuickButtonStyle}" Padding="10,5" Margin="0,0,6,6" Tag="type:important" Click="MemoTag_Click"/>
                         <Button Content="💡 灵感" Style="{StaticResource QuickButtonStyle}" Padding="10,5" Margin="0,0,6,6" Tag="type:idea" Click="MemoTag_Click"/>
-                        <Button Content="😄 开心" Style="{StaticResource QuickButtonStyle}" Padding="10,5" Margin="0,0,6,6" Tag="😄 开心" Click="MemoTag_Click"/>
-                        <Button Content="😌 平静" Style="{StaticResource QuickButtonStyle}" Padding="10,5" Margin="0,0,6,6" Tag="😌 平静" Click="MemoTag_Click"/>
-                        <Button Content="🥱 疲惫" Style="{StaticResource QuickButtonStyle}" Padding="10,5" Margin="0,0,6,6" Tag="🥱 疲惫" Click="MemoTag_Click"/>
-                        <Button Content="😤 上头" Style="{StaticResource QuickButtonStyle}" Padding="10,5" Margin="0,0,6,6" Tag="😤 上头" Click="MemoTag_Click"/>
-                        <Button Content="😢 难过" Style="{StaticResource QuickButtonStyle}" Padding="10,5" Margin="0,0,6,6" Tag="😢 难过" Click="MemoTag_Click"/>
-                        <Button Content="🤯 爆炸" Style="{StaticResource QuickButtonStyle}" Padding="10,5" Margin="0,0,6,6" Tag="🤯 爆炸" Click="MemoTag_Click"/>
-                        <Button Content="🥳 庆祝" Style="{StaticResource QuickButtonStyle}" Padding="10,5" Margin="0,0,6,6" Tag="🥳 庆祝" Click="MemoTag_Click"/>
-                        <Button Content="😴 摆烂" Style="{StaticResource QuickButtonStyle}" Padding="10,5" Margin="0,0,6,6" Tag="😴 摆烂" Click="MemoTag_Click"/>
+                        <Button Content="🎭 心情" Style="{StaticResource QuickButtonStyle}" Padding="10,5" Margin="0,0,6,6" Tag="mood-open" Click="MemoTag_Click"/>
+                    </WrapPanel>
+                    <!-- 心情快选行：选「心情」后展开（8 种心情并入该选项，不再单独平铺） -->
+                    <WrapPanel x:Name="MoodRow" Visibility="Collapsed">
+                        <Button Content="😄 开心" Style="{StaticResource QuickButtonStyle}" Padding="10,5" Margin="0,0,6,6" Tag="mood:😄 开心" Click="MemoTag_Click"/>
+                        <Button Content="😌 平静" Style="{StaticResource QuickButtonStyle}" Padding="10,5" Margin="0,0,6,6" Tag="mood:😌 平静" Click="MemoTag_Click"/>
+                        <Button Content="🥱 疲惫" Style="{StaticResource QuickButtonStyle}" Padding="10,5" Margin="0,0,6,6" Tag="mood:🥱 疲惫" Click="MemoTag_Click"/>
+                        <Button Content="😤 上头" Style="{StaticResource QuickButtonStyle}" Padding="10,5" Margin="0,0,6,6" Tag="mood:😤 上头" Click="MemoTag_Click"/>
+                        <Button Content="😢 难过" Style="{StaticResource QuickButtonStyle}" Padding="10,5" Margin="0,0,6,6" Tag="mood:😢 难过" Click="MemoTag_Click"/>
+                        <Button Content="🤯 爆炸" Style="{StaticResource QuickButtonStyle}" Padding="10,5" Margin="0,0,6,6" Tag="mood:🤯 爆炸" Click="MemoTag_Click"/>
+                        <Button Content="🥳 庆祝" Style="{StaticResource QuickButtonStyle}" Padding="10,5" Margin="0,0,6,6" Tag="mood:🥳 庆祝" Click="MemoTag_Click"/>
+                        <Button Content="😴 摆烂" Style="{StaticResource QuickButtonStyle}" Padding="10,5" Margin="0,0,6,6" Tag="mood:😴 摆烂" Click="MemoTag_Click"/>
                     </WrapPanel>
 
                     <DockPanel Margin="0,2,0,0">
@@ -345,7 +342,7 @@
                                  Padding="10,0" FontSize="13"
                                  KeyDown="MemoBox_KeyDown"/>
                     </DockPanel>
-                    <TextBlock Text="选一个标签定类型或心情；心情在未输入文字时点「记录」即一键直达（回车同样生效）"
+                    <TextBlock Text="选一个标签定类型；点「心情」展开快选，未输入文字时选心情即一键记录（回车同样生效）"
                                FontSize="11" Foreground="{DynamicResource TextMutedBrush}" Margin="2,6,0,0"/>
 
                     <!-- 最近 5 条 -->

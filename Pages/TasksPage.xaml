@@ -123,7 +123,7 @@
                                    Margin="0,2,0,8"/>
 
                         <ProgressBar x:Name="DetailProgress" Height="7" Minimum="0" Maximum="100"
-                                     BorderThickness="0" Background="{DynamicResource AppBgBrush}"
+                                     BorderThickness="0" Background="{DynamicResource SoftBgBrush}"
                                      Foreground="{DynamicResource AccentBrush}" Margin="0,0,0,4"/>
                         <TextBlock x:Name="DetailProgressText" FontSize="11"
                                    Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,10"/>

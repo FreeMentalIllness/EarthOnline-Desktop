@@ -116,6 +116,9 @@ public static class ProfileDialog
                 bmp.BeginInit();
                 bmp.CacheOption = BitmapCacheOption.OnLoad;   // 读完即释放文件句柄，避免锁定
                 bmp.UriSource = new Uri(path);
+                // 44px 圆形预览按 4 倍超采样解码（176px）：超大原图不全量解码（省内存），
+                // 预览依旧清晰；最终显示质量由裁剪输出的 512px 上限与主页 152px 解码保证
+                bmp.DecodePixelWidth = 176;
                 bmp.EndInit();
                 bmp.Freeze();
                 previewImage.Source = bmp;

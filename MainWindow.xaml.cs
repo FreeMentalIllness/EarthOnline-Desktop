@@ -31,6 +31,12 @@ public partial class MainWindow : Window
     /// <summary>页面缓存：切换导航时不重建，保留页面内滚动位置与输入状态。</summary>
     private readonly Dictionary<string, Page> _pages = new();
 
+    /// <summary>内容区当前显示的页面 key（导航选中态与内容区对齐的依据）。</summary>
+    private string _currentPageKey = "home";
+
+    /// <summary>程序性同步侧栏选中态时置 true，避免 SelectionChanged 再次触发 Navigate 造成循环。</summary>
+    private bool _syncingNav;
+
     /// <summary>展开 / 紧凑侧栏的分界宽度（像素）。</summary>
     private const double CompactThreshold = 980;
     private const double ExpandedNavWidth = 200;
@@ -60,6 +66,7 @@ public partial class MainWindow : Window
         InitializeComponent();
         Closing += MainWindow_Closing;
         PreviewKeyDown += MainWindow_PreviewKeyDown;
+        NavList.PreviewMouseLeftButtonDown += NavList_PreviewMouseLeftButtonDown;
         Loaded += (_, _) =>
         {
             RestoreWindowGeometry();
@@ -213,9 +220,26 @@ public partial class MainWindow : Window
 
     private void NavList_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
+        if (_syncingNav) return;   // 程序性同步（Navigate 内部）不回流
         if (NavList.SelectedItem is ListBoxItem item)
         {
             Navigate(item.Tag?.ToString() ?? "home");
+        }
+    }
+
+    /// <summary>
+    /// 侧栏已选中项再点一次：若内容区不在该页（如从主页概览跳去了数据页，侧栏选中项随后被同步），
+    /// 强制导航回去。否则「点主页回不来」：选中项没变不触发 SelectionChanged。
+    /// </summary>
+    private void NavList_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        var hit = e.OriginalSource as DependencyObject;
+        while (hit is not null && hit is not ListBoxItem) hit = System.Windows.Media.VisualTreeHelper.GetParent(hit);
+        if (hit is ListBoxItem li &&
+            ReferenceEquals(li, NavList.SelectedItem) &&
+            li.Tag?.ToString() is string key && key != _currentPageKey)
+        {
+            Navigate(key);
         }
     }
 
@@ -243,8 +267,36 @@ public partial class MainWindow : Window
             _pages[key] = page;
         }
 
+        _currentPageKey = key;
+        SyncNavSelection(key);
         ContentFrame.Navigate(page);
         PlayEnterAnimation();
+    }
+
+    /// <summary>
+    /// 把侧栏选中项对齐到当前页面 key（含引导页等无对应导航项时保持原选中）。
+    /// 概览卡片直接 NavigateTo 跳页时，侧栏选中态必须跟着走，
+    /// 否则侧栏停在「主页」而内容区在别处，之后点「主页」永远没有选中变化、回不了主页。
+    /// </summary>
+    private void SyncNavSelection(string key)
+    {
+        if (NavList is null) return;
+        _syncingNav = true;
+        try
+        {
+            foreach (var it in NavList.Items.OfType<ListBoxItem>())
+            {
+                if ((it.Tag as string) == key)
+                {
+                    NavList.SelectedItem = it;
+                    break;
+                }
+            }
+        }
+        finally
+        {
+            _syncingNav = false;
+        }
     }
 
     /// <summary>内容区进入动画：淡入 + 轻微上移（160ms 缓出），提供切换反馈而不牺牲性能。</summary>

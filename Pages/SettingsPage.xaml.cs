@@ -251,6 +251,12 @@ public partial class SettingsPage : Page
         Dialogs.ChangelogDialog.Show();
     }
 
+    /// <summary>赞助弹窗：收款码 + 说明 + 赞助者名单（不再跳转仓库）。</summary>
+    private void OpenSponsor_Click(object sender, RoutedEventArgs e)
+    {
+        Dialogs.SponsorDialog.Show();
+    }
+
     // ==================== 通用（自启 / 更新） ====================
 
     private void LoadGeneral()

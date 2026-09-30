@@ -46,11 +46,16 @@
                         <TextBlock x:Name="ChartTitle" Text="活跃分布" Style="{StaticResource SectionTitleStyle}"/>
                         <Grid Height="200">
                             <Canvas x:Name="ReportChart" SizeChanged="ReportChart_SizeChanged"/>
-                            <TextBlock x:Name="ChartEmpty" Text="这段时间还没有任何记录。"
-                                       HorizontalAlignment="Center" VerticalAlignment="Center"
-                                       FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"
-                                       Background="{DynamicResource AppBgBrush}" Padding="12,6"
-                                       Visibility="Collapsed"/>
+                            <!-- 空状态垫片：实底卡片（同 DataPage，壁纸模式下 AppBgBrush 是图片画刷） -->
+                            <Border x:Name="ChartEmpty"
+                                    HorizontalAlignment="Center" VerticalAlignment="Center"
+                                    Background="{DynamicResource CardBgBrush}"
+                                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                                    CornerRadius="9" Padding="14,7"
+                                    Visibility="Collapsed">
+                                <TextBlock Text="这段时间还没有任何记录。"
+                                           FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            </Border>
                         </Grid>
                     </StackPanel>
                 </Border>

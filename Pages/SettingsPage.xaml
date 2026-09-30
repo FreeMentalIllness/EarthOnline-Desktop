@@ -391,7 +391,7 @@
                         <Button Content="GitHub 仓库" Style="{StaticResource SoftButtonStyle}" Margin="8,0,0,0"
                                 Click="OpenRepo_Click"/>
                         <Button Content="💖 赞助" Style="{StaticResource SoftButtonStyle}" Margin="8,0,0,0"
-                                Click="OpenRepo_Click" ToolTip="赞助与赞助者名单详见仓库主页（海神唐三 · Seastar · 清浅）"/>
+                                Click="OpenSponsor_Click" ToolTip="请作者喝一杯 ☕ · 微信收款码（海神唐三 · Seastar · 清浅）"/>
                         <Button Content="意见反馈" Style="{StaticResource SoftButtonStyle}" Margin="8,0,0,0"
                                 Click="OpenIssues_Click"/>
                         <Button Content="打开数据文件夹" Style="{StaticResource SoftButtonStyle}" Margin="8,0,0,0"

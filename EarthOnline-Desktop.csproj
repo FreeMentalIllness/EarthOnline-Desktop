@@ -21,6 +21,8 @@
     <!-- 界面内图标资源：窗口/托盘/标题栏共用（与移动端一致） -->
     <Resource Include="Assets\app_logo.ico" />
     <Resource Include="Assets\app_logo.png" />
+    <!-- 赞助弹窗：微信收款码（内嵌资源，单文件发布可用；不上传任何赞助信息到远端） -->
+    <Resource Include="Assets\sponsor_wechat.jpg" />
     <!-- 地图页：内嵌为资源，运行时释放到数据目录再加载（兼容单文件发布） -->
     <Resource Include="Assets\map.html" />
     <!--

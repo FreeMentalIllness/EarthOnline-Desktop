@@ -135,16 +135,36 @@ public static class CropDialog
             last = p;
             ApplyTransform(scale, translate, zoom.Value, tx, ty);
         };
+
+        // 缩放统一入口：以锚点（鼠标位置 / 取景框中心）为不动点换算平移，再同步滑块
+        bool syncingSlider = false;
+        void SetZoom(double nz, double? anchorX, double? anchorY)
+        {
+            nz = Math.Clamp(nz, minZ, maxZ);
+            if (Math.Abs(nz - z) < 0.0001) return;
+            double mx = anchorX ?? Viewport / 2.0, my = anchorY ?? Viewport / 2.0;
+            tx = mx - (mx - tx) * (nz / z);
+            ty = my - (my - ty) * (nz / z);
+            z = nz;
+            ApplyTransform(scale, translate, z, tx, ty);
+            syncingSlider = true;
+            zoom.Value = z;
+            syncingSlider = false;
+        }
+
+        // 鼠标滚轮缩放：锚在指针位置（朝指针处放大 / 缩小），与滑块联动
+        canvas.MouseWheel += (_, e) =>
+        {
+            e.Handled = true;
+            var p = e.GetPosition(canvas);
+            SetZoom(z * (e.Delta > 0 ? 1.12 : 1 / 1.12), p.X, p.Y);
+        };
+
         // 缩放以取景框中心为锚点：否则会以左上角为锚点，越缩越往一边漂
         zoom.ValueChanged += (_, _) =>
         {
-            double nz = zoom.Value;
-            if (nz <= 0 || z <= 0) return;
-            double cx = Viewport / 2.0, cy = Viewport / 2.0;
-            tx = cx - (cx - tx) * (nz / z);
-            ty = cy - (cy - ty) * (nz / z);
-            z = nz;
-            ApplyTransform(scale, translate, z, tx, ty);
+            if (syncingSlider) return;   // 滚轮 / 程序性设值触发的回调不做二次换算
+            SetZoom(zoom.Value, null, null);
         };
 
         // ---- 按钮 ----
@@ -192,7 +212,7 @@ public static class CropDialog
         var root = new StackPanel { Margin = new Thickness(18) };
         root.Children.Add(new TextBlock
         {
-            Text = "拖拽移动图片 · 拖动滑块缩放，框内即最终效果",
+            Text = "拖拽移动图片 · 滚轮或滑块缩放，框内即最终效果",
             FontSize = 12,
             Foreground = ThemeService.FromHex("#7A7268"),
             Margin = new Thickness(0, 0, 0, 10)
@@ -270,6 +290,35 @@ public static class CropDialog
 
             var crop = new CroppedBitmap(bmp, new Int32Rect(X, Y, W, H));
 
+            // 头像输出上限 512px：超大原图自动等比压缩（Fant 高质量降采样），
+            // 显示端 76px / 44px 圆形仍保有数倍超采样，肉眼无损、文件体积与解码内存可控。
+            // 壁纸（circular=false）不受此限，保留全分辨率。
+            BitmapSource final = crop;
+            if (circular)
+            {
+                int maxEdge = Math.Max(crop.PixelWidth, crop.PixelHeight);
+                if (maxEdge > 512)
+                {
+                    double k = 512.0 / maxEdge;
+                    int tw = Math.Max(1, (int)Math.Round(crop.PixelWidth * k));
+                    int th = Math.Max(1, (int)Math.Round(crop.PixelHeight * k));
+                    var scaler = new System.Windows.Controls.Image
+                    {
+                        Source = crop,
+                        Stretch = Stretch.Fill,
+                        Width = tw,
+                        Height = th
+                    };
+                    RenderOptions.SetBitmapScalingMode(scaler, BitmapScalingMode.Fant);
+                    scaler.Measure(new Size(tw, th));
+                    scaler.Arrange(new Rect(0, 0, tw, th));
+                    var rtb = new RenderTargetBitmap(tw, th, 96, 96, PixelFormats.Pbgra32);
+                    rtb.Render(scaler);
+                    rtb.Freeze();
+                    final = rtb;
+                }
+            }
+
             var dir = string.IsNullOrWhiteSpace(outputDir)
                 ? AppPaths.AvatarDir
                 : outputDir;
@@ -277,7 +326,7 @@ public static class CropDialog
             outPath = Path.Combine(dir, "crop_" + Guid.NewGuid().ToString("N") + ".png");
 
             var encoder = new PngBitmapEncoder(); // PNG 无损，保留原图画质
-            encoder.Frames.Add(BitmapFrame.Create(crop));
+            encoder.Frames.Add(BitmapFrame.Create(final));
             using var fs = new FileStream(outPath, FileMode.Create, FileAccess.Write);
             encoder.Save(fs);
             return true;

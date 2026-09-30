@@ -71,39 +71,61 @@ public partial class HomePage : Page
             .FirstOrDefault(b => (b.Tag as string) == "type:note"));
     }
 
-    /// <summary>统一标签行：随笔/重要/灵感 设定类型；心情标签选中后未输入文字点「记录」一键直达。</summary>
+    /// <summary>
+    /// 统一标签行：随笔/重要/灵感 设定类型；「心情」展开/收起心情快选行；
+    /// 选中具体心情后未输入文字点「记录」一键直达（与网页 / 安卓 mood 口径一致）。
+    /// </summary>
     private void MemoTag_Click(object sender, RoutedEventArgs e)
     {
         if ((sender as Button)?.Tag is not string tag) return;
+
         if (tag.StartsWith("type:", StringComparison.Ordinal))
         {
             _memoType = tag["type:".Length..];
             _moodTag = "";
+            MoodRow.Visibility = Visibility.Collapsed;
+            ApplyMemoTagSelection(sender as Button);
+            return;
         }
-        else
+
+        if (tag == "mood-open")
+        {
+            // 「心情」统一入口：展开快选并置为心情类型；再点一次收起
+            bool open = MoodRow.Visibility != Visibility.Visible;
+            MoodRow.Visibility = open ? Visibility.Visible : Visibility.Collapsed;
+            _memoType = "mood";
+            ApplyMemoTagSelection(open ? sender as Button : null);
+            return;
+        }
+
+        if (tag.StartsWith("mood:", StringComparison.Ordinal))
         {
             _memoType = "mood";
-            _moodTag = tag;
-            // 保留原「心情一键记录」体验：文字为空时点心情立即落一条
+            _moodTag = tag["mood:".Length..];
+            var moodEntry = MemoTypeRow.Children.OfType<Button>()
+                .FirstOrDefault(b => (b.Tag as string) == "mood-open");
+            ApplyMemoTagSelection(sender as Button, moodEntry);
+            // 保留原「心情一键记录」体验：文字为空时选心情立即落一条
             if (string.IsNullOrWhiteSpace(_vm.MemoInput))
             {
-                if (_vm.AddMemo("mood", tag)) _vm.Load();
-                return;
+                if (_vm.AddMemo("mood", _moodTag)) _vm.Load();
             }
         }
-        ApplyMemoTagSelection(sender as Button);
     }
 
-    /// <summary>选中态高亮：选中标签琥珀底白字，其余还原样式默认。</summary>
-    private void ApplyMemoTagSelection(Button? selected)
+    /// <summary>选中态高亮：选中标签琥珀底白字，其余还原样式默认（类型行 + 心情快选行统一处理）。</summary>
+    private void ApplyMemoTagSelection(params Button?[] selected)
     {
         if (MemoTypeRow is null) return;
-        foreach (var b in MemoTypeRow.Children.OfType<Button>())
+        var sel = selected.Where(b => b is not null).OfType<Button>().ToHashSet();
+        var all = MemoTypeRow.Children.OfType<Button>()
+            .Concat(MoodRow?.Children.OfType<Button>() ?? Enumerable.Empty<Button>());
+        foreach (var b in all)
         {
-            bool sel = ReferenceEquals(b, selected);
-            b.Background = sel ? ThemeService.Brush("AccentBrush") : null;
-            b.BorderBrush = sel ? ThemeService.Brush("AccentBrush") : null;
-            b.Foreground = sel ? Brushes.White : null;
+            bool on = sel.Contains(b);
+            b.Background = on ? ThemeService.Brush("AccentBrush") : null;
+            b.BorderBrush = on ? ThemeService.Brush("AccentBrush") : null;
+            b.Foreground = on ? Brushes.White : null;
         }
     }
 
