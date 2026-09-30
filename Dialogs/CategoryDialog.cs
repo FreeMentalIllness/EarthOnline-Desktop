@@ -28,17 +28,7 @@ public static class CategoryDialog
     public static bool Show(string scope)
     {
         bool isItem = scope == BagScope.Item;
-        var win = new Window
-        {
-            Title = isItem ? "管理物品分类" : "管理收藏分类",
-            Width = 420,
-            SizeToContent = SizeToContent.Height,
-            MaxHeight = 560,
-            ResizeMode = ResizeMode.NoResize,
-            WindowStartupLocation = WindowStartupLocation.CenterOwner,
-            Background = Bg,
-            Owner = Application.Current?.MainWindow
-        };
+        var win = new ThemeDialogWindow(isItem ? "管理物品分类" : "管理收藏分类", 420, 560);
         bool changed = false;
 
         var root = new StackPanel { Margin = new Thickness(20) };
@@ -202,7 +192,7 @@ public static class CategoryDialog
             Fill();
         };
 
-        win.Content = root;
+        win.SetBody(root);
         win.ShowDialog();
         return changed;
     }

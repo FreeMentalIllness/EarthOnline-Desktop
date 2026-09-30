@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.IO;
 using System.Text.Json;
 using System.Windows;
@@ -7,6 +7,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using EarthOnline.Desktop.Data;
 using EarthOnline.Desktop.Data.Entities;
+using EarthOnline.Desktop.Dialogs;
 using EarthOnline.Desktop.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Web.WebView2.Core;
@@ -412,16 +413,7 @@ public partial class MapPage : Page
     /// <summary>新建 / 编辑足迹：true = 已确认（结果写入传入实体）。</summary>
     private static bool EditDialog(LocationEntity loc, bool isNew)
     {
-        var win = new Window
-        {
-            Title = isNew ? "添加足迹" : "编辑足迹",
-            Width = 420,
-            SizeToContent = SizeToContent.Height,
-            ResizeMode = ResizeMode.NoResize,
-            WindowStartupLocation = WindowStartupLocation.CenterOwner,
-            Background = ThemeService.Brush("AppBgBrush"),
-            Owner = Application.Current?.MainWindow
-        };
+        var win = new ThemeDialogWindow(isNew ? "添加足迹" : "编辑足迹", 420);
 
         var root = new StackPanel { Margin = new Thickness(20) };
 
@@ -472,7 +464,7 @@ public partial class MapPage : Page
         btnRow.Children.Add(cancel);
         btnRow.Children.Add(ok);
         root.Children.Add(btnRow);
-        win.Content = root;
+        win.SetBody(root);
 
         if (win.ShowDialog() != true) return false;
 

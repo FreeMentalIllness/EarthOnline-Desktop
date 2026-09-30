@@ -36,16 +36,7 @@ public static class CollectionDialog
 
     public static bool Show(CollectionEntity col, bool isNew)
     {
-        var win = new Window
-        {
-            Title = isNew ? "新增收藏" : "编辑收藏",
-            Width = 440,
-            SizeToContent = SizeToContent.Height,
-            ResizeMode = ResizeMode.NoResize,
-            WindowStartupLocation = WindowStartupLocation.CenterOwner,
-            Background = Bg,
-            Owner = Application.Current?.MainWindow
-        };
+        var win = new ThemeDialogWindow(isNew ? "新增收藏" : "编辑收藏", 440);
         var root = new StackPanel { Margin = new Thickness(20) };
 
         // ===== 标题 =====
@@ -195,7 +186,7 @@ public static class CollectionDialog
         btnRow.Children.Add(cancel);
         btnRow.Children.Add(ok);
         root.Children.Add(btnRow);
-        win.Content = root;
+        win.SetBody(root);
 
         if (win.ShowDialog() != true) return false;
         if (string.IsNullOrWhiteSpace(titleBox.Text))

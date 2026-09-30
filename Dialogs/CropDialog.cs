@@ -169,17 +169,7 @@ public static class CropDialog
             Cursor = Cursors.Hand
         };
 
-        var win = new Window
-        {
-            Title = circular ? "裁剪头像" : "裁剪壁纸",
-            Width = 420,
-            SizeToContent = SizeToContent.Height,
-            MaxHeight = 680,
-            ResizeMode = ResizeMode.NoResize,
-            WindowStartupLocation = WindowStartupLocation.CenterOwner,
-            Background = ThemeService.FromHex("#F8F6F2"),
-            Owner = Application.Current?.MainWindow
-        };
+        var win = new ThemeDialogWindow(circular ? "裁剪头像" : "裁剪壁纸", 420, 680);
 
         bool result = false;
         string? pickedPath = null;
@@ -228,7 +218,7 @@ public static class CropDialog
         btnRow.Children.Add(ok);
         btnRow.Children.Add(cancel);
         root.Children.Add(btnRow);
-        win.Content = root;
+        win.SetBody(root);
 
         win.ShowDialog();
         croppedPath = pickedPath;

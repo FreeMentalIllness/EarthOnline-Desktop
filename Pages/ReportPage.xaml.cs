@@ -1,8 +1,9 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using EarthOnline.Desktop.Services;
+using EarthOnline.Desktop.Dialogs;
 
 namespace EarthOnline.Desktop.Pages;
 
@@ -129,17 +130,7 @@ public partial class ReportPage : Page
             };
             var rows = ReportService.BucketDetail(kind, bucketIndex);
 
-            var win = new Window
-            {
-                Title = "记录明细",
-                Width = 440,
-                SizeToContent = SizeToContent.Height,
-                MaxHeight = 520,
-                ResizeMode = ResizeMode.NoResize,
-                WindowStartupLocation = WindowStartupLocation.CenterOwner,
-                Background = Brush("#F8F6F2"),
-                Owner = Application.Current?.MainWindow
-            };
+            var win = new ThemeDialogWindow("记录明细", 440, 520);
 
             var root = new StackPanel { Margin = new Thickness(20) };
             root.Children.Add(new TextBlock
@@ -206,7 +197,7 @@ public partial class ReportPage : Page
             closeBtn.Click += (_, _) => win.Close();
             root.Children.Add(closeBtn);
 
-            win.Content = new ScrollViewer { Content = root, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
+            win.SetBody(new ScrollViewer { Content = root, VerticalScrollBarVisibility = ScrollBarVisibility.Auto });
             win.ShowDialog();
         }
         catch { /* 洞察属锦上添花，失败不打断报告页 */ }

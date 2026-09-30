@@ -40,17 +40,7 @@ public static class ProfileDialog
 
     public static bool Show(ProfileEntity profile)
     {
-        var win = new Window
-        {
-            Title = "完善资料",
-            Width = 480,
-            SizeToContent = SizeToContent.Height,
-            MaxHeight = 640,
-            ResizeMode = ResizeMode.NoResize,
-            WindowStartupLocation = WindowStartupLocation.CenterOwner,
-            Background = Bg,
-            Owner = Application.Current?.MainWindow
-        };
+        var win = new ThemeDialogWindow("完善资料", 480, 660);
         var okButton = new Button();
 
         var root = new StackPanel { Margin = new Thickness(20) };
@@ -228,14 +218,16 @@ public static class ProfileDialog
             return new Button
             {
                 Content = text, MinWidth = 72, Height = 30, Padding = new Thickness(10, 0, 10, 0),
-                Margin = new Thickness(0, 0, 8, 0), Foreground = TextMain, Background = Card,
-                BorderBrush = Border, BorderThickness = new Thickness(1),
-                Cursor = System.Windows.Input.Cursors.Hand
+                Margin = new Thickness(0, 0, 8, 0),
             };
         }
         var addField = MkBtn("＋ 添加");
         var editField = MkBtn("✏️ 修改");
         var delField = MkBtn("🗑 删除");
+        // 自定义字段操作按钮统一主题化
+        addField.Style = (Style)Application.Current.Resources["SoftButtonStyle"];
+        editField.Style = (Style)Application.Current.Resources["SoftButtonStyle"];
+        delField.Style = (Style)Application.Current.Resources["SoftButtonStyle"];
         addField.Click += (_, _) =>
         {
             var label = SimpleDialogs.Prompt("添加自定义字段", "标签（例如：职业）");
@@ -278,25 +270,22 @@ public static class ProfileDialog
             Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right,
             Margin = new Thickness(0, 18, 0, 0)
         };
-        var cancelButton = new Button
-        {
-            Content = "取消", MinWidth = 84, Height = 34, Padding = new Thickness(14, 0, 14, 0),
-            Foreground = TextMain, Background = Card, BorderBrush = Border, BorderThickness = new Thickness(1),
-            Cursor = System.Windows.Input.Cursors.Hand
-        };
+        // 主体按钮统一走全局样式（暖色圆角，与主页/设置页完全一致）
+        var cancelButton = new Button { Content = "取消", MinWidth = 84, Height = 34 };
+        cancelButton.Style = (Style)Application.Current.Resources["SoftButtonStyle"];
         okButton = new Button
         {
             Content = "保存", MinWidth = 84, Height = 34, Padding = new Thickness(14, 0, 14, 0),
-            Margin = new Thickness(6, 0, 0, 0), Foreground = Brushes.White, Background = Accent,
-            BorderThickness = new Thickness(0), Cursor = System.Windows.Input.Cursors.Hand
+            Margin = new Thickness(6, 0, 0, 0),
         };
+        okButton.Style = (Style)Application.Current.Resources["PrimaryButtonStyle"];
         cancelButton.Click += (_, _) => win.DialogResult = false;
         okButton.Click += (_, _) => win.DialogResult = true;
         btnRow.Children.Add(cancelButton);
         btnRow.Children.Add(okButton);
         root.Children.Add(btnRow);
 
-        win.Content = new ScrollViewer { Content = root, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
+        win.SetBody(new ScrollViewer { Content = root, VerticalScrollBarVisibility = ScrollBarVisibility.Auto });
 
         if (win.ShowDialog() != true)
         {

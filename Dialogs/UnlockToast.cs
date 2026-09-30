@@ -85,18 +85,12 @@ public static class UnlockToast
         {
             Background = ThemeService.FromHex("#FFFFFF"),
             BorderBrush = ThemeService.FromHex("#D4A373"),
-            BorderThickness = new Thickness(0, 0, 3, 0),
+            BorderThickness = new Thickness(1, 1, 3, 1),
             CornerRadius = new CornerRadius(10),
             Padding = new Thickness(14, 12, 16, 12),
             Margin = new Thickness(0, 0, 0, 0),
-            Child = new StackPanel { Orientation = Orientation.Horizontal, Children = { icon, stack } },
-            Effect = new System.Windows.Media.Effects.DropShadowEffect
-            {
-                BlurRadius = 18,
-                ShadowDepth = 3,
-                Opacity = 0.25,
-                Color = ThemeService.ColorOf("TextPrimaryBrush")
-            }
+            Child = new StackPanel { Orientation = Orientation.Horizontal, Children = { icon, stack } }
+            // 悬浮/浮层规范：不用 DropShadowEffect（高斯模糊类，重栅格化发虚），改暖色描边分层
         };
 
         var win = new Window

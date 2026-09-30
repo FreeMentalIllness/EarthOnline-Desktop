@@ -30,17 +30,7 @@ public static class BadgePickerDialog
 
         var selected = new HashSet<string>(pinned);
 
-        var win = new Window
-        {
-            Title = "佩戴徽章（最多 3 枚）",
-            Width = 420,
-            SizeToContent = SizeToContent.Height,
-            MaxHeight = 560,
-            ResizeMode = ResizeMode.NoResize,
-            WindowStartupLocation = WindowStartupLocation.CenterOwner,
-            Background = Bg,
-            Owner = Application.Current?.MainWindow
-        };
+        var win = new ThemeDialogWindow("佩戴徽章（最多 3 枚）", 420, 560);
 
         var root = new StackPanel { Margin = new Thickness(20) };
         root.Children.Add(new TextBlock
@@ -106,7 +96,7 @@ public static class BadgePickerDialog
         btnRow.Children.Add(okButton);
         root.Children.Add(btnRow);
 
-        win.Content = root;
+        win.SetBody(root);
         if (win.ShowDialog() != true) return false;
 
         pinned.Clear();

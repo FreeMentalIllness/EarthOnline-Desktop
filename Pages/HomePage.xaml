@@ -1,4 +1,4 @@
-<Page x:Class="EarthOnline.Desktop.Pages.HomePage"
+﻿<Page x:Class="EarthOnline.Desktop.Pages.HomePage"
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -11,19 +11,21 @@
     </Page.Resources>
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="28,24,28,24" MaxWidth="1040">
-            <TextBlock Text="主页" Style="{StaticResource PageTitleStyle}"/>
-            <!-- v1.0.3：动态问候语 + 当季徽章（Greeting.kt / SeasonTheme.kt 规格） -->
-            <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+            <!-- ===== 顶部问候区（对齐移动端信息架构：问候语即页面标题） ===== -->
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,4">
                 <Border Background="{DynamicResource CardBgBrush}"
                         BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
                         CornerRadius="8" Padding="8,3" VerticalAlignment="Center">
                     <TextBlock Text="{Binding SeasonBadge}" FontSize="12"
                                Foreground="{DynamicResource TextPrimaryBrush}"/>
                 </Border>
-                <TextBlock Text="{Binding GreetingText}" FontSize="13" Margin="10,0,0,0"
-                           VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
-                           Foreground="{DynamicResource TextSecondaryBrush}"/>
+                <TextBlock Text="主页" FontSize="22" FontWeight="SemiBold" Margin="12,0,0,0"
+                           VerticalAlignment="Center"
+                           Foreground="{DynamicResource TextPrimaryBrush}"/>
             </StackPanel>
+            <TextBlock Text="{Binding GreetingText}" FontSize="13" Margin="2,0,0,16"
+                       TextTrimming="CharacterEllipsis"
+                       Foreground="{DynamicResource TextSecondaryBrush}"/>
 
             <!-- ============ 个人资料卡 ============ -->
             <Border Style="{StaticResource CardStyle}">
@@ -68,6 +70,16 @@
                             <TextBlock Text="{Binding TitleLine}" FontSize="15" FontWeight="SemiBold"
                                        Margin="10,2,0,0" VerticalAlignment="Center"
                                        Foreground="#B08045"/>
+                            <!-- 等级徽章（Lv 数据与称号行同口径，悬浮可见天数明细） -->
+                            <Border Background="{DynamicResource SoftBgBrush}"
+                                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                                    CornerRadius="8" Padding="7,2" Margin="10,2,0,0"
+                                    VerticalAlignment="Center"
+                                    ToolTip="{Binding DaysLivedText}"
+                                    Visibility="{Binding HasLevel, Converter={StaticResource BoolToVis}}">
+                                <TextBlock Text="{Binding LevelStatText}" FontSize="11" FontWeight="SemiBold"
+                                           Foreground="#B08045"/>
+                            </Border>
                         </StackPanel>
                         <TextBlock FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,4,0,0">
                             <Run Text="{Binding BirthDate}"/>
@@ -111,7 +123,7 @@
                     </StackPanel>
 
                     <!-- 编辑资料 -->
-                    <Button Grid.Column="2" Content="✏️ 编辑资料" Padding="12,6"
+                    <Button Style="{StaticResource SoftButtonStyle}" Grid.Column="2" Content="✏️ 编辑资料" Padding="12,6"
                             VerticalAlignment="Top" Click="EditProfile_Click" Cursor="Hand"/>
                 </Grid>
             </Border>
@@ -163,7 +175,7 @@
             <Border Style="{StaticResource CardStyle}">
                 <StackPanel>
                     <DockPanel>
-                        <Button DockPanel.Dock="Right" Content="佩戴徽章" Padding="12,6"
+                        <Button Style="{StaticResource SoftButtonStyle}" DockPanel.Dock="Right" Content="佩戴徽章" Padding="12,6"
                                 VerticalAlignment="Top" Click="PickBadges_Click" Cursor="Hand"/>
                         <ItemsControl ItemsSource="{Binding Badges}" VerticalAlignment="Center">
                             <ItemsControl.ItemsPanel>
@@ -198,12 +210,13 @@
                 </StackPanel>
             </Border>
 
-            <!-- ============ 四个统计卡 ============ -->
+            <!-- ============ 概览：模块入口行（点击直达对应页面） ============ -->
             <TextBlock Text="概览" Style="{StaticResource SectionTitleStyle}" Margin="0,8,0,8"/>
             <UniformGrid Columns="4" Margin="0,0,0,4">
                 <Border Style="{StaticResource StatCardStyle}" Margin="0,0,8,0"
                         Tag="tasks" Cursor="Hand" MouseLeftButtonUp="StatCard_Click" ToolTip="点击进入任务">
                     <StackPanel>
+                        <TextBlock Text="🗂" FontSize="16" HorizontalAlignment="Center"/>
                         <TextBlock Text="{Binding TaskCount}" Style="{StaticResource StatNumStyle}"/>
                         <TextBlock Text="任务" Style="{StaticResource StatLabelStyle}"/>
                     </StackPanel>
@@ -211,6 +224,7 @@
                 <Border Style="{StaticResource StatCardStyle}" Margin="4,0,4,0"
                         Tag="backpack" Cursor="Hand" MouseLeftButtonUp="StatCard_Click" ToolTip="点击进入背包">
                     <StackPanel>
+                        <TextBlock Text="🎒" FontSize="16" HorizontalAlignment="Center"/>
                         <TextBlock Text="{Binding ItemCount}" Style="{StaticResource StatNumStyle}"/>
                         <TextBlock Text="背包" Style="{StaticResource StatLabelStyle}"/>
                     </StackPanel>
@@ -218,6 +232,7 @@
                 <Border Style="{StaticResource StatCardStyle}" Margin="4,0,4,0"
                         Tag="achievements" Cursor="Hand" MouseLeftButtonUp="StatCard_Click" ToolTip="点击进入成就">
                     <StackPanel>
+                        <TextBlock Text="🏆" FontSize="16" HorizontalAlignment="Center"/>
                         <TextBlock Text="{Binding AchievementCount}" Style="{StaticResource StatNumStyle}"/>
                         <TextBlock Text="成就" Style="{StaticResource StatLabelStyle}"/>
                     </StackPanel>
@@ -225,43 +240,41 @@
                 <Border Style="{StaticResource StatCardStyle}" Margin="8,0,0,0"
                         Tag="ai" Cursor="Hand" MouseLeftButtonUp="StatCard_Click" ToolTip="点击进入 AI 助手">
                     <StackPanel>
+                        <TextBlock Text="💡" FontSize="16" HorizontalAlignment="Center"/>
                         <TextBlock Text="{Binding InspirationCount}" Style="{StaticResource StatNumStyle}"/>
                         <TextBlock Text="灵感" Style="{StaticResource StatLabelStyle}"/>
                     </StackPanel>
                 </Border>
             </UniformGrid>
 
-            <!-- v1.0.3：四个速览数据（等级 / 成就 / 足迹 / 完成率） -->
-            <UniformGrid Columns="4" Margin="0,0,0,4">
+            <!-- ============ 概览：速览数据行（等级 / 足迹 / 完成率，去重不再与模块行重复） ============ -->
+            <UniformGrid Columns="3" Margin="0,0,0,4">
                 <Border Style="{StaticResource StatCardStyle}" Margin="0,0,8,0"
-                        Tag="data" Cursor="Hand" MouseLeftButtonUp="StatCard_Click" ToolTip="点击进入数据">
+                        Tag="data" Cursor="Hand" MouseLeftButtonUp="StatCard_Click" ToolTip="点击进入数据看板">
                     <StackPanel>
+                        <TextBlock Text="⭐" FontSize="16" HorizontalAlignment="Center"/>
                         <TextBlock Text="{Binding LevelStatText}" Style="{StaticResource StatNumStyle}"/>
                         <TextBlock Text="等级" Style="{StaticResource StatLabelStyle}"/>
                     </StackPanel>
                 </Border>
                 <Border Style="{StaticResource StatCardStyle}" Margin="4,0,4,0"
-                        Tag="achievements" Cursor="Hand" MouseLeftButtonUp="StatCard_Click" ToolTip="点击进入成就">
+                        Tag="map" Cursor="Hand" MouseLeftButtonUp="StatCard_Click" ToolTip="点击进入足迹地图">
                     <StackPanel>
-                        <TextBlock Text="{Binding AchievementCount}" Style="{StaticResource StatNumStyle}"/>
-                        <TextBlock Text="成就" Style="{StaticResource StatLabelStyle}"/>
-                    </StackPanel>
-                </Border>
-                <Border Style="{StaticResource StatCardStyle}" Margin="4,0,4,0"
-                        Tag="map" Cursor="Hand" MouseLeftButtonUp="StatCard_Click" ToolTip="点击进入地图">
-                    <StackPanel>
+                        <TextBlock Text="🗺" FontSize="16" HorizontalAlignment="Center"/>
                         <TextBlock Text="{Binding FootprintCount}" Style="{StaticResource StatNumStyle}"/>
                         <TextBlock Text="足迹" Style="{StaticResource StatLabelStyle}"/>
                     </StackPanel>
                 </Border>
                 <Border Style="{StaticResource StatCardStyle}" Margin="8,0,0,0"
-                        Tag="data" Cursor="Hand" MouseLeftButtonUp="StatCard_Click" ToolTip="点击进入数据">
+                        Tag="data" Cursor="Hand" MouseLeftButtonUp="StatCard_Click" ToolTip="点击进入数据看板">
                     <StackPanel>
+                        <TextBlock Text="✅" FontSize="16" HorizontalAlignment="Center"/>
                         <TextBlock Text="{Binding DoneRateText}" Style="{StaticResource StatNumStyle}"/>
                         <TextBlock Text="完成率" Style="{StaticResource StatLabelStyle}"/>
                     </StackPanel>
                 </Border>
             </UniformGrid>
+
 
             <!-- ============ 人生卡 ============ -->
             <Border Style="{StaticResource CardStyle}"
@@ -311,10 +324,8 @@
             <Border Style="{StaticResource CardStyle}">
                 <StackPanel>
                     <DockPanel>
-                        <Button DockPanel.Dock="Right" Content="记录" Padding="14,0" Height="34"
-                                Margin="8,0,0,0" Click="MemoSave_Click"
-                                Background="{DynamicResource AccentBrush}" Foreground="White"
-                                BorderThickness="0" Cursor="Hand"/>
+                        <Button Style="{StaticResource PrimaryButtonStyle}" DockPanel.Dock="Right" Content="记录" Padding="14,0" Height="34"
+                                Margin="8,0,0,0" Click="MemoSave_Click" Cursor="Hand"/>
                         <ComboBox x:Name="MemoType" DockPanel.Dock="Right" Width="96" Height="34"
                                   VerticalContentAlignment="Center" SelectedIndex="0">
                             <ComboBoxItem Content="📝 随笔" Tag="note"/>
@@ -360,7 +371,7 @@
                                         <TextBlock Grid.Column="2" Text="{Binding TimeText}" FontSize="11"
                                                    Margin="8,2,0,0" VerticalAlignment="Top"
                                                    Foreground="{DynamicResource TextMutedBrush}"/>
-                                        <Button Grid.Column="3" Content="🗑" FontSize="12" Margin="8,0,0,0"
+                                        <Button Style="{StaticResource SoftButtonStyle}" Grid.Column="3" Content="🗑" FontSize="12" Margin="8,0,0,0"
                                                 Background="Transparent" BorderThickness="0"
                                                 Cursor="Hand" Click="MemoDelete_Click" Tag="{Binding Id}"/>
                                     </Grid>

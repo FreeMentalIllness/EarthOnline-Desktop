@@ -34,16 +34,7 @@ public static class ItemDialog
 
     public static bool Show(ItemEntity item, bool isNew)
     {
-        var win = new Window
-        {
-            Title = isNew ? "新增物品" : "编辑物品",
-            Width = 440,
-            SizeToContent = SizeToContent.Height,
-            ResizeMode = ResizeMode.NoResize,
-            WindowStartupLocation = WindowStartupLocation.CenterOwner,
-            Background = Bg,
-            Owner = Application.Current?.MainWindow
-        };
+        var win = new ThemeDialogWindow(isNew ? "新增物品" : "编辑物品", 440);
         var root = new StackPanel { Margin = new Thickness(20) };
 
         var nameBox = Field(root, "物品名称", isNew ? "" : item.Name);
@@ -111,7 +102,7 @@ public static class ItemDialog
         btnRow.Children.Add(cancel);
         btnRow.Children.Add(ok);
         root.Children.Add(btnRow);
-        win.Content = root;
+        win.SetBody(root);
 
         if (win.ShowDialog() != true) return false;
         if (string.IsNullOrWhiteSpace(nameBox.Text))

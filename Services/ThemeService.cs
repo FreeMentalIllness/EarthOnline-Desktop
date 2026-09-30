@@ -42,6 +42,9 @@ public static class ThemeService
         ("AiBubbleAiBrush",   Color.FromRgb(0xF6, 0xF4, 0xF0), Color.FromRgb(0x33, 0x30, 0x2C)),
         ("ChartGridBrush",    Color.FromRgb(0xE8, 0xE2, 0xDA), Color.FromRgb(0x3F, 0x3B, 0x36)),
         ("ChartTextBrush",    Color.FromRgb(0xB0, 0xA8, 0x9C), Color.FromRgb(0x8F, 0x8F, 0x99)),
+        // ---- 悬浮反馈专用（卡片 / 按钮悬浮时的高亮；禁模糊后统一的跟手反馈）----
+        ("HoverBgBrush",      Color.FromRgb(0xF3, 0xEE, 0xE8), Color.FromRgb(0x2C, 0x2C, 0x30)),
+        ("HoverBorderBrush",  Color.FromRgb(0xD9, 0xC4, 0xA6), Color.FromRgb(0x5C, 0x54, 0x44)),
     };
 
     /// <summary>当前是否为深色主题（ApplyTheme 后有效；无 Application 时按最近一次设置判定）。</summary>

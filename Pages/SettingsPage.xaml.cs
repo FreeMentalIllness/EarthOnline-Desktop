@@ -182,6 +182,11 @@ public partial class SettingsPage : Page
         }
     }
 
+    private void OpenChangelog_Click(object sender, RoutedEventArgs e)
+    {
+        Dialogs.ChangelogDialog.Show();
+    }
+
     // ==================== 通用（自启 / 更新） ====================
 
     private void LoadGeneral()

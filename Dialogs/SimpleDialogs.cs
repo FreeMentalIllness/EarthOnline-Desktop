@@ -28,27 +28,16 @@ public static class SimpleDialogs
             Height = 34,
             Padding = new Thickness(14, 0, 14, 0),
             Margin = new Thickness(6, 0, 0, 0),
-            Foreground = primary ? Brushes.White : TextMain,
-            Background = primary ? Accent : Card,
-            BorderBrush = Border,
-            BorderThickness = new Thickness(1),
             Cursor = System.Windows.Input.Cursors.Hand
         };
+        // 统一走 App.xaml 的全局按钮样式（琥珀主按钮 / 暖色次级按钮，圆角 9）
+        b.Style = (Style)Application.Current.Resources[primary ? "PrimaryButtonStyle" : "SoftButtonStyle"];
         return b;
     }
 
-    private static Window MakeWindow(string title, double width = 420)
+    private static ThemeDialogWindow MakeWindow(string title, double width = 420)
     {
-        return new Window
-        {
-            Title = title,
-            Width = width,
-            SizeToContent = SizeToContent.Height,
-            ResizeMode = ResizeMode.NoResize,
-            WindowStartupLocation = WindowStartupLocation.CenterOwner,
-            Background = Bg,
-            Owner = Application.Current?.MainWindow
-        };
+        return new ThemeDialogWindow(title, width);
     }
 
     /// <summary>单字段输入。取消返回 null。</summary>
@@ -95,7 +84,7 @@ public static class SimpleDialogs
         string? result = null;
         ok.Click += (_, _) => { result = box.Text; win.DialogResult = true; };
         cancel.Click += (_, _) => { win.DialogResult = false; };
-        win.Content = root;
+        win.SetBody(root);
 
         box.Focus();
         box.SelectAll();
@@ -103,9 +92,36 @@ public static class SimpleDialogs
         return win.ShowDialog() == true ? result : null;
     }
 
+    /// <summary>主题化确认框（替代系统 MessageBox，与全端暖色圆角风格一致）。</summary>
     public static bool Confirm(string message, string title = "确认")
     {
-        return MessageBox.Show(message, title, MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes;
+        var win = MakeWindow(title, 380);
+        var root = new StackPanel { Margin = new Thickness(0, 6, 0, 0) };
+
+        root.Children.Add(new TextBlock
+        {
+            Text = message, FontSize = 13, LineHeight = 20, TextWrapping = TextWrapping.Wrap,
+            Foreground = TextMain
+        });
+
+        var bar = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            HorizontalAlignment = HorizontalAlignment.Right,
+            Margin = new Thickness(0, 18, 0, 0)
+        };
+        var no = MakeButton("取消", false);
+        var yes = MakeButton("确定", true);
+        no.Margin = new Thickness(0, 0, 0, 0);
+        yes.Margin = new Thickness(6, 0, 0, 0);
+        no.Click += (_, _) => win.DialogResult = false;
+        yes.Click += (_, _) => win.DialogResult = true;
+        bar.Children.Add(no);
+        bar.Children.Add(yes);
+        root.Children.Add(bar);
+
+        win.SetBody(root);
+        return win.ShowDialog() == true;
     }
 
     /// <summary>任务编辑（新建 / 修改）。返回是否点了「保存」。</summary>
@@ -211,7 +227,7 @@ public static class SimpleDialogs
         };
         cancel.Click += (_, _) => win.DialogResult = false;
 
-        win.Content = root;
+        win.SetBody(root);
         titleBox.Focus();
         return win.ShowDialog() == true;
     }
