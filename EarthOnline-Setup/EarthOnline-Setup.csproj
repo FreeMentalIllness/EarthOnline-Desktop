@@ -1,0 +1,47 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <RootNamespace>EarthOnline.Setup</RootNamespace>
+    <AssemblyName>EarthOnline-Setup</AssemblyName>
+    <ApplicationIcon>Assets\app_logo.ico</ApplicationIcon>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Version>1.0.4</Version>
+    <AssemblyTitle>地球Online 安装向导</AssemblyTitle>
+    <Product>地球Online</Product>
+    <!-- 安装器自身也自包含发布，目标机无需预装 .NET 运行时 -->
+    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>true</SelfContained>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\app_logo.ico" />
+    <Resource Include="Assets\app_logo.png" />
+  </ItemGroup>
+
+  <!-- 主程序发布产物作为嵌入资源：构建前从主工程 Release 发布目录拷贝进来 -->
+  <Target Name="CopyPayload" BeforeTargets="BeforeBuild">
+    <Exec Command="if not exist &quot;$(MSBuildProjectDirectory)\AppPayload&quot; mkdir &quot;$(MSBuildProjectDirectory)\AppPayload&quot;" />
+    <Copy
+      SourceFiles="$(MSBuildProjectDirectory)\..\bin\Release\net8.0-windows\win-x64\publish\EarthOnline.exe"
+      DestinationFiles="$(MSBuildProjectDirectory)\AppPayload\EarthOnline.exe"
+      Condition="Exists('$(MSBuildProjectDirectory)\..\bin\Release\net8.0-windows\win-x64\publish\EarthOnline.exe')" />
+  </Target>
+
+  <Target Name="EnsurePayload" BeforeTargets="CoreCompile" DependsOnTargets="CopyPayload">
+    <Error
+      Text="未找到主程序发布产物。请先运行 build_windows_release.bat 生成主程序 Release，再构建安装器。"
+      Condition="!Exists('$(MSBuildProjectDirectory)\AppPayload\EarthOnline.exe')" />
+  </Target>
+
+  <ItemGroup>
+    <EmbeddedResource Include="AppPayload\EarthOnline.exe" />
+  </ItemGroup>
+
+</Project>

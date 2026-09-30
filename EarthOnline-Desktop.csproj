@@ -34,6 +34,18 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- 嵌套安装器工程（EarthOnline-Setup）必须从主工程通配中排除：
+         其源码与 obj 生成物（含 UseWindowsForms 的 GlobalUsings.g.cs）
+         会被 **/*.cs 扫入主编译，导致 Color/ProgressBar 等 CS0104 歧义 -->
+    <Compile Remove="EarthOnline-Setup\**" />
+    <EmbeddedResource Remove="EarthOnline-Setup\**" />
+    <Resource Remove="EarthOnline-Setup\**" />
+    <Page Remove="EarthOnline-Setup\**" />
+    <None Remove="EarthOnline-Setup\**" />
+    <Content Remove="EarthOnline-Setup\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.11">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>

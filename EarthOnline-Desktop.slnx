@@ -1,3 +1,4 @@
 <Solution>
   <Project Path="EarthOnline-Desktop.csproj" />
+  <Project Path="EarthOnline-Setup/EarthOnline-Setup.csproj" />
 </Solution>

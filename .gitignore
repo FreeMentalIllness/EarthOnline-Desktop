@@ -22,3 +22,11 @@ publish_win/
 
 # 【红线】内置回退的高德 Key（本地可选文件，任何人可放自己的 Key 覆盖；严禁入库）
 Assets/amap_default.json
+
+# 安装器构建期生成的主程序嵌入资源（体积大，不入库）
+EarthOnline-Setup/AppPayload/
+
+# 安装器构建产物（exe/pdb 体积大，只发 Release 资产，不入库）
+EarthOnline-Setup/SetupPublish/
+EarthOnline-Setup/Release/
+EarthOnline-SetupRelease/
