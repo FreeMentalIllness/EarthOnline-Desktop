@@ -62,7 +62,7 @@
                                 <Button x:Name="BrowseBtn" Grid.Column="1" Content="浏览…"
                                         Style="{StaticResource SoftButton}" Margin="8,0,0,0" Click="BrowseBtn_Click"/>
                             </Grid>
-                            <TextBlock x:Name="PathHint" Text="选择安装盘符后，将自动创建专属文件夹（如 D:\EarthOnline\EarthOnline），不会散落文件。默认安装到用户目录，无需管理员权限。"
+                            <TextBlock x:Name="PathHint" Text="选择安装盘符后，将自动创建专属文件夹（如 D:\EarthOnline），不会散落文件。默认安装到用户目录，无需管理员权限。"
                                        FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,8,0,0" TextWrapping="Wrap"/>
                             <Button x:Name="UseProgramFilesBtn" Content="改为安装到 C:\Program Files\EarthOnline（需要管理员权限）"
                                     Style="{StaticResource SoftButton}" HorizontalAlignment="Left"

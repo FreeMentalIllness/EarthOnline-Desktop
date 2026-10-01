@@ -113,7 +113,13 @@ public partial class HomePage : Page
         }
     }
 
-    /// <summary>选中态高亮：选中标签琥珀底白字，其余还原样式默认（类型行 + 心情快选行统一处理）。</summary>
+    /// <summary>
+    /// 选中态高亮：选中标签琥珀底白字，未选中的**清除本地值**以回落到样式默认。
+    /// 【踩坑】这里不能用 `b.Background = null` 还原——WPF 依赖属性里「本地值 = null」
+    /// 依然是一个有效本地值，优先级高于 Style 的 Setter，会把背景 / 边框 / 前景全部
+    /// 覆盖成 null，导致未选中的标签彻底不可见（连同文字一起消失）。
+    /// 正确做法是 ClearValue，让属性回退到 QuickButtonStyle 的 Setter。
+    /// </summary>
     private void ApplyMemoTagSelection(params Button?[] selected)
     {
         if (MemoTypeRow is null) return;
@@ -122,10 +128,18 @@ public partial class HomePage : Page
             .Concat(MoodRow?.Children.OfType<Button>() ?? Enumerable.Empty<Button>());
         foreach (var b in all)
         {
-            bool on = sel.Contains(b);
-            b.Background = on ? ThemeService.Brush("AccentBrush") : null;
-            b.BorderBrush = on ? ThemeService.Brush("AccentBrush") : null;
-            b.Foreground = on ? Brushes.White : null;
+            if (sel.Contains(b))
+            {
+                b.Background = ThemeService.Brush("AccentBrush");
+                b.BorderBrush = ThemeService.Brush("AccentBrush");
+                b.Foreground = Brushes.White;
+            }
+            else
+            {
+                b.ClearValue(Control.BackgroundProperty);
+                b.ClearValue(Control.BorderBrushProperty);
+                b.ClearValue(Control.ForegroundProperty);
+            }
         }
     }
 

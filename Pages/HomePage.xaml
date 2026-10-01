@@ -340,10 +340,12 @@
                                 Margin="8,0,0,0" Click="MemoSave_Click" Cursor="Hand"/>
                         <TextBox x:Name="MemoBox" Height="34" VerticalContentAlignment="Center"
                                  Padding="10,0" FontSize="13"
+                                 Background="{DynamicResource SoftBgBrush}"
                                  KeyDown="MemoBox_KeyDown"/>
                     </DockPanel>
                     <TextBlock Text="选一个标签定类型；点「心情」展开快选，未输入文字时选心情即一键记录（回车同样生效）"
-                               FontSize="11" Foreground="{DynamicResource TextMutedBrush}" Margin="2,6,0,0"/>
+                               FontSize="11" TextWrapping="Wrap"
+                               Foreground="{DynamicResource TextMutedBrush}" Margin="2,6,0,0"/>
 
                     <!-- 最近 5 条 -->
                     <ItemsControl ItemsSource="{Binding RecentMemos}" Margin="0,12,0,0">

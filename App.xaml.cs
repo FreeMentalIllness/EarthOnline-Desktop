@@ -71,6 +71,27 @@ public partial class App : Application
                 catch { /* 同步失败绝不影响启动 */ }
             });
         }
+
+        // 启动静默检查更新：延迟 20s（避开启动高峰）+ 24h 节流；
+        // 仅发现新版本时经顶部提示条温和告知，不打断使用；任何失败都静默。
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await Task.Delay(20_000);
+                var st = SettingsStore.Load();
+                var last = DateTimeOffset.TryParse(st.LastUpdateCheckAt, out var t) ? t : DateTimeOffset.MinValue;
+                if ((DateTimeOffset.Now - last).TotalHours < 24) return;
+                var r = await UpdateService.CheckAsync();
+                st.LastUpdateCheckAt = DateTimeOffset.Now.ToString("o");
+                try { st.Save(); } catch { }
+                if (r.Ok && r.LatestVersion is not null && r.Message.StartsWith("发现新版本", StringComparison.Ordinal))
+                    Dispatcher.Invoke(() =>
+                        (MainWindow as MainWindow)?.ShowSyncBanner(
+                            r.Message + " 可在「设置 → 检查更新」中下载安装。", false));
+            }
+            catch { /* 更新检查失败绝不影响使用 */ }
+        });
     }
 
     /// <summary>解析并设置数据目录（方案 A 便携优先）：显式设置 &gt; 应用根 EarthOnlineData（可写）&gt; %LOCALAPPDATA%\EarthOnline；并从旧目录一次性迁移数据。</summary>

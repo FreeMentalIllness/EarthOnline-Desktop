@@ -40,17 +40,38 @@ public partial class MapPage : Page
     private bool _loaded;
     /// <summary>WebView2 事件是否已挂过（重试加载时避免重复订阅）。</summary>
     private bool _handlersHooked;
+    /// <summary>当前存活的地图页实例（页面被 MainWindow 缓存，设置页改地图偏好时靠它即时推送）。</summary>
+    private static MapPage? _live;
 
     public MapPage()
     {
         InitializeComponent();
+        _live = this;
+        // 夜间样式跟随深色主题：主题亮↔暗切换时按最新偏好重推样式
+        ThemeService.ThemeChanged += OnThemeChangedForPrefs;
         Loaded += async (_, _) =>
         {
             _loaded = true;
+            _live = this;
             LoadList();
             await InitMapAsync();
         };
     }
+
+    private void OnThemeChangedForPrefs(bool dark)
+    {
+        try
+        {
+            var s = SettingsStore.Load();
+            var style = EffectiveStyle(s, dark);
+            ApplyPrefsLive(style, s.MapZoom, resetView: false);
+        }
+        catch { /* 偏好读取失败则忽略，下次打开地图页按新主题初始化 */ }
+    }
+
+    /// <summary>实际生效的样式：深色主题且开启联动时强制夜间，否则用选定样式。</summary>
+    private static string EffectiveStyle(SettingsStore s, bool dark)
+        => dark && s.MapStyleFollowDark ? "dark" : NormalizeMapStyle(s.MapStyle);
 
     // ==================== 数据 ====================
 
@@ -122,24 +143,28 @@ public partial class MapPage : Page
 
 
             // Key 注入必须在导航之前：AddScriptToExecuteOnDocumentCreated 对后续文档生效。
-            // 无 Key（用户未填且无内置回退）→ 直接降级，不发起任何外部请求。
+            // 无 Key（未配置且无内置回退）→ 直接降级，不发起任何外部请求。
             var cfg = AmapConfig.Load();
             if (string.IsNullOrWhiteSpace(cfg.Key))
             {
                 ShowFallback(true,
-                    "未配置高德地图 API Key。可在「设置 → 地图」填入自己的 Key；" +
-                    "未配置时可直接使用右侧列表视图管理足迹（新增 / 编辑 / 删除完全可用）。");
-                SetHint("未配置地图 Key，使用列表视图");
+                    "未检测到可用的地图服务，已切换为列表视图。" +
+                    "右侧足迹列表的新增 / 编辑 / 删除完全可用，不依赖地图。");
+                SetHint("未检测到地图服务，使用列表视图");
                 return;
             }
 
+            // 地图偏好（样式 / 默认缩放）随 Key 一起在文档创建前注入，地图页 init 时直接采用。
+            var prefs = SettingsStore.Load();
             await MapView.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync(
                 "window.__AMAP_KEY__ = " + JsonSerializer.Serialize(cfg.Key) + ";" +
-                "window.__AMAP_SEC__ = " + JsonSerializer.Serialize(cfg.Sec) + ";");
+                "window.__AMAP_SEC__ = " + JsonSerializer.Serialize(cfg.Sec) + ";" +
+                "window.__AMAP_STYLE__ = " + JsonSerializer.Serialize(EffectiveStyle(prefs, ThemeService.Dark)) + ";" +
+                "window.__AMAP_ZOOM__ = " + NormalizeMapZoom(prefs.MapZoom).ToString(CultureInfo.InvariantCulture) + ";");
 
             var file = ExtractMapHtml();
             MapView.Source = new Uri(file);
-            SetHint(cfg.IsCustom ? "地图加载中…（使用你自己的 Key）" : "地图加载中…（使用内置回退 Key）");
+            SetHint("地图加载中…");
             ShowFallback(false);
         }
         catch (Exception ex)
@@ -181,6 +206,38 @@ public partial class MapPage : Page
         using var fs = new FileStream(target, FileMode.Create, FileAccess.Write);
         sri.Stream.CopyTo(fs);
         return target;
+    }
+
+    // ==================== 地图偏好（与设置页共用同一份 SettingsStore） ====================
+
+    /// <summary>地图样式关键字归一：normal / whitesmoke / dark（非法值回落 normal）。</summary>
+    public static string NormalizeMapStyle(string? style)
+    {
+        var v = (style ?? "").Trim().ToLowerInvariant();
+        return v is "normal" or "whitesmoke" or "dark" ? v : "normal";
+    }
+
+    /// <summary>默认缩放级别（钳在 3~17，未设置回落 4）。</summary>
+    public static double NormalizeMapZoom(double zoom)
+        => zoom >= 3 && zoom <= 17 ? Math.Round(zoom) : 4;
+
+    /// <summary>
+    /// 设置页改地图样式 / 缩放（或点「重置地图视图」）后即时推给已打开的地图页。
+    /// 地图页实例由 MainWindow 缓存，因此通常都活着；实例不存在时静默忽略，
+    /// 下次进入地图页会按最新偏好重新初始化。
+    /// </summary>
+    public static void ApplyPrefsLive(string style, double zoom, bool resetView)
+    {
+        var page = _live;
+        if (page?.MapView?.CoreWebView2 is null) return;
+        var inv = CultureInfo.InvariantCulture;
+        try
+        {
+            _ = page.MapView.ExecuteScriptAsync(
+                $"window.applyPrefs({JsonSerializer.Serialize(NormalizeMapStyle(style))}, " +
+                $"{NormalizeMapZoom(zoom).ToString(inv)}, {(resetView ? "true" : "false")})");
+        }
+        catch { /* 地图页未就绪则忽略，下次打开按新偏好初始化 */ }
     }
 
     /// <summary>把足迹推送给地图页重画标记。</summary>
@@ -227,14 +284,17 @@ public partial class MapPage : Page
                     if (reason == "nokey")
                     {
                         ShowFallback(true,
-                            "未配置高德地图 API Key。可在「设置 → 地图」填入自己的 Key；" +
-                            "未配置时可直接使用右侧列表视图管理足迹。");
-                        SetHint("未配置地图 Key，使用列表视图");
+                            "未检测到可用的地图服务，已切换为列表视图。" +
+                            "右侧足迹列表的新增 / 编辑 / 删除完全可用，不依赖地图。");
+                        SetHint("未检测到地图服务，使用列表视图");
                         break;
                     }
-                    ShowFallback(true, reason == "offline"
-                        ? "当前无网络，地图不可用。可切换列表视图：右侧足迹列表的新增 / 编辑 / 删除完全可用，不依赖地图。"
-                        : "地图加载失败（请检查网络），可切换列表视图管理足迹。");
+                    ShowFallback(true, reason switch
+                    {
+                        "offline" => "当前无网络，地图不可用。可切换列表视图：右侧足迹列表的新增 / 编辑 / 删除完全可用，不依赖地图。",
+                        "blank" => "地图底图渲染失败，已自动切换为列表视图。右侧足迹列表的新增 / 编辑 / 删除完全可用；可点上方「⟳ 刷新」或「🔄 重试加载地图」再试一次。",
+                        _ => "地图加载失败（请检查网络），可切换列表视图管理足迹。"
+                    });
                     SetHint("地图不可用，仍可通过列表管理足迹");
                     break;
 

@@ -22,6 +22,30 @@ public static class SyncService
     private static WebDavService.DavConfig DavOf(SettingsStore s) =>
         new(s.Url, s.User, s.Pass);
 
+    /// <summary>
+    /// 把底层异常翻译成用户能看懂的中文提示（HTTP 状态码 / DNS / 超时等常见情形）。
+    /// 只改展示文案，不改变异常的判定逻辑与合并语义。
+    /// </summary>
+    private static string Friendly(Exception ex)
+    {
+        var m = ex.Message ?? "";
+        // HttpClient 抛 HttpRequestException 时通常带状态码描述
+        if (m.Contains("401") || m.Contains("Unauthorized", StringComparison.OrdinalIgnoreCase))
+            return "用户名或密码错误（服务器返回 401）";
+        if (m.Contains("403") || m.Contains("Forbidden", StringComparison.OrdinalIgnoreCase))
+            return "服务器拒绝访问（403）：请检查账号权限或目录是否可写";
+        if (m.Contains("404") || m.Contains("NotFound", StringComparison.OrdinalIgnoreCase))
+            return "服务器路径不存在（404）：请检查服务器地址";
+        if (m.Contains("timed out", StringComparison.OrdinalIgnoreCase) || m.Contains("timeout", StringComparison.OrdinalIgnoreCase))
+            return "连接超时：请检查网络或服务器地址";
+        if (m.Contains("name or service not known", StringComparison.OrdinalIgnoreCase)
+            || m.Contains("getaddrinfo", StringComparison.OrdinalIgnoreCase)
+            || m.Contains("No such host", StringComparison.OrdinalIgnoreCase)
+            || m.Contains("从远程服务器返回了一个错误", StringComparison.Ordinal) && m.Contains("502"))
+            return "无法连接服务器：请检查网络是否可用、地址是否正确";
+        return m;
+    }
+
     /// <summary>拉取：云端 exportedAt 新于本地上次同步时间时才导入。force=true 忽略自动同步开关。</summary>
     public static async Task<SyncResult> PullIfRemoteNewerAsync(bool force = false)
     {
@@ -55,7 +79,7 @@ public static class SyncService
         }
         catch (Exception ex)
         {
-            return new SyncResult(false, "下载失败：" + ex.Message);
+            return new SyncResult(false, "下载失败：" + Friendly(ex));
         }
         finally
         {
@@ -83,7 +107,7 @@ public static class SyncService
         }
         catch (Exception ex)
         {
-            return new SyncResult(false, "上传失败：" + ex.Message);
+            return new SyncResult(false, "上传失败：" + Friendly(ex));
         }
         finally
         {
@@ -103,7 +127,7 @@ public static class SyncService
         }
         catch (Exception ex)
         {
-            return new SyncResult(false, "连接失败：" + ex.Message);
+            return new SyncResult(false, "连接失败：" + Friendly(ex));
         }
     }
 
@@ -120,7 +144,7 @@ public static class SyncService
         }
         catch (Exception ex)
         {
-            return new SyncResult(false, "删除云端失败：" + ex.Message);
+            return new SyncResult(false, "删除云端失败：" + Friendly(ex));
         }
         finally
         {

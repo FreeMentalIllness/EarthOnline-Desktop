@@ -24,10 +24,10 @@ public static class SetupManager
 
     /// <summary>
     /// 安装目录归一化：
-    /// ① 用户只选了盘符根（如 D:\）→ D:\EarthOnline\EarthOnline；
-    /// ② 用户选了已含 EarthOnline 名字的目录 → 原样；
+    /// ① 用户只选了盘符根（如 D:\）→ D:\EarthOnline（单一专属文件夹，**不**再套一层）；
+    /// ② 用户选了已含 EarthOnline 名字的目录 → 原样（并折叠历史遗留的重复层级）；
     /// ③ 其他目录（如 D:\MyApps）→ D:\MyApps\EarthOnline。
-    /// 保证文件永不平铺在盘符根目录。
+    /// 保证文件永不平铺在盘符根目录，且永不出现 D:\EarthOnline\EarthOnline 这类多余层级。
     /// </summary>
     public static string NormalizeInstallDir(string selected)
     {
@@ -39,6 +39,18 @@ public static class SetupManager
         }
 
         path = path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+
+        // 折叠重复的 EarthOnline 层级：旧版本选盘符根会生成 D:\EarthOnline\EarthOnline，
+        // 这类路径再次传入时必须收敛为 D:\EarthOnline，否则越装越深。
+        while (true)
+        {
+            if (!string.Equals(Path.GetFileName(path), "EarthOnline", StringComparison.OrdinalIgnoreCase)) break;
+            var parent = Path.GetDirectoryName(path);
+            if (string.IsNullOrWhiteSpace(parent)) break;
+            if (!string.Equals(Path.GetFileName(parent), "EarthOnline", StringComparison.OrdinalIgnoreCase)) break;
+            path = parent.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        }
+
         var name = Path.GetFileName(path);
 
         if (string.Equals(name, "EarthOnline", StringComparison.OrdinalIgnoreCase))
@@ -46,9 +58,9 @@ public static class SetupManager
 
         if (string.IsNullOrWhiteSpace(name))
         {
-            // 选中盘符根：D:\ → D:\EarthOnline\EarthOnline（外层站点文件夹 + 应用文件夹）
+            // 选中盘符根：D:\ → D:\EarthOnline
             var root = Path.GetPathRoot(path) ?? "C:\\";
-            return Path.Combine(root, "EarthOnline", "EarthOnline");
+            return Path.Combine(root, "EarthOnline");
         }
 
         return Path.Combine(path, "EarthOnline");

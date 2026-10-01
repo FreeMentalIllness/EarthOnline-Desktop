@@ -111,8 +111,12 @@ public static class ThemeService
     /// <summary>按设置应用主题（App 启动 / 切换时调用）。</summary>
     public static void ApplyTheme(SettingsStore s) => ApplyTheme(IsDark(s));
 
+    /// <summary>主题切换完成通知（亮↔暗变化后触发；订阅方如地图页用于联动夜间样式）。</summary>
+    public static event Action<bool>? ThemeChanged;
+
     public static void ApplyTheme(bool dark)
     {
+        var changed = Dark != dark;
         Dark = dark;   // 先记状态：无 Application 时 ColorOf 也能给出正确主题色
         var res = Application.Current?.Resources;
         if (res is null) return;
@@ -124,6 +128,7 @@ public static class ThemeService
             if (key == "AppBgBrush" && res[key] is ImageBrush) continue; // 有壁纸时不拿纯色盖掉它
             res[key] = new SolidColorBrush(dark ? darkColor : light);
         }
+        if (changed) ThemeChanged?.Invoke(dark);
     }
 
     /// <summary>应用全局字号缩放（0.9 / 1.0 / 1.15）。

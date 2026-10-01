@@ -10,14 +10,30 @@
   Assets/amap_default.json（gitignore，默认不存在）→ 无 Key 则降级为列表视图。
   坐标一律 [lng, lat]，与安卓 / 网页端一致。
   C# → JS：window.render(locs) / window.focusOn(lng,lat) / window.setUser(lng,lat)
+            / window.applyPrefs(style, zoom, resetView)
   JS  → C#：window.chrome.webview.postMessage(JSON) —— ready / fail / click / drag / focus
+  Key / 安全密钥 / 地图样式 / 默认缩放均由宿主注入（window.__AMAP_KEY__ / __AMAP_SEC__
+  / __AMAP_STYLE__ / __AMAP_ZOOM__），本文件不含任何硬编码密钥（红线）。
+-->
+<!--
+  白名单必须覆盖 AMap JS API 2.0 运行时真实用到的全部来源，否则地图会出现
+  「只有高德 Logo、主体全白」的假加载状态。实测 2.0 会动态加载：
+    · https://webapi.amap.com/...             SDK 引导脚本
+    · https://jsapi-service.amap.com/...      渲染器插件（WebGLRenderer，缺失即白屏）
+    · https://restapi.amap.com/...            日志 / 服务接口
+    · blob: Worker                         矢量瓦片解析线程
+  瓦片与静态资源域名含 *.amap.com 与 *.autonavi.com（wprd0x.is.autonavi.com 等）。
+  宿主注入 Key 走 AddScriptToExecuteOnDocumentCreated，不受本策略限制。
 -->
 <meta http-equiv="Content-Security-Policy"
-      content="default-src 'self' https://*.amap.com 'unsafe-inline' 'unsafe-eval';
-               img-src 'self' data: https://*.amap.com;
-               script-src 'self' https://webapi.amap.com 'unsafe-inline' 'unsafe-eval';
+      content="default-src 'self' data: blob: https://*.amap.com https://*.autonavi.com;
+               script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://*.amap.com https://*.autonavi.com;
+               worker-src 'self' blob: https://*.amap.com;
+               child-src 'self' blob: https://*.amap.com;
                style-src 'self' 'unsafe-inline';
-               connect-src 'self' https://*.amap.com;">
+               img-src 'self' data: blob: https://*.amap.com https://*.autonavi.com;
+               font-src 'self' data: https://*.amap.com;
+               connect-src 'self' data: blob: https://*.amap.com https://*.autonavi.com;">
 <style>
   html, body { width:100%; height:100%; margin:0; padding:0;
                font-family:"Microsoft YaHei","Segoe UI",sans-serif; background:#F8F6F2; }
@@ -32,6 +48,28 @@
   #offline .m { font-size:13px; color:#7A7268; margin-top:10px; line-height:1.7; }
   #offline .b { margin-top:16px; font-size:13px; padding:8px 16px; cursor:pointer;
                 border:1px solid #E8E2DA; background:#fff; color:#1E1A16; border-radius:6px; }
+
+  /* ------------------------------------------------------------------
+     足迹标记：**纯 CSS 自绘图钉**，不依赖任何外部图片。
+     为什么不用高德默认 Marker：默认图钉是远端 png，在 WebView2 的 file:// 源下会加载失败，
+     表现为灰色「破图」占位符（曾被用户截图反馈）。自绘后无网络依赖，风格也与应用琥珀主色一致。
+     几何：外层 wrap 固定 28×34，rotate(-45°) 的方块把 0 圆角那个角转到底部正中成为针尖，
+     针尖落在外层 (14, 33.8) 处 —— 宿主用 offset(-14,-34) 对齐，保证针尖精准压在坐标上。
+     ------------------------------------------------------------------ */
+  .eo-pin-wrap { position:relative; width:28px; height:34px; }
+  .eo-pin { position:absolute; left:0; top:0; width:28px; height:28px; box-sizing:border-box;
+            border-radius:50% 50% 50% 0; transform:rotate(-45deg);
+            background:linear-gradient(135deg,#EBCFAC 0%,#D4A373 48%,#B57F45 100%);
+            border:2px solid #FFFFFF; box-shadow:0 2px 6px rgba(60,42,24,.34);
+            cursor:pointer; transition:transform .12s ease, background .12s ease; }
+  .eo-pin i { position:absolute; left:50%; top:50%; width:9px; height:9px;
+              margin:-4.5px 0 0 -4.5px; border-radius:50%; background:#FFFFFF; }
+  .eo-pin-wrap:hover .eo-pin { transform:rotate(-45deg) scale(1.14); }
+  .eo-pin.is-active { background:linear-gradient(135deg,#8FBE9B 0%,#4E9C63 52%,#33774A 100%); }
+  .eo-label { position:absolute; left:31px; top:5px; white-space:nowrap; max-width:150px;
+              overflow:hidden; text-overflow:ellipsis; font-size:11px; line-height:1;
+              padding:4px 8px; border-radius:9px; color:#1E1A16; background:rgba(255,255,255,.93);
+              border:1px solid #E8E2DA; box-shadow:0 1px 3px rgba(0,0,0,.12); }
 </style>
 <!-- SDK 不再写死在 HTML 里：等宿主注入 Key 后按 Key 动态加载（见下方 boot） -->
 </head>
@@ -50,7 +88,17 @@
 </div>
 
 <script>
-  var map = null, markers = {}, userMarker = null, popup = null;
+  var map = null, markers = {}, userMarker = null, popup = null, lastLocs = [];
+
+  /** 默认视野（全国）与默认样式，供「重置地图视图」使用。 */
+  var DEFAULT_CENTER = [105, 35], DEFAULT_ZOOM = 4, DEFAULT_STYLE = 'normal';
+
+  /** 样式关键字 → 高德样式 URI。 */
+  function styleUri(name) {
+    var s = String(name || '').toLowerCase();
+    if (s !== 'normal' && s !== 'whitesmoke' && s !== 'dark') s = DEFAULT_STYLE;
+    return 'amap://styles/' + s;
+  }
 
   function post(msg) {
     try {
@@ -108,9 +156,17 @@
       fail('sdk', 'AMap undefined');
       return;
     }
+    var style = window.__AMAP_STYLE__ || DEFAULT_STYLE;
+    var zoom = Number(window.__AMAP_ZOOM__);
+    if (!(zoom >= 3 && zoom <= 17)) zoom = DEFAULT_ZOOM;
+    // 深色样式下先把容器底色压暗，避免加载瞬间闪一块浅色
+    var container = document.getElementById('container');
+    if (container && String(style).toLowerCase() === 'dark') container.style.background = '#1B1B1B';
+
     try {
       map = new AMap.Map('container', {
-        zoom: 4, center: [105, 35], viewMode: '2D', doubleClickZoom: false
+        zoom: zoom, center: DEFAULT_CENTER, viewMode: '2D', doubleClickZoom: false,
+        mapStyle: styleUri(style)
       });
     } catch (e) {
       fail('init', (e && e.message ? e.message : String(e)));
@@ -123,16 +179,53 @@
       var lat = e.lnglat.getLat(), lng = e.lnglat.getLng();
       post({ type: 'click', lat: lat, lng: lng });
     });
+
+    // ---- 尺寸同步 ----
+    // WebView2 在窗口缩放 / 侧栏折叠时容器尺寸会变，AMap 不会自动跟随，
+    // 会出现瓦片错位甚至大片留白。这里显式 map.resize()。
+    try {
+      if (window.ResizeObserver && container) {
+        new ResizeObserver(function () { try { map.resize(); } catch (e) { } }).observe(container);
+      }
+      window.addEventListener('resize', function () { try { map.resize(); } catch (e) { } });
+      // 首帧后补一次（抑制 WebView2 首次布局抖动）
+      var n = 0, iv = setInterval(function () {
+        try { map.resize(); } catch (e) { }
+        if (++n >= 4) clearInterval(iv);
+      }, 500);
+    } catch (e) { /* 尺寸同步失败不影响地图本身 */ }
+
+    // ---- 白屏看门狗 ----
+    // 底图真正画完会触发 'complete'。若 12s 仍未完成，说明渲染链路被拦截（如 CSP 误拦
+    // 渲染器插件），此时主动降级，避免用户对着「只有 Logo 的纯白区域」不知所措。
+    var basemapDone = false;
+    try { map.on('complete', function () { basemapDone = true; window.__MAP_BASEMAP_DONE = true; }); } catch (e) { }
+    setTimeout(function () {
+      if (!basemapDone) fail('blank', 'basemap not completed in 12s');
+    }, 12000);
+  }
+
+  /**
+   * 单枚足迹标记的自绘 HTML。
+   * 针尖精准落在坐标上（offset -14,-34 配合 28×34 的 wrap），名称用悬浮小胶囊显示，
+   * 完全没有任何 img / 外部图标依赖，因此不会出现「破图 / 默认图钉 / 拉伸」。
+   */
+  function markerHtml(l, active) {
+    var label = l.name ? '<div class="eo-label">' + esc(l.name) + '</div>' : '';
+    return '<div class="eo-pin-wrap"><div class="eo-pin' + (active ? ' is-active' : '') +
+           '"><i></i></div>' + label + '</div>';
   }
 
   /** 渲染足迹标记（全量重画：先清后画，与网页端口径一致） */
   function render(locs) {
     if (!map || typeof AMap === 'undefined') return;
+    lastLocs = locs || [];
     for (var k in markers) { try { map.remove(markers[k]); } catch (e) { } }
     markers = {};
-    (locs || []).forEach(function (l) {
+    lastLocs.forEach(function (l) {
       var m = new AMap.Marker({
-        position: [l.lng, l.lat], map: map, draggable: true, title: l.name
+        position: [l.lng, l.lat], map: map, draggable: true, title: l.name,
+        content: markerHtml(l), offset: new AMap.Pixel(-14, -34), zIndex: 120
       });
       m.on('click', function () { showPopup(l); post({ type: 'focus', id: l.id }); });
       m.on('dragend', function () {
@@ -141,16 +234,42 @@
       });
       markers[l.id] = m;
     });
-    if (locs && locs.length === 1) { map.setCenter([locs[0].lng, locs[0].lat]); map.setZoom(12); }
-    else if (locs && locs.length > 1) { try { map.setFitView(); } catch (e) { } }
+    if (lastLocs.length === 1) { map.setCenter([lastLocs[0].lng, lastLocs[0].lat]); map.setZoom(12); }
+    else if (lastLocs.length > 1) {
+      // 留出边距，避免标记贴着容器边缘或被标题遮住
+      try { map.setFitView(null, false, [70, 70, 70, 70]); } catch (e) { try { map.setFitView(); } catch (e2) { } }
+    }
     showTip('');
   }
 
   function showPopup(l) {
     if (!map || typeof AMap === 'undefined') return;
-    if (!popup) popup = new AMap.InfoWindow({ offset: new AMap.Pixel(0, -28) });
+    // 弹窗抬到针尖之上（图钉高 34px）
+    if (!popup) popup = new AMap.InfoWindow({ offset: new AMap.Pixel(0, -38) });
     popup.setContent('<b>' + esc(l.name) + '</b><br>' + esc(l.note || ''));
     popup.open(map, [l.lng, l.lat]);
+  }
+
+  /**
+   * 设置页改地图偏好后由宿主即时推来（无需重开页面）。
+   * @param {string} style  normal / whitesmoke / dark
+   * @param {number} zoom   默认缩放级别
+   * @param {boolean} reset true = 连视野一起复位（用于「重置地图视图」）
+   */
+  function applyPrefs(style, zoom, reset) {
+    if (!map) return;
+    window.__AMAP_STYLE__ = style; window.__AMAP_ZOOM__ = zoom;
+    try { map.setMapStyle(styleUri(style)); } catch (e) { }
+    var z = Number(zoom); if (!(z >= 3 && z <= 17)) z = DEFAULT_ZOOM;
+    if (reset) {
+      // 有足迹就重新自适应把它们纳入视野，没有就回到全国默认视野
+      if (lastLocs.length) render(lastLocs);
+      else { try { map.setZoomAndCenter(z, DEFAULT_CENTER); } catch (e) { } }
+      var c = document.getElementById('container');
+      if (c) c.style.background = String(style).toLowerCase() === 'dark' ? '#1B1B1B' : '#F8F6F2';
+    } else {
+      try { map.setZoom(z); } catch (e) { }
+    }
   }
 
   /** 聚焦单个足迹（列表点击 → 地图平移 + 弹窗） */

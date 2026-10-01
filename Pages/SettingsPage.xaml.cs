@@ -19,7 +19,7 @@ public partial class SettingsPage : Page
         DbPathText.Text = AppPaths.DbFile;
         Loaded += (_, _) =>
         {
-            LoadProfile(); LoadConfig(); LoadGeneral(); LoadAppearance(); LoadBackups(); LoadAmap(); LoadDataDir();
+            LoadProfile(); LoadConfig(); LoadGeneral(); LoadAppearance(); LoadBackups(); LoadMapPrefs(); LoadDataDir();
         };
     }
 
@@ -652,53 +652,117 @@ public partial class SettingsPage : Page
         (Application.Current.MainWindow as MainWindow)?.RefreshCurrentPage();
     }
 
-    // ==================== 地图 Key（高德） ====================
+    // ==================== 地图偏好（样式 / 默认缩放 / 视图重置） ====================
+    // v1.0.5：地图服务已内置，原来的「API Key + 安全密钥」输入框属于普通用户无法完成的配置，
+    // 已整体移除，改为看得懂、点得动的偏好项。
 
-    private void LoadAmap()
-    {
-        var cfg = AmapConfig.Load();
-        // 界面只显示用户自填的那份（内置回退不回显，避免把回退 Key 暴露在输入框里）
-        AmapKeyBox.Text = cfg.IsCustom ? cfg.Key : "";
-        AmapSecBox.Text = cfg.IsCustom ? cfg.Sec : "";
-        AmapStatusText.Text = cfg.IsCustom
-            ? "已使用你自己的 Key（加密存于本机）。清空后回落到内置回退 Key。"
-            : AmapConfig.HasDefault
-                ? "当前使用内置回退 Key（来自本地可选文件 Assets/amap_default.json，不入库）。填入你自己的 Key 可覆盖。"
-                : "未配置 Key，也没有内置回退：地图页会自动降级为列表视图（足迹增删改不受影响）。";
-    }
+    /// <summary>程序化回填控件时抑制 Changed 事件，避免把默认值误写回设置文件。</summary>
+    private bool _mapPrefLoading;
 
-    private void SaveAmapKey_Click(object sender, RoutedEventArgs e)
+    private void LoadMapPrefs()
     {
-        var key = AmapKeyBox.Text.Trim();
-        if (key.Length == 0)
-        {
-            SimpleDialogs.Alert("要清空请点「清空（回落内置）」；保存需要填写 Key。", "地球Online",
-                MessageBoxButton.OK, MessageBoxImage.Information);
-            return;
-        }
+        if (MapStyleNormal is null || MapZoomSlider is null) return;
+        _mapPrefLoading = true;
         try
         {
-            AmapConfig.Save(key, AmapSecBox.Text.Trim());
-            LoadAmap();
-            SimpleDialogs.Alert("已保存（密钥经 Windows DPAPI 加密后存于本机）。重新打开地图页生效。",
-                "地球Online", MessageBoxButton.OK, MessageBoxImage.Information);
+            var s = SettingsStore.Load();
+            var style = MapPage.NormalizeMapStyle(s.MapStyle);
+            MapStyleNormal.IsChecked = style == "normal";
+            MapStyleWhitesmoke.IsChecked = style == "whitesmoke";
+            MapStyleDark.IsChecked = style == "dark";
+            MapZoomSlider.Value = MapPage.NormalizeMapZoom(s.MapZoom);
+            UpdateMapZoomText();
+            MapFollowDarkBox.IsChecked = s.MapStyleFollowDark;
+
+            // 历史版本可能存过用户自填的 Key：只在确实存在时露出「恢复默认地图服务」，
+            // 给一条退路，但不把它做成需要用户理解的配置项。
+            var cfg = AmapConfig.Load();
+            RestoreBuiltinMapBtn.Visibility = cfg.IsCustom ? Visibility.Visible : Visibility.Collapsed;
+            MapStatusText.Text = cfg.IsCustom
+                ? "当前使用你此前配置的地图服务（密钥加密存于本机）。若地图显示异常，可点「恢复默认地图服务」改用内置服务。"
+                : string.IsNullOrWhiteSpace(cfg.Key)
+                    ? "未检测到可用的地图服务，地图页会自动切换为足迹列表（足迹增删改不受影响）。"
+                    : "当前使用内置地图服务，无需任何配置。";
         }
-        catch (Exception ex)
-        {
-            SimpleDialogs.Alert("保存失败：" + ex.Message, "地球Online", MessageBoxButton.OK, MessageBoxImage.Error);
-        }
+        finally { _mapPrefLoading = false; }
     }
 
-    private void ClearAmapKey_Click(object sender, RoutedEventArgs e)
+    private string CurrentMapStyle()
+        => MapStyleWhitesmoke.IsChecked == true ? "whitesmoke"
+         : MapStyleDark.IsChecked == true ? "dark" : "normal";
+
+    private void MapPref_Changed(object sender, RoutedEventArgs e)
     {
+        if (_mapPrefLoading || MapStyleNormal is null) return;
+        try
+        {
+            var s = SettingsStore.Load();
+            s.MapStyle = CurrentMapStyle();
+            s.MapStyleFollowDark = MapFollowDarkBox.IsChecked == true;
+            s.Save();
+            MapPage.ApplyPrefsLive(s.MapStyle, s.MapZoom, resetView: false);
+        }
+        catch { /* 偏好写入失败不影响使用 */ }
+    }
+
+    private void MapZoom_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_mapPrefLoading || MapZoomSlider is null || MapZoomText is null) return;
+        UpdateMapZoomText();
+        try
+        {
+            var s = SettingsStore.Load();
+            s.MapZoom = MapPage.NormalizeMapZoom(MapZoomSlider.Value);
+            s.Save();
+            MapPage.ApplyPrefsLive(s.MapStyle, s.MapZoom, resetView: false);
+        }
+        catch { /* 同上 */ }
+    }
+
+    private void UpdateMapZoomText()
+    {
+        if (MapZoomText is null || MapZoomSlider is null) return;
+        int z = (int)Math.Round(MapZoomSlider.Value);
+        var name = z <= 4 ? "省域" : z <= 7 ? "城市圈" : z <= 10 ? "城区"
+                 : z <= 13 ? "街区" : z <= 15 ? "街道" : "楼栋";
+        MapZoomText.Text = $"{z} · {name}";
+    }
+
+    /// <summary>重置地图视图：样式回标准、缩放回省域，并让已打开的地图页立刻复位。</summary>
+    private void ResetMapView_Click(object sender, RoutedEventArgs e)
+    {
+        _mapPrefLoading = true;
+        try
+        {
+            var s = SettingsStore.Load();
+            s.MapStyle = "normal";
+            s.MapZoom = 4;
+            s.Save();
+            MapStyleNormal.IsChecked = true;
+            MapZoomSlider.Value = 4;
+        }
+        catch { /* 忽略 */ }
+        finally { _mapPrefLoading = false; }
+
+        UpdateMapZoomText();
+        MapPage.ApplyPrefsLive("normal", 4, resetView: true);
+        if (MapStatusText is not null)
+            MapStatusText.Text = "已恢复默认地图视图（标准样式 · 省域视野）。";
+    }
+
+    /// <summary>历史遗留的自填 Key 退出使用，回落内置地图服务。</summary>
+    private void RestoreBuiltinMap_Click(object sender, RoutedEventArgs e)
+    {
+        if (!SimpleDialogs.Confirm("将改用内置地图服务，并清除你此前填写的密钥（仅本机加密存储的那份）。继续？")) return;
         try
         {
             AmapConfig.Save("", "");
-            LoadAmap();
+            LoadMapPrefs();
+            MapPage.ApplyPrefsLive("normal", 4, resetView: true);
         }
         catch (Exception ex)
         {
-            SimpleDialogs.Alert("清空失败：" + ex.Message, "地球Online", MessageBoxButton.OK, MessageBoxImage.Error);
+            SimpleDialogs.Alert("操作失败：" + ex.Message, "地球Online", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 

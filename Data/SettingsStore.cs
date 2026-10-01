@@ -79,6 +79,24 @@ public class SettingsStore
     public string AmapSecEnc { get; set; } = "";
 
     /// <summary>
+    /// 地图样式：normal 标准 / whitesmoke 简约 / dark 夜间（v1.0.5 起由「设置 → 地图偏好」控制，
+    /// 取代原先需要用户自填 API Key 的复杂配置）。
+    /// </summary>
+    public string MapStyle { get; set; } = "normal";
+
+    /// <summary>地图默认缩放级别（3 ~ 17，默认 4 = 省域视野）。</summary>
+    public double MapZoom { get; set; } = 4;
+
+    /// <summary>
+    /// 夜间地图样式跟随深色主题（v1.0.5）：开启后主题切到深色时地图自动用「夜间」样式，
+    /// 切回浅色恢复「地图偏好」里选的样式；关闭则始终用选定样式。
+    /// </summary>
+    public bool MapStyleFollowDark { get; set; } = false;
+
+    /// <summary>上次自动检查更新的本地时间（ISO；启动检查 24h 节流用，手动检查不受限）。</summary>
+    public string LastUpdateCheckAt { get; set; } = "";
+
+    /// <summary>
     /// 自定义数据目录（v1.0.3）。留空 = 使用默认目录（应用根 EarthOnlineData，不可写时回落 %LOCALAPPDATA%\EarthOnline）。
     /// 设置后下一次启动生效；App 启动时会把旧目录的数据一次性迁移过来。
     /// </summary>

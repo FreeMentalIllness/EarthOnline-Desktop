@@ -256,41 +256,55 @@
                 </StackPanel>
             </Border>
 
-            <!-- 地图（高德）Key 配置：用户自填优先，内置回退次之，都没有则地图降级为列表 -->
+            <!-- 地图偏好：Key 已内置，不再让用户填；这里只保留看得懂的偏好项 -->
             <Border Style="{StaticResource CardStyle}">
                 <StackPanel>
-                    <TextBlock Text="🗺️ 地图（高德）" FontWeight="SemiBold" FontSize="15"
+                    <TextBlock Text="🗺️ 地图偏好" FontWeight="SemiBold" FontSize="15"
                                Foreground="{DynamicResource TextPrimaryBrush}"/>
-                    <TextBlock Text="填入自己的高德 Web 端 JS API Key；留空则使用内置回退 Key，都没有时地图自动降级为列表视图（足迹增删改不受影响）。"
+                    <TextBlock Text="地图服务已内置，开箱即用，无需任何配置；离线或加载失败时会自动切换为足迹列表，功能不受影响。"
                                FontSize="12" Margin="0,6,0,0" TextWrapping="Wrap"
                                Foreground="{DynamicResource TextSecondaryBrush}"/>
 
-                    <Grid Margin="0,12,0,0">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="90"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                        </Grid.RowDefinitions>
-                        <TextBlock Grid.Row="0" Grid.Column="0" Text="API Key" FontSize="13" VerticalAlignment="Center"
+                    <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
+                        <TextBlock Text="地图样式" FontSize="13" Width="70" VerticalAlignment="Center"
                                    Foreground="{DynamicResource TextSecondaryBrush}"/>
-                        <TextBox x:Name="AmapKeyBox" Grid.Row="0" Grid.Column="1" Padding="8,6" Margin="0,3"
-                                 ToolTip="在高德开放平台申请「Web端(JS API)」Key；本机用 Windows DPAPI 加密保存"/>
-                        <TextBlock Grid.Row="1" Grid.Column="0" Text="安全密钥" FontSize="13" VerticalAlignment="Center"
-                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
-                        <TextBox x:Name="AmapSecBox" Grid.Row="1" Grid.Column="1" Padding="8,6" Margin="0,3"
-                                 ToolTip="JS API 的安全密钥 securityJsCode；若你的 Key 类型不需要可留空"/>
-                    </Grid>
-
-                    <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
-                        <Button Style="{StaticResource PrimaryButtonStyle}" Content="保存 Key" Padding="12,6" Click="SaveAmapKey_Click" Cursor="Hand"/>
-                        <Button Style="{StaticResource SoftButtonStyle}" Content="清空（回落内置）" Padding="12,6" Margin="8,0,0,0"
-                                Click="ClearAmapKey_Click" Cursor="Hand"/>
+                        <RadioButton x:Name="MapStyleNormal" GroupName="MapStyle" Content="标准"
+                                     Style="{StaticResource SegButtonStyle}" Checked="MapPref_Changed"/>
+                        <RadioButton x:Name="MapStyleWhitesmoke" GroupName="MapStyle" Content="简约"
+                                     Style="{StaticResource SegButtonStyle}" Margin="8,0,0,0" Checked="MapPref_Changed"/>
+                        <RadioButton x:Name="MapStyleDark" GroupName="MapStyle" Content="夜间"
+                                     Style="{StaticResource SegButtonStyle}" Margin="8,0,0,0" Checked="MapPref_Changed"/>
                     </StackPanel>
 
-                    <TextBlock x:Name="AmapStatusText" Margin="0,10,0,0" FontSize="12" TextWrapping="Wrap"
+                    <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                        <TextBlock Text="默认缩放" FontSize="13" Width="70" VerticalAlignment="Center"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+                        <Slider x:Name="MapZoomSlider" Width="200" Minimum="3" Maximum="17"
+                                TickFrequency="1" IsSnapToTickEnabled="True"
+                                VerticalAlignment="Center" ValueChanged="MapZoom_Changed"/>
+                        <TextBlock x:Name="MapZoomText" Margin="12,0,0,0" FontSize="12" Width="96"
+                                   VerticalAlignment="Center"
+                                   Foreground="{DynamicResource TextMutedBrush}"/>
+                    </StackPanel>
+                    <TextBlock Text="3 省域 · 8 城市 · 12 街道 · 17 楼栋；进入地图页时的初始视野"
+                               FontSize="11" Margin="70,4,0,0"
+                               Foreground="{DynamicResource TextMutedBrush}"/>
+
+                    <CheckBox x:Name="MapFollowDarkBox" Content="深色主题下自动使用夜间地图样式"
+                              FontSize="13" Margin="0,12,0,0" Checked="MapPref_Changed" Unchecked="MapPref_Changed"/>
+                    <TextBlock Text="开启后切到深色主题时地图自动变为夜间样式，切回浅色恢复上面选的样式"
+                               FontSize="11" Margin="24,4,0,0"
+                               Foreground="{DynamicResource TextMutedBrush}"/>
+
+                    <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
+                        <Button Style="{StaticResource SoftButtonStyle}" Content="↺ 重置地图视图" Padding="12,6"
+                                Click="ResetMapView_Click" Cursor="Hand"/>
+                        <Button x:Name="RestoreBuiltinMapBtn" Style="{StaticResource SoftButtonStyle}" Content="恢复默认地图服务"
+                                Padding="12,6" Margin="8,0,0,0" Visibility="Collapsed"
+                                Click="RestoreBuiltinMap_Click" Cursor="Hand"/>
+                    </StackPanel>
+
+                    <TextBlock x:Name="MapStatusText" Margin="0,10,0,0" FontSize="12" TextWrapping="Wrap"
                                Foreground="{DynamicResource TextSecondaryBrush}"/>
                 </StackPanel>
             </Border>
