@@ -116,6 +116,8 @@ public class AppDbContext : DbContext
             e.HasKey(i => i.Id);
             e.Property(i => i.Type).HasDefaultValue("physical");
             e.HasIndex(i => i.Category);
+            e.HasQueryFilter(i => i.DeletedAt == null);
+            e.Property(i => i.DeletedAt).HasDefaultValue((string?)null);
         });
 
         // ---------- achievements ----------
@@ -134,6 +136,8 @@ public class AppDbContext : DbContext
             e.ToTable("collections");
             e.HasKey(c => c.Id);
             e.HasIndex(c => c.Category);
+            e.HasQueryFilter(c => c.DeletedAt == null);
+            e.Property(c => c.DeletedAt).HasDefaultValue((string?)null);
         });
 
         // ---------- locations ----------
@@ -142,6 +146,8 @@ public class AppDbContext : DbContext
             e.ToTable("locations");
             e.HasKey(l => l.Id);
             e.HasIndex(l => l.Date);
+            e.HasQueryFilter(l => l.DeletedAt == null);
+            e.Property(l => l.DeletedAt).HasDefaultValue((string?)null);
         });
 
         // ---------- activities ----------

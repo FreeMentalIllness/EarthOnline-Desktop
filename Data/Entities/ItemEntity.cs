@@ -20,4 +20,7 @@ public class ItemEntity
 
     /// <summary>YYYY-MM-DD</summary>
     [JsonPropertyName("createdAt")] public string CreatedAt { get; set; } = "";
+
+    /// <summary>回收站软删标记（ISO 时间），不入导出 JSON（v1.0.5）</summary>
+    [JsonIgnore] public string? DeletedAt { get; set; }
 }

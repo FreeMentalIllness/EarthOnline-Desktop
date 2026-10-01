@@ -415,12 +415,11 @@ public partial class MapPage : Page
         if ((sender as Button)?.Tag is not string id) return;
         using var db0 = new AppDbContext(AppPaths.DbFile);
         var name = db0.Locations.Find(id)?.Name ?? "";
-        if (!Dialogs.SimpleDialogs.Confirm($"确定删除足迹「{name}」？")) return;
+        if (!Dialogs.SimpleDialogs.Confirm($"确定删除足迹「{name}」？可在回收站恢复（保留 30 天）。")) return;
 
         using var db = new AppDbContext(AppPaths.DbFile);
         var row = db.Locations.Find(id);
-        if (row is not null) db.Locations.Remove(row);
-        db.SaveChanges();
+        if (row is not null) { row.DeletedAt = DateTime.Now.ToString("o"); db.SaveChanges(); }
         AchievementNotifier.Check();
         LoadList();
         _ = PushLocationsAsync();

@@ -30,3 +30,6 @@ EarthOnline-Setup/AppPayload/
 EarthOnline-Setup/SetupPublish/
 EarthOnline-Setup/Release/
 EarthOnline-SetupRelease/
+
+# 本地归档产物不入库（发布物归档到 EarthOnline-Backups）
+Backups/

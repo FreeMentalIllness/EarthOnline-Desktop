@@ -304,11 +304,10 @@ public partial class BackpackPage : Page
     {
         var sel = SelectedItemEntity();
         if (sel is null) return;
-        if (!SimpleDialogs.Confirm($"确定删除物品「{sel.Name}」？")) return;
+        if (!SimpleDialogs.Confirm($"确定删除物品「{sel.Name}」？可在回收站恢复（保留 30 天）。")) return;
         using var db = new AppDbContext(AppPaths.DbFile);
         var row = db.Items.Find(sel.Id);
-        if (row is not null) db.Items.Remove(row);
-        db.SaveChanges();
+        if (row is not null) { row.DeletedAt = DateTime.Now.ToString("o"); db.SaveChanges(); }
         AchievementNotifier.Check();
         ReloadAll();
     }
@@ -453,20 +452,13 @@ public partial class BackpackPage : Page
     {
         var sel = SelectedCollectionEntity();
         if (sel is null) return;
-        if (!SimpleDialogs.Confirm($"确定删除收藏「{sel.Title}」？")) return;
+        if (!SimpleDialogs.Confirm($"确定删除收藏「{sel.Title}」？可在回收站恢复（保留 30 天）。")) return;
         using var db = new AppDbContext(AppPaths.DbFile);
         var row = db.Collections.Find(sel.Id);
         if (row is not null)
         {
-            db.Collections.Remove(row);
-            db.SaveChanges(); // 先落库成功，再清理附件文件
-        }
-        // 删除条目后清理其附件文件（仅限 FilesDir 内的私有文件）
-        if (!string.IsNullOrEmpty(sel.FileUri) &&
-            sel.FileUri.StartsWith(AppPaths.FilesDir, StringComparison.OrdinalIgnoreCase) &&
-            File.Exists(sel.FileUri))
-        {
-            try { File.Delete(sel.FileUri); } catch { /* 清理失败不影响 */ }
+            row.DeletedAt = DateTime.Now.ToString("o");
+            db.SaveChanges(); // 软删：附件文件保留，永久删除（回收站清理）时才清文件
         }
         AchievementNotifier.Check();
         ReloadAll();

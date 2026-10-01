@@ -10,9 +10,9 @@ using Microsoft.EntityFrameworkCore;
 namespace EarthOnline.Desktop.Dialogs;
 
 /// <summary>
-/// 回收站（v1.0.5）：任务 / 世界日志的软删除暂存区。
+/// 回收站（v1.0.5）：任务 / 世界日志 / 物品 / 收藏 / 足迹的软删除暂存区。
 /// - 删除操作只打 DeletedAt 标记，30 天内可在此恢复；
-/// - 启动时 PurgeExpired() 永久清理超过 30 天的行；
+/// - 启动时 PurgeExpired() 永久清理超过 30 天的行（收藏同时清理其附件文件）；
 /// - DeletedAt 不参与导出 JSON（JsonIgnore），不影响 WebDAV 按主键合并。
 /// </summary>
 public static class RecycleBinService
@@ -31,10 +31,18 @@ public static class RecycleBinService
             var cut = CutOff.ToString("o");
             var oldTasks = db.Tasks.IgnoreQueryFilters().Where(t => t.DeletedAt != null && string.Compare(t.DeletedAt, cut, StringComparison.Ordinal) < 0).ToList();
             var oldMemos = db.Memos.IgnoreQueryFilters().Where(m => m.DeletedAt != null && string.Compare(m.DeletedAt, cut, StringComparison.Ordinal) < 0).ToList();
+            var oldItems = db.Items.IgnoreQueryFilters().Where(x => x.DeletedAt != null && string.Compare(x.DeletedAt, cut, StringComparison.Ordinal) < 0).ToList();
+            var oldCols = db.Collections.IgnoreQueryFilters().Where(x => x.DeletedAt != null && string.Compare(x.DeletedAt, cut, StringComparison.Ordinal) < 0).ToList();
+            var oldLocs = db.Locations.IgnoreQueryFilters().Where(x => x.DeletedAt != null && string.Compare(x.DeletedAt, cut, StringComparison.Ordinal) < 0).ToList();
             db.Tasks.RemoveRange(oldTasks);
             db.Memos.RemoveRange(oldMemos);
-            if (oldTasks.Count + oldMemos.Count > 0) db.SaveChanges();
-            return oldTasks.Count + oldMemos.Count;
+            db.Items.RemoveRange(oldItems);
+            db.Collections.RemoveRange(oldCols);
+            db.Locations.RemoveRange(oldLocs);
+            var n = oldTasks.Count + oldMemos.Count + oldItems.Count + oldCols.Count + oldLocs.Count;
+            if (n > 0) db.SaveChanges();
+            foreach (var c in oldCols) DeleteCollectionFile(c.FileUri);   // 落库成功后再清附件
+            return n;
         }
         catch { return 0; }   // 清理失败不影响使用
     }
@@ -45,7 +53,10 @@ public static class RecycleBinService
         {
             using var db = new AppDbContext(AppPaths.DbFile);
             return db.Tasks.IgnoreQueryFilters().Count(t => t.DeletedAt != null)
-                 + db.Memos.IgnoreQueryFilters().Count(m => m.DeletedAt != null);
+                 + db.Memos.IgnoreQueryFilters().Count(m => m.DeletedAt != null)
+                 + db.Items.IgnoreQueryFilters().Count(i => i.DeletedAt != null)
+                 + db.Collections.IgnoreQueryFilters().Count(c => c.DeletedAt != null)
+                 + db.Locations.IgnoreQueryFilters().Count(l => l.DeletedAt != null);
         }
         catch { return 0; }
     }
@@ -57,12 +68,31 @@ public static class RecycleBinService
         {
             using var db = new AppDbContext(AppPaths.DbFile);
             if (kind == "task") RestoreTaskCascade(db, id);
-            else
+            else if (kind == "memo")
             {
                 var m = db.Memos.IgnoreQueryFilters().FirstOrDefault(x => x.Id == id);
                 if (m is null) return false;
                 m.DeletedAt = null;
             }
+            else if (kind == "item")
+            {
+                var i = db.Items.IgnoreQueryFilters().FirstOrDefault(x => x.Id == id);
+                if (i is null) return false;
+                i.DeletedAt = null;
+            }
+            else if (kind == "collection")
+            {
+                var c = db.Collections.IgnoreQueryFilters().FirstOrDefault(x => x.Id == id);
+                if (c is null) return false;
+                c.DeletedAt = null;
+            }
+            else if (kind == "location")
+            {
+                var l = db.Locations.IgnoreQueryFilters().FirstOrDefault(x => x.Id == id);
+                if (l is null) return false;
+                l.DeletedAt = null;
+            }
+            else return false;
             db.SaveChanges();
             return true;
         }
@@ -82,41 +112,78 @@ public static class RecycleBinService
         row.DeletedAt = null;
     }
 
-    /// <summary>永久删除单条（不可恢复，需确认）。</summary>
+    /// <summary>永久删除单条（不可恢复，需确认）。收藏会同时清理其附件文件。</summary>
     public static bool DeleteForever(string kind, string id)
     {
         try
         {
             using var db = new AppDbContext(AppPaths.DbFile);
+            string? colFile = null;
             if (kind == "task")
             {
                 var t = db.Tasks.IgnoreQueryFilters().FirstOrDefault(x => x.Id == id);
                 if (t is null) return false;
                 db.Tasks.Remove(t);
             }
-            else
+            else if (kind == "memo")
             {
                 var m = db.Memos.IgnoreQueryFilters().FirstOrDefault(x => x.Id == id);
                 if (m is null) return false;
                 db.Memos.Remove(m);
             }
+            else if (kind == "item")
+            {
+                var i = db.Items.IgnoreQueryFilters().FirstOrDefault(x => x.Id == id);
+                if (i is null) return false;
+                db.Items.Remove(i);
+            }
+            else if (kind == "collection")
+            {
+                var c = db.Collections.IgnoreQueryFilters().FirstOrDefault(x => x.Id == id);
+                if (c is null) return false;
+                colFile = c.FileUri;
+                db.Collections.Remove(c);
+            }
+            else if (kind == "location")
+            {
+                var l = db.Locations.IgnoreQueryFilters().FirstOrDefault(x => x.Id == id);
+                if (l is null) return false;
+                db.Locations.Remove(l);
+            }
+            else return false;
             db.SaveChanges();
+            if (colFile != null) DeleteCollectionFile(colFile);
             return true;
         }
         catch { return false; }
     }
+
+    /// <summary>清理收藏附件（仅限 FilesDir 内的私有文件，落库成功后调用）。</summary>
+    private static void DeleteCollectionFile(string? fileUri)
+    {
+        if (string.IsNullOrEmpty(fileUri)) return;
+        if (!fileUri.StartsWith(AppPaths.FilesDir, StringComparison.OrdinalIgnoreCase)) return;
+        try { if (File.Exists(fileUri)) File.Delete(fileUri); } catch { }
+    }
 }
 
-/// <summary>回收站窗口：分「任务 / 日志」两页，支持恢复与永久删除。</summary>
+/// <summary>回收站窗口：分「任务 / 日志 / 物品 / 收藏 / 足迹」，支持恢复与永久删除。</summary>
 public static class RecycleBinDialog
 {
     private class Row
     {
-        public string Kind = "";      // task / memo
+        public string Kind = "";      // task / memo / item / collection / location
         public string Id = "";
         public string Title = "";
         public string DeletedAt = "";
-        public string KindLabel => Kind == "task" ? "🗂" : "📝";
+        public string KindLabel => Kind switch
+        {
+            "task" => "🗂",
+            "memo" => "📝",
+            "item" => "🎒",
+            "collection" => "📎",
+            _ => "📍",
+        };
     }
 
     private static Brush TextMain => ThemeService.Brush("TextPrimaryBrush");
@@ -134,7 +201,7 @@ public static class RecycleBinDialog
 
         root.Children.Add(new TextBlock
         {
-            Text = $"删除的任务与世界日志会在这里保留 {RecycleBinService.RetainDays} 天，超期自动清理。恢复任务时，其上级任务会一并恢复。",
+            Text = $"删除的任务、世界日志、物品、收藏与足迹会在这里保留 {RecycleBinService.RetainDays} 天，超期自动清理。恢复任务时，其上级任务会一并恢复；收藏的附件在永久删除前不会被清掉。",
             FontSize = 11, Foreground = TextMuted, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 0, 0, 10),
         });
 
@@ -172,6 +239,19 @@ public static class RecycleBinDialog
                 .Where(m => m.DeletedAt != null)
                 .OrderByDescending(m => m.DeletedAt)
                 .Select(m => new Row { Kind = "memo", Id = m.Id, Title = m.Text, DeletedAt = m.DeletedAt ?? "" }));
+            rows.AddRange(db.Items.IgnoreQueryFilters()
+                .Where(i => i.DeletedAt != null)
+                .OrderByDescending(i => i.DeletedAt)
+                .Select(i => new Row { Kind = "item", Id = i.Id, Title = i.Name, DeletedAt = i.DeletedAt ?? "" }));
+            rows.AddRange(db.Collections.IgnoreQueryFilters()
+                .Where(c => c.DeletedAt != null)
+                .OrderByDescending(c => c.DeletedAt)
+                .Select(c => new Row { Kind = "collection", Id = c.Id, Title = c.Title, DeletedAt = c.DeletedAt ?? "" }));
+            rows.AddRange(db.Locations.IgnoreQueryFilters()
+                .Where(l => l.DeletedAt != null)
+                .OrderByDescending(l => l.DeletedAt)
+                .Select(l => new Row { Kind = "location", Id = l.Id, Title = l.Name, DeletedAt = l.DeletedAt ?? "" }));
+            rows = rows.OrderByDescending(r => r.DeletedAt).ToList();
         }
         catch { }
 

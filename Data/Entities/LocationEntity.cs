@@ -20,4 +20,7 @@ public class LocationEntity
 
     /// <summary>List&lt;string&gt; 的 JSON（多标签）</summary>
     [JsonPropertyName("tagsJson")] public string? TagsJson { get; set; }
+
+    /// <summary>回收站软删标记（ISO 时间），不入导出 JSON（v1.0.5）</summary>
+    [JsonIgnore] public string? DeletedAt { get; set; }
 }

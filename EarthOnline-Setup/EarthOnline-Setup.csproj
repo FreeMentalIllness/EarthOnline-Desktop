@@ -10,7 +10,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
     <UseWindowsForms>true</UseWindowsForms>
-    <Version>1.0.4</Version>
+    <Version>1.0.5</Version>
     <AssemblyTitle>地球Online 安装向导</AssemblyTitle>
     <Product>地球Online</Product>
     <!-- 安装器自身也自包含发布，目标机无需预装 .NET 运行时 -->
