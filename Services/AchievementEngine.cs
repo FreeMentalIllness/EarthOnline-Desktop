@@ -28,6 +28,8 @@ public static class AchievementEngine
         public int Am3TasksDone { get; set; }
         /// <summary>空白标题保存被拒次数（唯一需持久化的计数，来自 SettingsStore）。</summary>
         public int BlankTitleTries { get; set; }
+        public int ThrowbackSeen { get; set; }
+        public int MemoryPhotos { get; set; }
         public int LongTitleTasks { get; set; }
         public int EmojiTitleTasks { get; set; }
         public int PeriodTitleTasks { get; set; }
@@ -130,6 +132,8 @@ public static class AchievementEngine
         new AutoRule { Key="egg_streak_365", Title="全年无休", Desc="连续 365 天记录世界日志", Category="egg", Goal=365, Current=s=>s.RecordStreak },
         new AutoRule { Key="egg_memo_emoji", Title="此时无声胜有声", Desc="写一条只有表情的日志", Category="egg", Goal=1, Current=s=>s.EmojiOnlyMemos },
         new AutoRule { Key="egg_newyear", Title="元旦宝宝", Desc="生日是 1 月 1 日", Category="egg", Goal=1, Current=s=>s.NewYearBirth, Test=s=>s.NewYearBirth>0 },
+        new AutoRule { Key="egg_throwback", Title="时光回声", Desc="翻开一次「历年今日」的旧时光", Category="egg", Goal=1, Current=s=>s.ThrowbackSeen },
+        new AutoRule { Key="egg_memory_album", Title="记忆管理员", Desc="往记忆相册导入第一张老照片", Category="egg", Goal=1, Current=s=>s.MemoryPhotos },
     };
 
     /// <summary>彩蛋未解锁时的占位标题 / 说明（与安卓 ACH_EGG_MASK 一致）。</summary>
@@ -231,7 +235,9 @@ public static class AchievementEngine
             Memos = memos.Count,
             Locations = db.Locations.Count(),
             Gender = profile?.Gender ?? "",
-            BlankTitleTries = SettingsStore.Load().BlankTitleTries
+            BlankTitleTries = SettingsStore.Load().BlankTitleTries,
+            ThrowbackSeen = Math.Max(0, SettingsStore.Load().ThrowbackSeen),
+            MemoryPhotos = Math.Max(0, SettingsStore.Load().MemoryPhotos)
         };
 
         // 存活天数 / 周岁

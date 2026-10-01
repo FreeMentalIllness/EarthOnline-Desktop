@@ -467,8 +467,8 @@ public partial class HomeViewModel : ObservableObject
         {
             using var db = new AppDbContext(AppPaths.DbFile);
             var row = db.Memos.Find(id);
-            if (row is not null) db.Memos.Remove(row);
-            db.SaveChanges();
+            // v1.0.5 回收站：软删除（30 天后启动时永久清理）
+            if (row is not null) { row.DeletedAt = DateTime.Now.ToString("o"); db.SaveChanges(); }
         }
         catch (Exception ex)
         {

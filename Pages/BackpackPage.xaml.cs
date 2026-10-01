@@ -260,6 +260,9 @@ public partial class BackpackPage : Page
         return row?.Item;
     }
 
+    /// <summary>打开记忆相册（导入老照片 → egg_memory_album）。</summary>
+    private void MemoryAlbum_Click(object sender, RoutedEventArgs e) => Dialogs.MemoryAlbumDialog.Show();
+
     private void AddItem_Click(object sender, RoutedEventArgs e)
     {
         var item = new ItemEntity

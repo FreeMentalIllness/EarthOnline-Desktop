@@ -36,6 +36,12 @@ public class SettingsStore
     /// </summary>
     public int BlankTitleTries { get; set; }
 
+    /// <summary>翻看「历年今日」次数（egg_throwback 时光回声）。</summary>
+    public int ThrowbackSeen { get; set; }
+
+    /// <summary>记忆相册已导入照片数（egg_memory_album 记忆管理员）。</summary>
+    public int MemoryPhotos { get; set; }
+
     /// <summary>界面主题：light / dark（画刷颜色即时生效）。</summary>
     public string Theme { get; set; } = "light";
 

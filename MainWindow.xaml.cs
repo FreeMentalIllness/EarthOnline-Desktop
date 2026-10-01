@@ -378,6 +378,15 @@ public partial class MainWindow : Window
                     e.Handled = true;
                     _ = SaveShortcutAsync();
                     break;
+                case Key.F:   // v1.0.5 全局搜索
+                    e.Handled = true;
+                    Dialogs.GlobalSearchDialog.Show();
+                    break;
+                case Key.N:   // v1.0.5 新建任务
+                    e.Handled = true;
+                    NavigateTo("tasks");
+                    if (ContentFrame.Content is Pages.TasksPage tp) tp.StartCreate();
+                    break;
                 case Key.D1 or Key.NumPad1: e.Handled = true; NavList.SelectedIndex = 0; break;
                 case Key.D2 or Key.NumPad2: e.Handled = true; NavList.SelectedIndex = 1; break;
                 case Key.D3 or Key.NumPad3: e.Handled = true; NavList.SelectedIndex = 2; break;

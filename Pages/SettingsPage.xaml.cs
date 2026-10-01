@@ -31,9 +31,10 @@ public partial class SettingsPage : Page
         _suppressGeneral = true;
         try
         {
+            bool system = string.Equals(s.Theme, "system", StringComparison.OrdinalIgnoreCase);
             bool dark = ThemeService.IsDark(s);
-            ThemeDark.IsChecked = dark;
-            ThemeLight.IsChecked = !dark;
+            ThemeSystem.IsChecked = system;
+            if (!system) { ThemeDark.IsChecked = dark; ThemeLight.IsChecked = !dark; }
 
             double scale = Math.Clamp(s.FontScale <= 0 ? 1.0 : s.FontScale, 0.8, 1.4);
             (scale switch
@@ -122,7 +123,8 @@ public partial class SettingsPage : Page
         try
         {
             var s = SettingsStore.Load();
-            s.Theme = ThemeDark.IsChecked == true ? "dark" : "light";
+            s.Theme = ThemeSystem.IsChecked == true ? "system"
+                    : ThemeDark.IsChecked == true ? "dark" : "light";
             s.FontScale = double.Parse(
                 (FontSmall.IsChecked == true ? FontSmall : FontBig.IsChecked == true ? FontBig : FontStd).Tag?.ToString() ?? "1.0",
                 System.Globalization.CultureInfo.InvariantCulture);
@@ -133,7 +135,7 @@ public partial class SettingsPage : Page
 
             // 主题换了要重建内容区：指标卡 / 日历热图 / 图表等是代码生成的，
             // 颜色只在生成时取一次，不重建就会留着上一套主题的配色。
-            if (e.Source is RadioButton rb && (rb == ThemeLight || rb == ThemeDark))
+            if (e.Source is RadioButton rb && (rb == ThemeLight || rb == ThemeDark || rb == ThemeSystem))
                 (Application.Current.MainWindow as MainWindow)?.RefreshCurrentPage();
         }
         catch (Exception ex)
@@ -465,6 +467,41 @@ public partial class SettingsPage : Page
             {
                 OpenReleases_Click(sender, e);
             }
+        }
+    }
+
+    /// <summary>打开回收站（v1.0.5）。</summary>
+    private void RecycleBin_Click(object sender, RoutedEventArgs e) => Dialogs.RecycleBinDialog.Show();
+
+    private async void ImportCsv_Click(object sender, RoutedEventArgs e)
+    {
+        var dlg = new Microsoft.Win32.OpenFileDialog { Title = "选择 CSV 文件", Filter = "CSV|*.csv|所有文件|*.*" };
+        if (dlg.ShowDialog() != true) return;
+        try
+        {
+            var n = await System.Threading.Tasks.Task.Run(() => Dialogs.DataImportService.ImportCsvTasks(dlg.FileName));
+            SimpleDialogs.Alert($"已导入 {n} 个任务（不覆盖既有数据）。", "地球Online · 导入 CSV",
+                MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+        catch (Exception ex)
+        {
+            SimpleDialogs.Alert("导入失败：" + ex.Message, "地球Online", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    private async void ImportMarkdown_Click(object sender, RoutedEventArgs e)
+    {
+        var dlg = new Microsoft.Win32.OpenFileDialog { Title = "选择 Markdown 文件", Filter = "Markdown|*.md;*.markdown;*.txt|所有文件|*.*" };
+        if (dlg.ShowDialog() != true) return;
+        try
+        {
+            var n = await System.Threading.Tasks.Task.Run(() => Dialogs.DataImportService.ImportMarkdownDiary(dlg.FileName));
+            SimpleDialogs.Alert($"已导入 {n} 条世界日志（不覆盖既有数据）。\n\n提示：# 开头的日期行会被当作当日日志的时间。", "地球Online · 导入 Markdown",
+                MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+        catch (Exception ex)
+        {
+            SimpleDialogs.Alert("导入失败：" + ex.Message, "地球Online", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
@@ -927,6 +964,7 @@ public partial class SettingsPage : Page
         var r = await SyncService.PushAsync(force: true);
         SyncStatusText.Text = r.Message;
         LoadConfig();
+        if (r.Ok && r.Changed) App.NotifyTray("☁️ 同步完成", r.Message);   // v1.0.5 托盘通知
         SimpleDialogs.Alert(r.Message, "地球Online",
             MessageBoxButton.OK, r.Ok ? MessageBoxImage.Information : MessageBoxImage.Warning);
     }
@@ -942,6 +980,7 @@ public partial class SettingsPage : Page
         LoadConfig();
         LoadProfile();
         AchievementNotifier.Check();
+        if (r.Ok && r.Changed) App.NotifyTray("☁️ 同步完成", r.Message);   // v1.0.5 托盘通知
         SimpleDialogs.Alert(r.Message, "地球Online",
             MessageBoxButton.OK, r.Ok ? MessageBoxImage.Information : MessageBoxImage.Warning);
     }

@@ -37,4 +37,10 @@ public class TaskEntity
 
     /// <summary>排序号。安卓列名 sort_order（`order` 是 SQL 关键字，故改名）。</summary>
     [JsonPropertyName("order")] public int Order { get; set; }
+
+    /// <summary>
+    /// 回收站：软删除时间（ISO）。null=正常；非 null=已进回收站，30 天后启动时永久清理。
+    /// 本端独有，[JsonIgnore] 保证导出 JSON 与三端形状一致（不参与同步合并）。
+    /// </summary>
+    [JsonIgnore] public string? DeletedAt { get; set; }
 }

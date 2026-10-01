@@ -53,7 +53,28 @@ public static class ThemeService
     /// <summary>当前是否为深色主题（ApplyTheme 后有效；无 Application 时按最近一次设置判定）。</summary>
     public static bool Dark { get; private set; }
 
-    public static bool IsDark(SettingsStore s) => string.Equals(s.Theme, "dark", StringComparison.OrdinalIgnoreCase);
+    public static bool IsDark(SettingsStore s)
+    {
+        // "system"：跟随 Windows 深色模式（注册表 AppsUseLightTheme，0=深色）
+        if (string.Equals(s.Theme, "system", StringComparison.OrdinalIgnoreCase))
+        {
+            try
+            {
+                using var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(
+                    @"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize");
+                return key?.GetValue("AppsUseLightTheme") is int v && v == 0;
+            }
+            catch { return false; }
+        }
+        return string.Equals(s.Theme, "dark", StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>系统深浅切换事件（Theme="system" 时由 App 订阅触发重铺调色板）。</summary>
+    public static void OnSystemThemeChanged()
+    {
+        try { ApplyTheme(IsDark(SettingsStore.Load())); }
+        catch { /* 应用失败保持现状 */ }
+    }
 
     /// <summary>
     /// 取当前主题下的画刷（供代码生成的控件使用）。

@@ -35,6 +35,8 @@
                     </ComboBox>
                     <CheckBox x:Name="HideDoneBox" Content="隐藏已完成" FontSize="12" Margin="12,0,0,0"
                               VerticalAlignment="Center" Checked="HideDone_Changed" Unchecked="HideDone_Changed"/>
+                    <Button Style="{StaticResource SoftButtonStyle}" Content="🗑 回收站" Margin="12,0,0,0"
+                            Padding="12,6" Click="RecycleBin_Click" Cursor="Hand"/>
                     <Button Style="{StaticResource PrimaryButtonStyle}" Content="＋ 新建任务" Margin="10,0,0,0"
                             Padding="12,6" Click="AddRoot_Click" Cursor="Hand"/>
                 </StackPanel>
@@ -66,12 +68,17 @@
                             <MenuItem Header="✏️ 编辑" Click="Edit_Click"/>
                             <MenuItem x:Name="ToggleDoneItem" Header="✅ 标记完成" Click="ToggleDone_Click"/>
                             <MenuItem Header="🗑 删除" Click="Delete_Click"/>
+                            <Separator/>
+                            <MenuItem x:Name="BatchDoneItem" Header="✅ 批量完成（勾选集）" Click="BatchDone_Click"/>
+                            <MenuItem x:Name="BatchDeleteItem" Header="🗑 批量删除（进回收站）" Click="BatchDelete_Click"/>
+                            <MenuItem x:Name="BatchExportItem" Header="📤 导出勾选任务…" Click="BatchExport_Click"/>
                         </ContextMenu>
                     </TreeView.ContextMenu>
                     <TreeView.Resources>
                         <!-- 折叠状态双向绑定到节点模型；右键命中节点时先选中它 -->
                         <Style TargetType="TreeViewItem">
                             <EventSetter Event="PreviewMouseRightButtonDown" Handler="TreeViewItem_RightClick"/>
+                            <EventSetter Event="PreviewMouseLeftButtonDown" Handler="TreeViewItem_BatchClick"/>
                             <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}"/>
                         </Style>
                         <HierarchicalDataTemplate DataType="{x:Type local:TaskNode}" ItemsSource="{Binding Children}">

@@ -47,6 +47,7 @@
                             </ScrollViewer>
                         </StackPanel>
                         <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" HorizontalAlignment="Right">
+                            <Button Style="{StaticResource SoftButtonStyle}" Content="🖼 记忆相册" Padding="12,6" Click="MemoryAlbum_Click" Cursor="Hand" Margin="0,0,8,0"/>
                             <Button Style="{StaticResource PrimaryButtonStyle}" Content="＋ 新增物品" Padding="12,6" Click="AddItem_Click" Cursor="Hand"/>
                         </StackPanel>
                     </DockPanel>

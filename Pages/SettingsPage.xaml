@@ -42,6 +42,8 @@
                                      Style="{StaticResource SegButtonStyle}" Checked="Appearance_Changed"/>
                         <RadioButton x:Name="ThemeDark" GroupName="Theme" Content="🌙 深色"
                                      Style="{StaticResource SegButtonStyle}" Margin="8,0,0,0" Checked="Appearance_Changed"/>
+                        <RadioButton x:Name="ThemeSystem" GroupName="Theme" Content="🖥️ 跟随系统"
+                                     Style="{StaticResource SegButtonStyle}" Margin="8,0,0,0" Checked="Appearance_Changed"/>
                     </StackPanel>
 
                     <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
@@ -214,6 +216,9 @@
                     <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
                         <Button Style="{StaticResource SoftButtonStyle}" Content="导出备份到文件…" Padding="12,6" Click="ExportLocal_Click" Cursor="Hand"/>
                         <Button Style="{StaticResource SoftButtonStyle}" Content="从文件导入…" Padding="12,6" Margin="8,0,0,0" Click="ImportLocal_Click" Cursor="Hand"/>
+                        <Button Style="{StaticResource SoftButtonStyle}" Content="🗑 回收站" Padding="12,6" Margin="8,0,0,0" Click="RecycleBin_Click" Cursor="Hand"/>
+                        <Button Style="{StaticResource SoftButtonStyle}" Content="📥 导入 CSV 任务…" Padding="12,6" Margin="8,0,0,0" Click="ImportCsv_Click" Cursor="Hand"/>
+                        <Button Style="{StaticResource SoftButtonStyle}" Content="📥 导入 Markdown 日记…" Padding="12,6" Margin="8,0,0,0" Click="ImportMarkdown_Click" Cursor="Hand"/>
                     </StackPanel>
 
                     <!-- v1.0.5：清空数据（危险操作，红色警示 + 醒目二次确认） -->

@@ -259,13 +259,17 @@
                 </StackPanel>
             </Border>
 
-            <!-- ============ 历年今日（独立卡） ============ -->
+            <!-- ============ 历年今日（独立卡，点击翻开旧时光） ============ -->
             <Border Style="{StaticResource CardStyle}" Margin="0,0,0,12"
-                    Visibility="{Binding HasThisDay, Converter={StaticResource BoolToVis}}">
+                    Visibility="{Binding HasThisDay, Converter={StaticResource BoolToVis}}"
+                    Cursor="Hand" MouseLeftButtonUp="ThisDay_Click"
+                    ToolTip="点击翻开这一年的旧时光">
                 <StackPanel>
                     <TextBlock Text="🕰️ 历年今日" Style="{StaticResource SectionTitleStyle}"/>
                     <TextBlock Text="{Binding ThisDayText}" FontSize="13" LineHeight="21"
                                Foreground="{DynamicResource TextPrimaryBrush}" TextWrapping="Wrap"/>
+                    <TextBlock Text="✦ 点击卡片翻看旧时光" FontSize="11" Margin="0,4,0,0"
+                               Foreground="{DynamicResource TextMutedBrush}"/>
                 </StackPanel>
             </Border>
 
@@ -276,6 +280,11 @@
                     <TextBlock Text="🌱 人生卡" Style="{StaticResource SectionTitleStyle}"/>
                     <TextBlock Text="{Binding LifeCardText}" FontSize="13" LineHeight="22"
                                Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                        <Button Style="{StaticResource SoftButtonStyle}" Content="📷 分享人生卡" Padding="12,5"
+                                Click="ShareCard_Click" Cursor="Hand"
+                                ToolTip="把等级 / 连续记录 / 本月节奏生成长图，保存为 PNG"/>
+                    </StackPanel>
                 </StackPanel>
             </Border>
 

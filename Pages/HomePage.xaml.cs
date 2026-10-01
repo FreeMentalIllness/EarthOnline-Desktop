@@ -165,6 +165,22 @@ public partial class HomePage : Page
         _vm.DeleteMemo(id);
     }
 
+    /// <summary>分享人生卡：渲染 PNG 长图（v1.0.5）。</summary>
+    private void ShareCard_Click(object sender, RoutedEventArgs e) => Dialogs.ShareCardDialog.Show();
+
+    /// <summary>翻看「历年今日」：计数 + 触发成就检查（egg_throwback 时光回声）。</summary>
+    private void ThisDay_Click(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        try
+        {
+            var st = SettingsStore.Load();
+            st.ThrowbackSeen++;
+            st.Save();
+            AchievementNotifier.Check();
+        }
+        catch { /* 计数失败不影响展示 */ }
+    }
+
     // ==================== 徽章墙（v1.0.3） ====================
 
     /// <summary>佩戴徽章：从已解锁成就里挑最多 3 枚，存 settings.json（零 DB 变更）。</summary>

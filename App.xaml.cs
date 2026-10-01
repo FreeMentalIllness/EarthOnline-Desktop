@@ -2,6 +2,8 @@
 using System.Windows;
 using System.Windows.Controls;
 using EarthOnline.Desktop.Data;
+using EarthOnline.Desktop.Dialogs;
+using Microsoft.EntityFrameworkCore;
 using EarthOnline.Desktop.Services;
 using Hardcodet.Wpf.TaskbarNotification;
 
@@ -48,6 +50,39 @@ public partial class App : Application
         // 本地自动备份：监听落库信号，防抖留最近 3 份快照（对齐安卓 AutoBackupManager）
         try { AutoBackupService.Start(); }
         catch { /* 备份功能失败不影响使用 */ }
+
+        // 回收站：启动时永久清理超过 30 天的软删行（v1.0.5）
+        try { RecycleBinService.PurgeExpired(); }
+        catch { /* 清理失败不影响使用 */ }
+
+        // 深色模式跟随系统：系统深浅切换时重铺调色板并重绘代码生成页（v1.0.5）
+        Microsoft.Win32.SystemEvents.UserPreferenceChanged += (_, args) =>
+        {
+            if (args.Category != Microsoft.Win32.UserPreferenceCategory.General) return;
+            try
+            {
+                if (string.Equals(SettingsStore.Load().Theme, "system", StringComparison.OrdinalIgnoreCase))
+                    Dispatcher.Invoke(() =>
+                    {
+                        ThemeService.OnSystemThemeChanged();
+                        (MainWindow as MainWindow)?.RefreshCurrentPage();
+                    });
+            }
+            catch { /* 跟随失败保持现状 */ }
+        };
+
+        // 任务到期提醒（v1.0.5）：今天到期或已逾期的未完成任务，托盘温和提醒一次
+        try
+        {
+            var today = DateTime.Today.ToString("yyyy-MM-dd");
+            using var db0 = new Data.AppDbContext(Data.AppPaths.DbFile);
+            var due = db0.Tasks.AsNoTracking()
+                .Count(t => t.Status != "done" && t.DeletedAt == null && t.DueDate != null && string.Compare(t.DueDate, today, StringComparison.Ordinal) <= 0);
+            if (due > 0)
+                Dispatcher.BeginInvoke(new Action(() =>
+                    NotifyTray("📅 任务到期提醒", $"你有 {due} 个任务今天到期或已逾期，去「任务」看看吧。")));
+        }
+        catch { /* 提醒失败不影响使用 */ }
 
         // 自定义数据目录不可写回落：启动即温和提示并引导修改（不崩溃、不静默）
         if (DataRootNotice != null)

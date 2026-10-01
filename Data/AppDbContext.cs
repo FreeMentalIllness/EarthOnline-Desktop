@@ -93,6 +93,9 @@ public class AppDbContext : DbContext
             e.Property(t => t.Status).HasDefaultValue("planning");
             e.HasIndex(t => t.ParentId);
             e.HasIndex(t => t.Status);
+            // 回收站：默认过滤软删除行（回收站对话框用 IgnoreQueryFilters 访问）
+            e.HasQueryFilter(t => t.DeletedAt == null);
+            e.Property(t => t.DeletedAt).HasDefaultValue((string?)null);
         });
 
         // ---------- memos ----------
@@ -102,6 +105,8 @@ public class AppDbContext : DbContext
             e.HasKey(m => m.Id);
             e.Property(m => m.Type).HasDefaultValue("note");
             e.HasIndex(m => m.CreatedAt);
+            e.HasQueryFilter(m => m.DeletedAt == null);
+            e.Property(m => m.DeletedAt).HasDefaultValue((string?)null);
         });
 
         // ---------- items ----------

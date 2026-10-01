@@ -94,6 +94,7 @@ public partial class TasksPage : Page
                 .ThenBy(t => t.CreatedAt)
                 .ToList();
             BuildTree();
+            ClearBatchVisual();   // 树重建后多选高亮失效，同步清空勾选集
         }
         catch (Exception ex)
         {
@@ -278,9 +279,13 @@ public partial class TasksPage : Page
         {
             ToggleDoneItem.Header = sel.Status == "done" ? "↩️ 取消完成" : "✅ 标记完成";
         }
+        UpdateBatchMenuVisibility();
     }
 
     private void AddRoot_Click(object sender, RoutedEventArgs e) => CreateTask(null);
+
+    /// <summary>Ctrl+N 入口：打开新建任务对话框（模态，天然防连点重复）。</summary>
+    public void StartCreate() => CreateTask(null);
 
     private void AddChild_Click(object sender, RoutedEventArgs e)
     {
@@ -374,6 +379,139 @@ public partial class TasksPage : Page
         Reload();
     }
 
+    /// <summary>打开回收站（恢复 / 永久删除，v1.0.5）。</summary>
+    private void RecycleBin_Click(object sender, RoutedEventArgs e)
+    {
+        Dialogs.RecycleBinDialog.Show();
+        Reload();
+    }
+
+    // ==================== 批量操作（v1.0.5：Ctrl/Shift 点选 + 右键菜单） ====================
+
+    /// <summary>多选勾选集（任务 Id）。Ctrl/Shift + 左键点行加入/移出。</summary>
+    private readonly HashSet<string> _batch = new();
+
+    /// <summary>Ctrl/Shift + 左键：把行加入 / 移出勾选集（不高亮选中态，绿色勾选角标）。</summary>
+    private void TreeViewItem_BatchClick(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is TreeViewItem tvi && tvi.DataContext is TaskNode node && node.Task is { } t)
+        {
+            if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control) || Keyboard.Modifiers.HasFlag(ModifierKeys.Shift))
+            {
+                if (!_batch.Add(t.Id))
+                {
+                    _batch.Remove(t.Id);
+                    tvi.Background = null;
+                }
+                else
+                {
+                    var c = ThemeService.ColorOf("AccentBrush");
+                    tvi.Background = new System.Windows.Media.SolidColorBrush(
+                        System.Windows.Media.Color.FromArgb(60, c.R, c.G, c.B));
+                }
+                e.Handled = true;
+            }
+        }
+    }
+
+    private void ClearBatchVisual()
+    {
+        // 树已重建，旧 TreeViewItem 全部丢弃，无需还原背景；只需清空勾选集
+        _batch.Clear();
+    }
+
+    /// <summary>右键菜单按勾选集数量开合（单选场景隐藏批量项）。</summary>
+    private void UpdateBatchMenuVisibility()
+    {
+        bool on = _batch.Count > 1;
+        BatchDoneItem.Visibility = on ? Visibility.Visible : Visibility.Collapsed;
+        BatchDeleteItem.Visibility = on ? Visibility.Visible : Visibility.Collapsed;
+        BatchExportItem.Visibility = _batch.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private void BatchDone_Click(object sender, RoutedEventArgs e)
+    {
+        if (_batch.Count == 0) return;
+        try
+        {
+            using var db = new AppDbContext(AppPaths.DbFile);
+            foreach (var id in _batch)
+            {
+                var row = db.Tasks.Find(id);
+                if (row is null || row.Status == "done") continue;
+                row.Status = "done";
+                row.Progress = 100;
+                row.DoneAt = DateTime.Now.ToString("o");
+                row.LastModified = DateTime.Today.ToString("yyyy-MM-dd");
+            }
+            db.SaveChanges();
+        }
+        catch (Exception ex)
+        {
+            SimpleDialogs.Alert("批量完成失败：" + ex.Message, "地球Online", MessageBoxButton.OK, MessageBoxImage.Error);
+            return;
+        }
+        AchievementNotifier.Check();
+        Reload();
+    }
+
+    private void BatchDelete_Click(object sender, RoutedEventArgs e)
+    {
+        if (_batch.Count == 0) return;
+        if (!SimpleDialogs.Confirm($"把勾选的 {_batch.Count} 个任务移入回收站？（30 天内可恢复）")) return;
+        try
+        {
+            using var db = new AppDbContext(AppPaths.DbFile);
+            foreach (var id in _batch.ToList())
+            {
+                // 复用级联软删除；已软删的行 Find 不到（查询过滤器），天然幂等
+                DeleteCascade(db, id);
+                _batch.Remove(id);
+            }
+            db.SaveChanges();
+        }
+        catch (Exception ex)
+        {
+            SimpleDialogs.Alert("批量删除失败：" + ex.Message, "地球Online", MessageBoxButton.OK, MessageBoxImage.Error);
+            return;
+        }
+        AchievementNotifier.Check();
+        Reload();
+    }
+
+    private void BatchExport_Click(object sender, RoutedEventArgs e)
+    {
+        if (_batch.Count == 0) return;
+        try
+        {
+            var dlg = new Microsoft.Win32.SaveFileDialog
+            {
+                Title = "导出勾选任务",
+                Filter = "JSON 文件|*.json",
+                FileName = $"earthonline_tasks_{DateTime.Now:yyyyMMdd_HHmm}.json",
+            };
+            if (dlg.ShowDialog() != true) return;
+
+            using var db = new AppDbContext(AppPaths.DbFile);
+            var rows = db.Tasks.AsNoTracking()
+                .Where(t => _batch.Contains(t.Id))
+                .OrderBy(t => t.Order).ToList();
+            var opts = new System.Text.Json.JsonSerializerOptions
+            {
+                PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase,
+                WriteIndented = true,
+            };
+            System.IO.File.WriteAllText(dlg.FileName,
+                System.Text.Json.JsonSerializer.Serialize(rows, opts));
+            SimpleDialogs.Alert($"已导出 {rows.Count} 个任务到：\n{dlg.FileName}", "地球Online",
+                MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+        catch (Exception ex)
+        {
+            SimpleDialogs.Alert("导出失败：" + ex.Message, "地球Online", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
     private void Delete_Click(object sender, RoutedEventArgs e)
     {
         var sel = SelectedTask();
@@ -387,13 +525,15 @@ public partial class TasksPage : Page
         Reload();
     }
 
+    /// <summary>v1.0.5 回收站：级联软删除（含全部子任务），30 天后启动时永久清理。</summary>
     private static void DeleteCascade(AppDbContext db, string id)
     {
-        foreach (var child in db.Tasks.Where(t => t.ParentId == id).ToList())
+        // 注意：全局查询过滤器会隐藏已软删行，这里用 IgnoreQueryFilters 兼顾重删场景
+        foreach (var child in db.Tasks.IgnoreQueryFilters().Where(t => t.ParentId == id && t.DeletedAt == null).ToList())
         {
             DeleteCascade(db, child.Id);
         }
         var row = db.Tasks.Find(id);
-        if (row is not null) db.Tasks.Remove(row);
+        if (row is not null) { row.DeletedAt = DateTime.Now.ToString("o"); db.SaveChanges(); }
     }
 }
